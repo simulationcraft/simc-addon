@@ -1,0 +1,88 @@
+<Ui xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
+  <Script file="libs\LibStub\LibStub.lua"/>
+  <Include file="libs\CallbackHandler-1.0\CallbackHandler-1.0.xml"/>  
+  <Include file="libs\AceAddon-3.0\AceAddon-3.0.xml"/>
+  <Include file="libs\AceConsole-3.0\AceConsole-3.0.xml"/>
+  <Include file="libs\AceEvent-3.0\AceEvent-3.0.xml"/>>
+  <Include file="libs\LibSharedMedia-3.0\lib.xml"/>
+  <Include file="libs\AceGUI-3.0\AceGUI-3.0.xml"/>
+  <Include file="libs\AceConfig-3.0\AceConfig-3.0.xml"/>
+  <Include file="libs\AceDB-3.0\AceDB-3.0.xml"/>
+  <Include file="libs\AceDBOptions-3.0\AceDBOptions-3.0.xml"/>
+  <Include file="libs\AceLocale-3.0\AceLocale-3.0.xml"/>
+  <Include file="libs\AceTimer-3.0\AceTimer-3.0.xml"/>  
+  <GameTooltip name="SimulationcraftTooltip" frameStrata="TOOLTIP" hidden="true" parent="UIParent" inherits="GameTooltipTemplate"/>
+  
+  <Frame name="SimcCopyFrame" parent="UIParent" movable="true" enableMouse="true" inherits="DialogBoxFrame">
+  <Size>
+    <AbsDimension x="700" y="450"/>
+  </Size>
+  <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\Tooltips\UI-Tooltip-Border" tile="true">
+    <BackgroundInsets>
+      <AbsInset left="5" right="5" top="5" bottom="5"/>
+    </BackgroundInsets>
+    <TileSize>
+      <AbsValue val="16"/>
+    </TileSize>
+    <EdgeSize>
+      <AbsValue val="16"/>
+    </EdgeSize>
+  </Backdrop>
+  <Layers>
+    <Layer level="ARTWORK">
+      <FontString name="SimcText" inherits="GameFontHighlight">
+        <Anchors>
+          <Anchor point="TOPLEFT">
+            <Offset>
+              <AbsDimension x="5" y="-5"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+      </FontString>
+    </Layer>
+  </Layers>
+  <Frames>
+    <ScrollFrame name="SimcCopyFrameScroll" inherits="UIPanelScrollFrameTemplate" toplevel="true">
+      <Anchors>
+        <Anchor point="TOP">
+          <Offset>
+            <AbsDimension x="0" y="-30"/>
+          </Offset>
+        </Anchor>
+          <Anchor point="BOTTOM" relativeTo="SimcCopyFrameButton" relativePoint="TOP">
+              <Offset>
+              <AbsDimension x="0" y="5"/>
+              </Offset>
+          </Anchor>          
+      </Anchors>
+      <Size>
+        <AbsDimension x="650" y="420"/>
+      </Size>
+      <ScrollChild>
+        <EditBox name="SimcCopyFrameScrollText" letters="99999" multiLine="true" autoFocus="true" enableMouse="true">
+          <Size>
+            <AbsDimension x="630" y="380"/>
+          </Size>
+          <Scripts>
+            <OnEscapePressed>
+              self:Hide()
+            </OnEscapePressed>
+          </Scripts>
+          <FontString inherits="ChatFontNormal"/>
+        </EditBox>
+      </ScrollChild>
+    </ScrollFrame>
+  </Frames>
+  <Scripts>
+  <OnMouseDown>
+          if (button == "LeftButton") then
+             self:StartMoving()
+          end
+  </OnMouseDown>
+  <OnMouseUp>
+      --noinspection GlobalSelf
+      self:StopMovingOrSizing()
+  </OnMouseUp>
+  </Scripts>
+  </Frame>
+</Ui>
