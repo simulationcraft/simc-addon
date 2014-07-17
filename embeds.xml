@@ -63,11 +63,6 @@
           <Size>
             <AbsDimension x="630" y="380"/>
           </Size>
-          <Scripts>
-            <OnEscapePressed>
-              self:Hide()
-            </OnEscapePressed>
-          </Scripts>
           <FontString inherits="ChatFontNormal"/>
         </EditBox>
       </ScrollChild>
@@ -83,6 +78,10 @@
       --noinspection GlobalSelf
       self:StopMovingOrSizing()
   </OnMouseUp>
+  <!-- This apparently does nothing -->
+  <OnEscapePressed>
+      self:Hide()
+  </OnEscapePressed>
   </Scripts>
   </Frame>
 </Ui>

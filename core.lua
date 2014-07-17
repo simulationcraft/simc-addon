@@ -489,6 +489,8 @@ function Simulationcraft:PrintSimcProfile()
          
     -- show the appropriate frames
     SimcCopyFrame:Show()
+    SimcCopyFrameScroll:Show()
+    SimcCopyFrameScrollText:Show()
     SimcCopyFrameScrollText:SetText(simulationcraftProfile)
     SimcCopyFrameScrollText:HighlightText()
     -- Abandoned GUI code from earlier implementations
