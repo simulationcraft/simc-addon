@@ -24,8 +24,8 @@ function Simulationcraft:CreateOptions()
                 desc = L["UseCompactOutputDescription"],
                 type = "toggle",
                 width = "full",
-                set = function(info,val) self.db.profile.style = val end,
-                get = function(info) return self.db.profile.style end
+                set = function(info,val) self.db.profile.newStyle = val end,
+                get = function(info) return self.db.profile.newStyle end
             }      
         }
     }

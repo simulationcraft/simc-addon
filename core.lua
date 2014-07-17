@@ -90,7 +90,7 @@ local simcSlotNames = Simulationcraft.simcSlotNames
 local enchantNames  = Simulationcraft.enchantNames
 
 -- debug flag
-local SIMC_DEBUG = true
+local SIMC_DEBUG = false
 
 -- debug function
 local function simcDebug( s )
