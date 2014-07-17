@@ -5,7 +5,6 @@ function Simulationcraft:CreateDefaults()
 
     local defaults = {
         profile = {
-            enabled = true,
             newStyle = true,
         }
     }
