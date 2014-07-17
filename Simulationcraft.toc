@@ -1,9 +1,9 @@
-## Interface: 50001
+## Interface: 50400
 ## Title: Simulationcraft
 ## Notes: Constructs SimC export strings
 ## Author: Theck
 ## SavedVariables: SimulationcraftDB
-## Version: 1.0.0
+## Version: 1.0.2
 
 embeds.xml
 
