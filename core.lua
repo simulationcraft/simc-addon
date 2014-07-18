@@ -10,66 +10,7 @@ function Simulationcraft:OnInitialize()
     AceConfig = LibStub("AceConfigDialog-3.0")
     LibStub("AceConfig-3.0"):RegisterOptionsTable("Simulationcraft", self:CreateOptions())
     AceConfig:AddToBlizOptions("Simulationcraft", "Simulationcraft")
-    Simulationcraft:RegisterChatCommand('simc', 'PrintSimcProfile')
-    
-    -- Abandoned GUI stuff - decided to do it in XML instead
-    --[[
-    local acegui = false
-    
-    if acegui then
-    -- create export frame
-    AceGUI = LibStub("AceGUI-3.0")
-    self.exportFrame = AceGUI:Create("Frame")
-    local f = self.exportFrame
-    f:SetTitle("Example Frame")
-    f:SetStatusText("")
-    f:SetCallback("OnClose", function(widget) AceGUI:Release(widget) end)
-    f:SetLayout("List")
-    
-    -- add an edit box
-    local ebox = AceGUI:Create("MultiLineEditBox")
-    ebox:SetLabel("Output String (copy/paste into Simulationcraft):")
-    ebox:SetWidth(660)
-    ebox:SetNumLines(29)
-    ebox:DisableButton(true)
-    f:AddChild(ebox)
-    self.ebox = ebox
-    
-    -- and a button that the user can press to update the edit box! Probably useless.
-    local button = AceGUI:Create("Button")
-    button.Simulationcraft = self
-    button:SetText("Update")
-    button:SetWidth(120)
-    button:SetCallback("OnClick", function(self) self.Simulationcraft:PrintSimcProfile() end )
-    f:AddChild(button)
-    
-    else    
-     -- this is an attempt to build the GUI from scratch without AceGUI
-    print('Default')
-    local f = CreateFrame("FRAME", nil, UIParent)
-    f:SetWidth(650)
-    f:SetHeight(400)
-    f:SetPoint("CENTER", UIParent, "CENTER")
-    f:EnableMouse(true)
-    --f:SetBackdrop({bgFile = "Interface\\DialogFrame\\UI-DialogBox-Gold-Background"})
-    self.exportFrame = f
-    
-    local ebox = CreateFrame("ScrollFrame", "SimcScrollFrame", f, "InputScrollFrameTemplate")
-    --ebox:SetPoint("TOPLEFT", f, "TOPLEFT", 10, -10 )
-    --ebox:SetPoint("RIGHT",-25,0)
-    ebox:SetPoint("CENTER",f,"CENTER")
-    ebox:SetWidth(f:GetWidth()-50)
-    ebox:SetHeight(f:GetHeight()-50)
-    ebox.EditBox:SetWidth(ebox:GetWidth())
-    ebox.EditBox:SetHeight(ebox:GetHeight())
-    ebox.EditBox:SetMultiLine(true)
-    ebox.EditBox:SetMaxLetters(0)
-    ebox.EditBox:SetText("Test text")
-    ebox.EditBox:SetScript("OnEscapePressed",function() f:Hide() end )
-    self.ebox = ebox
-      
-    end
-    --]]
+    Simulationcraft:RegisterChatCommand('simc', 'PrintSimcProfile')    
 end
 
 function Simulationcraft:OnEnable() 
@@ -95,8 +36,7 @@ local SIMC_DEBUG = false
 -- debug function
 local function simcDebug( s )
   if SIMC_DEBUG then
-    s = s or 'nil'
-    print('debug: '.. s)    
+    print('debug: '.. tostring(s) )    
   end
 end
 
@@ -132,14 +72,14 @@ end
 local function CreateSimcTalentString() 
     local talentInfo = {}
     local maxTiers = 6
-    for talent = 1, GetNumTalents() do
-        local name, texture, tier, column, selected, available = GetTalentInfo(talent, false, nil)
-        if tier > maxTiers then
-            maxTiers = tier
-        end
+    local maxColumns = 3
+    for tier = 1, maxTiers do
+      for column = 1, maxColumns do
+        local talentID, name, iconTexture, selected, available = GetTalentInfo(tier, column, GetActiveSpecGroup())
         if selected then
             talentInfo[tier] = column
         end
+      end
     end
     
     local str = 'talents='
@@ -326,9 +266,14 @@ function Simulationcraft:GetItemStuffs()
         if itemLink then
             local itemString = string.match(itemLink, "item[%-?%d:]+")
             --simcDebug(itemString)
-            local itemId, enchantId, gemId1, gemId2, gemId3, gemId4, _, _, _, reforgeId, upgradeId = string.match(itemString, "item:(%d+):(%d+):(%d+):(%d+):(%d+):(%d+):(-?%d+):(-?%d+):(-?%d+):(%d+):(%d+)")
+            local _, itemId, enchantId, gemId1, gemId2, gemId3, gemId4, _, _, _, upgradeId, unk1, has_bonus, bonusId = strsplit(":", itemString)
+
             local name = GetItemInfo( itemId )
             local upgradeLevel = upgradeTable[tonumber(upgradeId)]
+            
+            if not bonus_id then
+              bonusId = "0"
+            end
             
             --=====Gems======
             -- determine number of sockets
@@ -432,7 +377,7 @@ function Simulationcraft:GetItemStuffs()
                 end
             end         
             
-        simcItemStr = simcSlotNames[slotNum] .. "=" .. tokenize(name) .. ",id=" .. itemId .. ",upgrade=" .. upgradeLevel .. gemString .. enchantString
+        simcItemStr = simcSlotNames[slotNum] .. "=" .. tokenize(name) .. ",id=" .. itemId .. ",bonus_id=".. bonusId .. ",upgrade=" .. upgradeLevel .. gemString .. enchantString
           --print('#sockets = '..numSockets .. ', bonus = ' .. tostring(useBonus))
           --print( simcItemStr )
         end
@@ -449,10 +394,20 @@ function Simulationcraft:PrintSimcProfile()
     local _, playerClass = UnitClass('player')
     local playerLevel = UnitLevel('player')
     local _, playerRace = UnitRace('player')
-    local _, playerSpec,_,_,_,role = GetSpecializationInfo(GetSpecialization())
+    local playerSpec, role
+    local specID = GetSpecialization()    
+    if specID then
+      _, playerSpec,_,_,_,role = GetSpecializationInfo(specID)
+    end
+    
     local p1, p2 = GetProfessions()
-    local playerProfessionOne,_,playerProfessionOneRank = GetProfessionInfo(p1)
-    local playerProfessionTwo,_,playerProfessionTwoRank = GetProfessionInfo(p2)
+    local playerProfessionOne, playerProfessionOneRank, playerProfessionTwo, playerProfessionTwoRank
+    if p1 then
+      playerProfessionOne,_,playerProfessionOneRank = GetProfessionInfo(p1)
+    end
+    if p2 then
+      playerProfessionTwo,_,playerProfessionTwoRank = GetProfessionInfo(p2)
+    end
     local realm = GetRealmName() -- not used yet (possibly for origin)
 
     -- get player info that's a little more involved
@@ -465,7 +420,18 @@ function Simulationcraft:PrintSimcProfile()
     playerRace = 'race=' .. tokenize(playerRace)
     playerRole = 'role=' .. translateRole(role)
     playerSpec = 'spec=' .. tokenize(playerSpec)
-    local playerProfessions = 'professions='..tokenize(playerProfessionOne)..'='..playerProfessionOneRank..'/'..tokenize(playerProfessionTwo)..'='..playerProfessionTwoRank
+    local playerProfessions = ''
+    if p1 or p2 then
+      playerProfessions = 'professions='
+      if p1 then
+        playerProfessions = playerProfessions..tokenize(playerProfessionOne)..'='..tostring(playerProfessionOneRank)..'/'
+      end
+      if p2 then
+        playerProfessions = playerProfessions..tokenize(playerProfessionTwo)..'='..tostring(playerProfessionTwoRank)
+      end  
+    else
+      playerProfessions = ''    
+    end
     
     
     -- output testing
@@ -485,6 +451,11 @@ function Simulationcraft:PrintSimcProfile()
         if items[slotNum] then
             simulationcraftProfile = simulationcraftProfile .. items[slotNum] .. '\n'
         end
+    end
+    
+    -- sanity checks - if there's anything that makes the output completely invalid, punt!
+    if specID==nil then
+      simulationcraftProfile = "Error: You need to pick a spec!"
     end
          
     -- show the appropriate frames
