@@ -266,12 +266,12 @@ function Simulationcraft:GetItemStuffs()
         if itemLink then
             local itemString = string.match(itemLink, "item[%-?%d:]+")
             --simcDebug(itemString)
-            local _, itemId, enchantId, gemId1, gemId2, gemId3, gemId4, _, _, _, upgradeId, unk1, has_bonus, bonusId = strsplit(":", itemString)
+            local _, itemId, enchantId, gemId1, gemId2, gemId3, gemId4, _, _, _, upgradeId, unk1, hasBonus, bonusId = strsplit(":", itemString)
 
             local name = GetItemInfo( itemId )
             local upgradeLevel = upgradeTable[tonumber(upgradeId)]
             
-            if not bonus_id then
+            if not bonusId then
               bonusId = "0"
             end
             
@@ -395,9 +395,9 @@ function Simulationcraft:PrintSimcProfile()
     local playerLevel = UnitLevel('player')
     local _, playerRace = UnitRace('player')
     local playerSpec, role
-    local specID = GetSpecialization()    
-    if specID then
-      _, playerSpec,_,_,_,role = GetSpecializationInfo(specID)
+    local specId = GetSpecialization()    
+    if specId then
+      _, playerSpec,_,_,_,role = GetSpecializationInfo(specId)
     end
     
     local p1, p2 = GetProfessions()
@@ -454,7 +454,7 @@ function Simulationcraft:PrintSimcProfile()
     end
     
     -- sanity checks - if there's anything that makes the output completely invalid, punt!
-    if specID==nil then
+    if specId==nil then
       simulationcraftProfile = "Error: You need to pick a spec!"
     end
          
