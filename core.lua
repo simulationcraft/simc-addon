@@ -71,7 +71,7 @@ end
 -- method for constructing the talent string
 local function CreateSimcTalentString() 
     local talentInfo = {}
-    local maxTiers = 6
+    local maxTiers = 7
     local maxColumns = 3
     for tier = 1, maxTiers do
       for column = 1, maxColumns do

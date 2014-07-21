@@ -3,7 +3,7 @@
 ## Notes: Constructs SimC export strings
 ## Author: Theck
 ## SavedVariables: SimulationcraftDB
-## Version: 1.1.0
+## Version: 1.1.1
 
 embeds.xml
 
