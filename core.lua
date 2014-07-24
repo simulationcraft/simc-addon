@@ -30,6 +30,9 @@ local slotNames     = Simulationcraft.slotNames
 local simcSlotNames = Simulationcraft.simcSlotNames
 local enchantNames  = Simulationcraft.enchantNames
 
+-- error string
+local simc_err_str = ''
+
 -- debug flag
 local SIMC_DEBUG = false
 
@@ -270,6 +273,10 @@ function Simulationcraft:GetItemStuffs()
 
             local name = GetItemInfo( itemId )
             local upgradeLevel = upgradeTable[tonumber(upgradeId)]
+            if upgradeLevel == nil then
+              upgradeLevel = 0
+              simc_err_str = simc_err_str + '\n # WARNING: upgradeLevel nil for upgradeId ' .. upgradeId .. ' in itemString ' .. itemString
+            end
             
             if not bonusId then
               bonusId = "0"
@@ -434,7 +441,7 @@ function Simulationcraft:PrintSimcProfile()
     end
     
     
-    -- output testing
+    -- output construction
     local simulationcraftProfile = player .. '\n'
     simulationcraftProfile = simulationcraftProfile .. playerLevel .. '\n'
     simulationcraftProfile = simulationcraftProfile .. playerRace .. '\n'
@@ -457,6 +464,9 @@ function Simulationcraft:PrintSimcProfile()
     if specId==nil then
       simulationcraftProfile = "Error: You need to pick a spec!"
     end
+    
+    -- append any error info
+    simulationcraftProfile = simulationcraftProfile .. '\n\n' ..simc_err_str
          
     -- show the appropriate frames
     SimcCopyFrame:Show()
