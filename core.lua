@@ -401,6 +401,11 @@ function Simulationcraft:PrintSimcProfile()
     local _, playerClass = UnitClass('player')
     local playerLevel = UnitLevel('player')
     local _, playerRace = UnitRace('player')
+    if playerRace == 'BloodElf' then
+      playerRace = 'Blood Elf'
+    elseif playerRace == 'NightElf' then
+      playerRace = 'Night Elf'
+    end
     local playerSpec, role
     local specId = GetSpecialization()    
     if specId then
