@@ -47,7 +47,7 @@ local enchantNames  = Simulationcraft.enchantNames
 local simc_err_str = ''
 
 -- debug flag
-local SIMC_DEBUG = true
+local SIMC_DEBUG = false
 
 -- debug function
 local function simcDebug( s )
@@ -390,7 +390,7 @@ function Simulationcraft:GetItemStrings()
           simcItemOptions[#simcItemOptions + 1] = 'enchant_id=' .. itemSplit[OFFSET_ENCHANT_ID]
         else
           local enchantBonus
-          simcDebug(tonumber(itemSplit[OFFSET_ENCHANT_ID]))
+          --simcDebug(tonumber(itemSplit[OFFSET_ENCHANT_ID]))
           if enchantNames[tonumber(itemSplit[OFFSET_ENCHANT_ID])] then
             enchantBonus = tokenize(enchantNames[tonumber(itemSplit[OFFSET_ENCHANT_ID])])
           else
