@@ -32,6 +32,74 @@ Simulationcraft.SimcStatAbbr = {
   ['readiness'] = 'readiness',  
 }
 
+-- non-localized profession names from ids
+Simulationcraft.ProfNames = {
+  [129] = 'First Aid',
+  [164] = 'Blacksmith',
+  [165] = 'Leatherworking',
+  [171] = 'Alchemy',
+  [182] = 'Herbalism',
+  [184] = 'Cooking',
+  [186] = 'Mining',
+  [197] = 'Tailoring',
+  [202] = 'Engineering',
+  [333] = 'Enchanting',
+  [356] = 'Fishing',
+  [393] = 'Skinning',
+  [755] = 'Jewelcrafting',
+  [773] = 'Inscription',
+  [794] = 'Archaeology'  
+}
+
+-- non-localized spec names from spec ids
+Simulationcraft.SpecNames = {
+-- Death Knight
+  [250] = 'Blood',
+  [251] = 'Frost',
+  [252] = 'Unholy',
+-- Druid 
+  [102] = 'Balance',
+  [103] = 'Feral Combat',
+  [104] = 'Guardian',
+  [105] = 'Restoration',
+-- Hunter 
+  [253] = 'Beast Mastery',
+  [254] = 'Marksmanship',
+  [255] = 'Survival',
+-- Mage 
+  [62] = 'Arcane',
+  [63] = 'Fire',
+  [64] = 'Frost',
+-- Monk 
+  [268] = 'Brewmaster',
+  [269] = 'Windwalker',
+  [270] = 'Mistweaver',
+-- Paladin 
+  [65] = 'Holy',
+  [66] = 'Protection',
+  [70] = 'Retribution',
+-- Priest 
+  [256] = 'Discipline',
+  [257] = 'Holy',
+  [258] = 'Shadow',
+-- Rogue 
+  [259] = 'Assassination',
+  [260] = 'Combat',
+  [261] = 'Subtlety',
+-- Shaman 
+  [262] = 'Elemental',
+  [263] = 'Enhancement',
+  [264] = 'Restoration',
+-- Warlock 
+  [265] = 'Affliction',
+  [266] = 'Demonology',
+  [267] = 'Destruction',
+-- Warrior 
+  [71] = 'Arms',
+  [72] = 'Furry',
+  [73] = 'Protection'
+}
+
 -- slot name conversion stuff
 
 Simulationcraft.slotNames = {"HeadSlot", "NeckSlot", "ShoulderSlot", "BackSlot", "ChestSlot", "ShirtSlot", "TabardSlot", "WristSlot", "HandsSlot", "WaistSlot", "LegsSlot", "FeetSlot", "Finger0Slot", "Finger1Slot", "Trinket0Slot", "Trinket1Slot", "MainHandSlot", "SecondaryHandSlot", "AmmoSlot" };    

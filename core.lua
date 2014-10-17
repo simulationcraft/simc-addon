@@ -42,6 +42,8 @@ local upgradeTable  = Simulationcraft.upgradeTable
 local slotNames     = Simulationcraft.slotNames
 local simcSlotNames = Simulationcraft.simcSlotNames
 local enchantNames  = Simulationcraft.enchantNames
+local specNames     = Simulationcraft.SpecNames
+local profNames     = Simulationcraft.ProfNames
 
 -- error string
 local simc_err_str = ''
@@ -430,31 +432,35 @@ function Simulationcraft:PrintSimcProfile()
   end
   
   -- Spec info
-  local playerSpec, role
+  local role, globalSpecID
   local specId = GetSpecialization()    
   if specId then
-    _, playerSpec,_,_,_,role = GetSpecializationInfo(specId)
+    globalSpecID,_,_,_,_,role = GetSpecializationInfo(specId)
   end
-
+  local playerSpec = specNames[ globalSpecID ]
+  
   -- Professions
-  local p1, p2 = GetProfessions()
-  local playerProfessionOne, playerProfessionOneRank, playerProfessionTwo, playerProfessionTwoRank
-  if p1 then
-    playerProfessionOne,_,playerProfessionOneRank = GetProfessionInfo(p1)
+  local pid1, pid2 = GetProfessions()
+  local firstProf, firstProfRank, secondProf, secondProfRank, profOneId, profTwoId
+  if pid1 then
+    _,_,firstProfRank,_,_,_,profOneId = GetProfessionInfo(pid1)
   end
-  if p2 then
-    playerProfessionTwo,_,playerProfessionTwoRank = GetProfessionInfo(p2)
+  if pid2 then
+    secondProf,_,secondProfRank,_,_,_,profTwoId = GetProfessionInfo(pid2)
   end
   local realm = GetRealmName() -- not used yet (possibly for origin)
   
+  firstProf = profNames[ profOneId ]
+  secondProf = profNames[ profTwoId ]
+  
   local playerProfessions = ''
-  if p1 or p2 then
+  if pid1 or pid2 then
     playerProfessions = 'professions='
-    if p1 then
-      playerProfessions = playerProfessions..tokenize(playerProfessionOne)..'='..tostring(playerProfessionOneRank)..'/'
+    if pid1 then
+      playerProfessions = playerProfessions..tokenize(firstProf)..'='..tostring(firstProfRank)..'/'
     end
-    if p2 then
-      playerProfessions = playerProfessions..tokenize(playerProfessionTwo)..'='..tostring(playerProfessionTwoRank)
+    if pid2 then
+      playerProfessions = playerProfessions..tokenize(secondProf)..'='..tostring(secondProfRank)
     end  
   else
     playerProfessions = ''    
