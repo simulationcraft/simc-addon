@@ -9,14 +9,14 @@ function Simulationcraft:CreateOptions()
         type = "group",
         name = "Simulationcraft",
         args = {
-            newStyle = {
+            opt1 = {
                 order = 2,
-                name = L["Use Compact Output"],
-                desc = L["UseCompactOutputDescription"],
+                name = L["This checkbox does nothing."],
+                desc = L["Option1desc"],
                 type = "toggle",
                 width = "full",
-                set = function(info,val) self.db.profile.newStyle = val end,
-                get = function(info) return self.db.profile.newStyle end
+                set = function(info,val) self.db.profile.opt1 = val end,
+                get = function(info) return self.db.profile.opt1 end
             }      
         }
     }

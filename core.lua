@@ -150,165 +150,6 @@ local function translateRole(str)
 
 end
 
--- =================== Item stuff (old style ) ========================= 
--- The following functions are used to grab item info from tooltips to support "old-style" character definitions
-
--- This function converts text-based stat info (from tooltips) into SimC-compatible strings
-local function ConvertToStatString( s )
-    s = s or ''
-    -- grab the value and stat from the string
-    local value,stat = string.match(s, "(%d+)%s(%a+%s?%a*)")
-    -- convert stat into simc abbreviation
-    local statAbbr = SimcStatAbbr[tokenize(stat)]   
-    -- return abbreviated combination or nil
-    if statAbbr and value then
-        return value..statAbbr
-    else
-        return ''
-    end
-end
-
-local function ConvertTooltipToStatStr( s )
-
-    local s1=s
-    local s2=''
-    if s:len()>0 then
-        -- check for a split bonus
-        if string.find(s, " and ++") then
-            s1, s2 = string.match(s, "(%d+%s%a+%s?%a*) and ++?(%d+%s%a+%s?%a*)")
-        end
-    end
-
-    s1=ConvertToStatString(s1)
-    s2=ConvertToStatString(s2)
-    
-    if s2:len()>0 then
-        return  s1 .. '_' .. s2
-    else
-        return s1
-    end
-end
-
--- This scans the tooltip to get gem stats
-local function GetGemBonus(link)
-    SimulationcraftTooltip:ClearLines()
-    SimulationcraftTooltip:SetHyperlink(link)
-    local numLines = SimulationcraftTooltip:NumLines()
-    --simcDebug(numLines)
-    local bonusStr=''
-    for i=2, numLines, 1 do
-        tmpText = _G["SimulationcraftTooltipTextLeft"..i]
-        if (tmpText:GetText()) then
-            line = tmpText:GetText()
-            --print(line)
-            if ( string.sub(line, 0, 1) == '+') then
-                bonusStr=line
-                --print('nabbed line: '..bonusStr)
-                break
-            end
-        end
-    end
-        
-    local gemBonusStr = ''
-    -- Extract Gem bonus from string
-    local enchantBonusStr = ''
-    if bonusStr:len()>0 then
-        gemBonusStr = ConvertTooltipToStatStr( bonusStr )
-    end
-    return gemBonusStr
-end
-
--- This scans the tooltip and picks out a socket bonus, if one exists
-local function GetSocketBonus(link)
-    SimulationcraftTooltip:ClearLines()
-    SimulationcraftTooltip:SetHyperlink(link)
-    local numLines = SimulationcraftTooltip:NumLines()
-    --Check each line of the tooltip until we find a bonus string
-    local bonusStr=''
-    for i=2, numLines, 1 do
-        tmpText = _G["SimulationcraftTooltipTextLeft"..i]
-        if (tmpText:GetText()) then
-            line = tmpText:GetText()
-            if ( string.sub(line, 0, string.len(L["SocketBonusPrefix"])) == L["SocketBonusPrefix"]) then
-                bonusStr=string.sub(line,string.len(L["SocketBonusPrefix"])+1)
-            end
-        end
-    end
-    
-    -- Extract Socket bonus from string
-    local socketBonusStr = ''
-    if bonusStr:len()>0 then
-        socketBonusStr = ConvertToStatString( bonusStr )
-    end
-    return socketBonusStr
-end
-
--- determine the number of sockets in an item
-local function GetNumSockets(itemLink)
-  local statTable = GetItemStats(itemLink)
-  local numSockets = 0
-  for stat, value in pairs(statTable) do
-    if string.match(stat, 'SOCKET') then
-      numSockets = numSockets + value
-    end                
-  end
-  return numSockets
-end
-
--- method that grabs gems and constructs old-style gem strings
-local function GetOldStyleGems(itemLink, slotId)
-  local gems={}
-  for i=1, 3 do -- hardcoded here to just grab all 3 sockets
-    local _,gemLink = GetItemGem(itemLink, i)
-    if gemLink then
-      local gemBonus = GetGemBonus(gemLink)
-      if gemBonus:len() > 0 then
-        gems[#gems + 1] = gemBonus
-      end
-    end
-  end
-  
-  local numSockets = GetNumSockets(itemLink)
-  SocketInventoryItem(slotId)
-  local useBonus=true
-  for i=1, numSockets do
-    local _,_,matches = GetExistingSocketInfo(i)
-    if not matches then
-      useBonus=false
-    end
-  end
-  CloseSocketInfo()
-  if #gems > 0 and useBonus then
-    gems[#gems + 1] = GetSocketBonus(itemLink)
-  end
-  return gems
-end
-
--- method to construct old-style enchant strings
-local function GetEnchantBonus(link)
-  SimulationcraftTooltip:ClearLines()
-  SimulationcraftTooltip:SetHyperlink(link)
-  local numLines = SimulationcraftTooltip:NumLines()
-  --Check each line of the tooltip until we find a bonus string
-  local bonusStr=''
-  for i=2, numLines, 1 do
-    tmpText = _G["SimulationcraftTooltipTextLeft"..i]
-    if (tmpText:GetText()) then
-      line = tmpText:GetText()
-      if ( string.sub(line, 0, string.len(L["EnchantBonusPrefix"])) == L["EnchantBonusPrefix"]) then
-        bonusStr=string.sub(line,string.len(L["EnchantBonusPrefix"])+1)
-      end
-    end
-  end
-
-  -- Extract Enchant bonus from string
-  local enchantBonusStr = ''
-  if bonusStr:len()>0 then
-    enchantBonusStr = ConvertTooltipToStatStr( bonusStr )
-  end
-
-  return enchantBonusStr
-end
 
 -- =================== Item Information ========================= 
 
@@ -366,43 +207,21 @@ function Simulationcraft:GetItemStrings()
 
       -- Gems
       local gems = {}
-      if self.db.profile.newStyle then
-        for i=1, 3 do -- hardcoded here to just grab all 3 sockets
-          local _,gemLink = GetItemGem(itemLink, i)
-          if gemLink then
-            local gemDetail = string.match(gemLink, "item[%-?%d:]+")
-            gems[#gems + 1] = string.match(gemDetail, "item:(%d+):" )
-          end
+      for i=1, 3 do -- hardcoded here to just grab all 3 sockets
+        local _,gemLink = GetItemGem(itemLink, i)
+        if gemLink then
+          local gemDetail = string.match(gemLink, "item[%-?%d:]+")
+          gems[#gems + 1] = string.match(gemDetail, "item:(%d+):" )
         end
-      else 
-        gems = GetOldStyleGems(itemLink, slotId)
       end
       --simcDebug(#gems)
       if #gems > 0 then
-        if self.db.profile.newStyle then
-          simcItemOptions[#simcItemOptions + 1] = 'gem_id=' .. table.concat(gems, '/')
-        else
-          simcItemOptions[#simcItemOptions + 1] = 'gems=' .. table.concat(gems,'_')
-        end
+        simcItemOptions[#simcItemOptions + 1] = 'gem_id=' .. table.concat(gems, '/')
       end
 
       -- Enchant
       if tonumber(itemSplit[OFFSET_ENCHANT_ID]) > 0 then
-        if self.db.profile.newStyle then
-          simcItemOptions[#simcItemOptions + 1] = 'enchant_id=' .. itemSplit[OFFSET_ENCHANT_ID]
-        else
-          local enchantBonus
-          --simcDebug(tonumber(itemSplit[OFFSET_ENCHANT_ID]))
-          if enchantNames[tonumber(itemSplit[OFFSET_ENCHANT_ID])] then
-            enchantBonus = tokenize(enchantNames[tonumber(itemSplit[OFFSET_ENCHANT_ID])])
-          else
-            enchantBonus = GetEnchantBonus(itemLink)
-          end
-          --simcDebug('ELEN' .. enchantBonus:len())
-          if enchantBonus:len() > 0 then
-            simcItemOptions[#simcItemOptions + 1] = 'enchant=' .. enchantBonus
-          end
-        end
+        simcItemOptions[#simcItemOptions + 1] = 'enchant_id=' .. itemSplit[OFFSET_ENCHANT_ID]
       end
 
       items[slotNum] = simcSlotNames[slotNum] .. "=" .. table.concat(simcItemOptions, ',')
