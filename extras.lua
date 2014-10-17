@@ -64,7 +64,7 @@ Simulationcraft.SpecNames = {
   [267] = 'Destruction',
 -- Warrior 
   [71] = 'Arms',
-  [72] = 'Furry',
+  [72] = 'Fury',
   [73] = 'Protection'
 }
 
