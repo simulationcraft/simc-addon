@@ -3,7 +3,7 @@ local _, Simulationcraft = ...
 -- non-localized profession names from ids
 Simulationcraft.ProfNames = {
   [129] = 'First Aid',
-  [164] = 'Blacksmith',
+  [164] = 'Blacksmithing',
   [165] = 'Leatherworking',
   [171] = 'Alchemy',
   [182] = 'Herbalism',
@@ -27,7 +27,7 @@ Simulationcraft.SpecNames = {
   [252] = 'Unholy',
 -- Druid 
   [102] = 'Balance',
-  [103] = 'Feral Combat',
+  [103] = 'Feral',
   [104] = 'Guardian',
   [105] = 'Restoration',
 -- Hunter 

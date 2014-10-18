@@ -112,25 +112,13 @@ local function CreateSimcTalentString()
   return str
 end
 
--- method for removing glyph prefixes
-local function StripGlyphPrefixes(name)
-  local s = tokenize(name)
-
-  s = string.gsub( s, 'glyph__', '')
-  s = string.gsub( s, 'glyph_of_the_', '')
-  s = string.gsub( s, 'glyph_of_','')
-
-  return s
-end
-
 -- constructs glyph string from game's glyph info
 local function CreateSimcGlyphString()
   local glyphs = {}
   for i=1, NUM_GLYPH_SLOTS do
     local _,_,_,spellid = GetGlyphSocketInfo(i, nil)
     if (spellid) then
-      name = GetSpellInfo(spellid)
-      glyphs[#glyphs + 1] = StripGlyphPrefixes(name)
+      glyphs[#glyphs + 1] = spellid
     end            
   end
   return 'glyphs=' .. table.concat(glyphs, '/')
@@ -172,8 +160,7 @@ function Simulationcraft:GetItemStrings()
 
       -- Item tokenized name
       local itemId = itemSplit[OFFSET_ITEM_ID]
-      simcItemOptions[#simcItemOptions + 1] = tokenize(GetItemInfo(itemId))
-      simcItemOptions[#simcItemOptions + 1] = 'id=' .. itemId
+      simcItemOptions[#simcItemOptions + 1] = ',id=' .. itemId
 
       -- Item upgrade level
       local upgradeId = itemSplit[OFFSET_UPGRADE_ID]
