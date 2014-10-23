@@ -225,6 +225,7 @@ function Simulationcraft:PrintSimcProfile()
   local playerName = UnitName('player')
   local _, playerClass = UnitClass('player')
   local playerLevel = UnitLevel('player')
+  local playerRealm = GetRealmName()
   
   -- Race info
   local _, playerRace = UnitRace('player')
@@ -254,7 +255,6 @@ function Simulationcraft:PrintSimcProfile()
   if pid2 then
     secondProf,_,secondProfRank,_,_,_,profTwoId = GetProfessionInfo(pid2)
   end
-  local realm = GetRealmName() -- not used yet (possibly for origin)
   
   firstProf = profNames[ profOneId ]
   secondProf = profNames[ profTwoId ]
@@ -278,6 +278,7 @@ function Simulationcraft:PrintSimcProfile()
   playerRace = 'race=' .. tokenize(playerRace)
   playerRole = 'role=' .. translateRole(role)
   playerSpec = 'spec=' .. tokenize(playerSpec)
+  playerRealm = 'server=' .. tokenize(playerRealm)
   
   -- Talents and Glyphs more involved - methods to handle them
   local playerTalents = CreateSimcTalentString()
@@ -287,6 +288,7 @@ function Simulationcraft:PrintSimcProfile()
   local simulationcraftProfile = player .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerLevel .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerRace .. '\n'
+  simulationcraftProfile = simulationcraftProfile .. playerRealm .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerRole .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerProfessions .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerTalents .. '\n'
