@@ -1,5 +1,14 @@
 local _, Simulationcraft = ...
 
+-- regionID lookup
+Simulationcraft.RegionString = {
+  [1] = 'us',
+  [2] = 'kr',
+  [3] = 'eu',
+  [4] = 'tw',
+  [5] = 'cn'
+}
+
 -- non-localized profession names from ids
 Simulationcraft.ProfNames = {
   [129] = 'First Aid',

@@ -44,6 +44,7 @@ local simcSlotNames = Simulationcraft.simcSlotNames
 local enchantNames  = Simulationcraft.enchantNames
 local specNames     = Simulationcraft.SpecNames
 local profNames     = Simulationcraft.ProfNames
+local regionString  = Simulationcraft.RegionString
 
 -- error string
 local simc_err_str = ''
@@ -226,6 +227,7 @@ function Simulationcraft:PrintSimcProfile()
   local _, playerClass = UnitClass('player')
   local playerLevel = UnitLevel('player')
   local playerRealm = GetRealmName()
+  local playerRegion = regionString[GetCurrentRegion()]
   
   -- Race info
   local _, playerRace = UnitRace('player')
@@ -279,6 +281,7 @@ function Simulationcraft:PrintSimcProfile()
   playerRole = 'role=' .. translateRole(role)
   playerSpec = 'spec=' .. tokenize(playerSpec)
   playerRealm = 'server=' .. tokenize(playerRealm)
+  playerRegion = 'region=' .. tokenize(playerRegion)
   
   -- Talents and Glyphs more involved - methods to handle them
   local playerTalents = CreateSimcTalentString()
@@ -288,6 +291,7 @@ function Simulationcraft:PrintSimcProfile()
   local simulationcraftProfile = player .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerLevel .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerRace .. '\n'
+  simulationcraftProfile = simulationcraftProfile .. playerRegion .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerRealm .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerRole .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerProfessions .. '\n'
