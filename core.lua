@@ -9,8 +9,8 @@ local OFFSET_GEM_ID_2 = 4
 local OFFSET_GEM_ID_3 = 5
 local OFFSET_GEM_ID_4 = 6
 local OFFSET_SUFFIX_ID = 7
-local OFFSET_UPGRADE_ID = wowVersion >= 60000 and 10 or 11
-local OFFSET_HAS_BONUS = wowVersion >= 60000 and 12 or -1
+local OFFSET_UPGRADE_ID = wowVersion >= 60000 and 11 or 12
+local OFFSET_HAS_BONUS = wowVersion >= 60000 and 13 or -1
 
 
 -- Most of the guts of this addon were based on a variety of other ones, including
@@ -163,12 +163,14 @@ function Simulationcraft:GetItemStrings()
       local itemId = itemSplit[OFFSET_ITEM_ID]
       simcItemOptions[#simcItemOptions + 1] = ',id=' .. itemId
 
+	  
+
       -- Item upgrade level
       local upgradeId = itemSplit[OFFSET_UPGRADE_ID]
       local upgradeLevel = upgradeTable[tonumber(upgradeId)]
       if upgradeLevel == nil then
         upgradeLevel = 0
-        simc_err_str = simc_err_str + '\n # WARNING: upgradeLevel nil for upgradeId ' .. upgradeId .. ' in itemString ' .. itemString
+        --simc_err_str = simc_err_str .. '\n # WARNING: upgradeLevel nil for upgradeId ' .. upgradeId .. ' in itemString ' .. itemString
       end
       if tonumber(upgradeLevel) > 0 then
         simcItemOptions[#simcItemOptions + 1] = 'upgrade=' .. upgradeLevel
