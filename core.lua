@@ -9,8 +9,7 @@ local OFFSET_GEM_ID_2 = 4
 local OFFSET_GEM_ID_3 = 5
 local OFFSET_GEM_ID_4 = 6
 local OFFSET_SUFFIX_ID = 7
-local OFFSET_UPGRADE_ID = wowVersion >= 60000 and 11 or 12
-local OFFSET_HAS_BONUS = wowVersion >= 60000 and 13 or -1
+local OFFSET_BONUS_ID = 13
 
 
 -- Most of the guts of this addon were based on a variety of other ones, including
@@ -154,6 +153,7 @@ function Simulationcraft:GetItemStrings()
       local itemSplit = {}
       local simcItemOptions = {}
 
+
       -- Split data into a table
       for v in string.gmatch(itemString, "(%d+):?") do
         itemSplit[#itemSplit + 1] = v
@@ -163,10 +163,25 @@ function Simulationcraft:GetItemStrings()
       local itemId = itemSplit[OFFSET_ITEM_ID]
       simcItemOptions[#simcItemOptions + 1] = ',id=' .. itemId
 
-	  
+      -- New style item suffix, old suffix style not supported
+      if tonumber(itemSplit[OFFSET_SUFFIX_ID]) ~= 0 then
+        simcItemOptions[#simcItemOptions + 1] = 'suffix=' .. itemSplit[OFFSET_SUFFIX_ID]
+      end
 
-      -- Item upgrade level
-      local upgradeId = itemSplit[OFFSET_UPGRADE_ID]
+      -- Item bonuses (WoD only)
+      local hasBonus = itemSplit[OFFSET_BONUS_ID]
+      local bonuses = {}
+      if tonumber(hasBonus) > 0 then
+        for index=OFFSET_BONUS_ID + 1, OFFSET_BONUS_ID + tonumber(hasBonus) do
+          bonuses[#bonuses + 1] = itemSplit[index]
+        end
+        if #bonuses > 0 then
+          simcItemOptions[#simcItemOptions + 1] = 'bonus_id=' .. table.concat(bonuses, '/')
+        end
+      end
+
+	  -- Item upgrade level
+      local upgradeId = itemSplit[#itemSplit]
       local upgradeLevel = upgradeTable[tonumber(upgradeId)]
       if upgradeLevel == nil then
         upgradeLevel = 0
@@ -174,25 +189,6 @@ function Simulationcraft:GetItemStrings()
       end
       if tonumber(upgradeLevel) > 0 then
         simcItemOptions[#simcItemOptions + 1] = 'upgrade=' .. upgradeLevel
-      end
-
-      -- New style item suffix, old suffix style not supported
-      if tonumber(itemSplit[OFFSET_SUFFIX_ID]) ~= 0 then
-        simcItemOptions[#simcItemOptions + 1] = 'suffix=' .. itemSplit[OFFSET_SUFFIX_ID]
-      end
-
-      -- Item bonuses (WoD only)
-      if wowVersion >= 60000 then
-        local hasBonus = itemSplit[OFFSET_HAS_BONUS]
-        local bonuses = {}
-        if tonumber(hasBonus) > 0 then
-          for index=OFFSET_HAS_BONUS + 1, #itemSplit do
-            bonuses[#bonuses + 1] = itemSplit[index]
-          end
-          if #bonuses > 0 then
-            simcItemOptions[#simcItemOptions + 1] = 'bonus_id=' .. table.concat(bonuses, '/')
-          end
-        end
       end
 
       -- Gems
