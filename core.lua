@@ -11,7 +11,6 @@ local OFFSET_GEM_ID_4 = 6
 local OFFSET_SUFFIX_ID = 7
 local OFFSET_BONUS_ID = 13
 
-
 -- Most of the guts of this addon were based on a variety of other ones, including
 -- Statslog, AskMrRobot, and BonusScanner. And a bunch of hacking around with AceGUI.
 -- Many thanks to the authors of those addons, and to reia for fixing my awful amateur
@@ -22,10 +21,10 @@ function Simulationcraft:OnInitialize()
   AceConfig = LibStub("AceConfigDialog-3.0")
   LibStub("AceConfig-3.0"):RegisterOptionsTable("Simulationcraft", self:CreateOptions())
   AceConfig:AddToBlizOptions("Simulationcraft", "Simulationcraft")
-  Simulationcraft:RegisterChatCommand('simc', 'PrintSimcProfile')    
+  Simulationcraft:RegisterChatCommand('simc', 'PrintSimcProfile')
 end
 
-function Simulationcraft:OnEnable() 
+function Simulationcraft:OnEnable()
   SimulationcraftTooltip:SetOwner(_G["UIParent"],"ANCHOR_NONE")
 end
 
@@ -54,7 +53,7 @@ local SIMC_DEBUG = false
 -- debug function
 local function simcDebug( s )
   if SIMC_DEBUG then
-    print('debug: '.. tostring(s) )    
+    print('debug: '.. tostring(s) )
   end
 end
 
@@ -87,7 +86,7 @@ local function tokenize(str)
 end
 
 -- method for constructing the talent string
-local function CreateSimcTalentString() 
+local function CreateSimcTalentString()
   local talentInfo = {}
   local maxTiers = 7
   local maxColumns = 3
@@ -107,21 +106,9 @@ local function CreateSimcTalentString()
     else
       str = str .. '0'
     end
-  end     
+  end
 
   return str
-end
-
--- constructs glyph string from game's glyph info
-local function CreateSimcGlyphString()
-  local glyphs = {}
-  for i=1, NUM_GLYPH_SLOTS do
-    local _,_,_,spellid = GetGlyphSocketInfo(i, nil)
-    if (spellid) then
-      glyphs[#glyphs + 1] = spellid
-    end            
-  end
-  return 'glyphs=' .. table.concat(glyphs, '/')
 end
 
 -- function that translates between the game's role values and ours
@@ -139,7 +126,7 @@ local function translateRole(str)
 end
 
 
--- =================== Item Information ========================= 
+-- =================== Item Information =========================
 
 function Simulationcraft:GetItemStrings()
   local items = {}
@@ -149,14 +136,18 @@ function Simulationcraft:GetItemStrings()
 
     -- if we don't have an item link, we don't care
     if itemLink then
-      local itemString = string.match(itemLink, "item[%-?%d:]+")
+      local itemString = string.match(itemLink, "item:([%-?%d:]+)")
       local itemSplit = {}
       local simcItemOptions = {}
 
 
       -- Split data into a table
-      for v in string.gmatch(itemString, "(%d+):?") do
-        itemSplit[#itemSplit + 1] = v
+      for v in string.gmatch(itemString, "(%d*:)") do
+        if v == ":" then
+          itemSplit[#itemSplit + 1] = 0
+        else
+          itemSplit[#itemSplit + 1] = string.sub(v, 1, -2)
+        end
       end
 
       -- Item tokenized name
@@ -226,7 +217,7 @@ function Simulationcraft:PrintSimcProfile()
   local playerLevel = UnitLevel('player')
   local playerRealm = GetRealmName()
   local playerRegion = regionString[GetCurrentRegion()]
-  
+
   -- Race info
   local _, playerRace = UnitRace('player')
   -- fix some races to match SimC format
@@ -237,15 +228,15 @@ function Simulationcraft:PrintSimcProfile()
   elseif playerRace == 'Scourge' then --lulz
     playerRace = 'Undead'
   end
-  
+
   -- Spec info
   local role, globalSpecID
-  local specId = GetSpecialization()    
+  local specId = GetSpecialization()
   if specId then
     globalSpecID,_,_,_,_,role = GetSpecializationInfo(specId)
   end
   local playerSpec = specNames[ globalSpecID ]
-  
+
   -- Professions
   local pid1, pid2 = GetProfessions()
   local firstProf, firstProfRank, secondProf, secondProfRank, profOneId, profTwoId
@@ -255,10 +246,10 @@ function Simulationcraft:PrintSimcProfile()
   if pid2 then
     secondProf,_,secondProfRank,_,_,_,profTwoId = GetProfessionInfo(pid2)
   end
-  
+
   firstProf = profNames[ profOneId ]
   secondProf = profNames[ profTwoId ]
-  
+
   local playerProfessions = ''
   if pid1 or pid2 then
     playerProfessions = 'professions='
@@ -267,9 +258,9 @@ function Simulationcraft:PrintSimcProfile()
     end
     if pid2 then
       playerProfessions = playerProfessions..tokenize(secondProf)..'='..tostring(secondProfRank)
-    end  
+    end
   else
-    playerProfessions = ''    
+    playerProfessions = ''
   end
 
   -- Construct SimC-compatible strings from the basic information
@@ -280,10 +271,9 @@ function Simulationcraft:PrintSimcProfile()
   playerSpec = 'spec=' .. tokenize(playerSpec)
   playerRealm = 'server=' .. tokenize(playerRealm)
   playerRegion = 'region=' .. tokenize(playerRegion)
-  
-  -- Talents and Glyphs more involved - methods to handle them
+
+  -- Talents are more involved - method to handle them
   local playerTalents = CreateSimcTalentString()
-  local playerGlyphs  = CreateSimcGlyphString()
 
   -- Build the output string for the player (not including gear)
   local simulationcraftProfile = player .. '\n'
@@ -294,13 +284,12 @@ function Simulationcraft:PrintSimcProfile()
   simulationcraftProfile = simulationcraftProfile .. playerRole .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerProfessions .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerTalents .. '\n'
-  simulationcraftProfile = simulationcraftProfile .. playerGlyphs .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerSpec .. '\n\n'
 
   -- Method that gets gear information
   local items = Simulationcraft:GetItemStrings()
-  
-  -- output gear 
+
+  -- output gear
   for slotNum=1, #slotNames do
     if items[slotNum] then
       simulationcraftProfile = simulationcraftProfile .. items[slotNum] .. '\n'
@@ -313,7 +302,9 @@ function Simulationcraft:PrintSimcProfile()
   end
 
   -- append any error info
-  simulationcraftProfile = simulationcraftProfile .. '\n\n' ..simc_err_str
+  if simc_err_str ~= '' then
+      simulationcraftProfile = simulationcraftProfile .. '\n\n' ..simc_err_str
+  end
 
   -- show the appropriate frames
   SimcCopyFrame:Show()
@@ -321,5 +312,5 @@ function Simulationcraft:PrintSimcProfile()
   SimcCopyFrameScrollText:Show()
   SimcCopyFrameScrollText:SetText(simulationcraftProfile)
   SimcCopyFrameScrollText:HighlightText()
-  
+
 end
