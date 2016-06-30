@@ -9,6 +9,7 @@ local OFFSET_GEM_ID_2 = 4
 local OFFSET_GEM_ID_3 = 5
 local OFFSET_GEM_ID_4 = 6
 local OFFSET_SUFFIX_ID = 7
+local OFFSET_FLAGS = 11
 local OFFSET_BONUS_ID = 13
 
 -- Most of the guts of this addon were based on a variety of other ones, including
@@ -140,7 +141,6 @@ function Simulationcraft:GetItemStrings()
       local itemSplit = {}
       local simcItemOptions = {}
 
-
       -- Split data into a table
       for v in string.gmatch(itemString, "(%d*:)") do
         if v == ":" then
@@ -159,46 +159,73 @@ function Simulationcraft:GetItemStrings()
         simcItemOptions[#simcItemOptions + 1] = 'suffix=' .. itemSplit[OFFSET_SUFFIX_ID]
       end
 
-      -- Item bonuses (WoD only)
-      local hasBonus = itemSplit[OFFSET_BONUS_ID]
-      local bonuses = {}
-      if tonumber(hasBonus) > 0 then
-        for index=OFFSET_BONUS_ID + 1, OFFSET_BONUS_ID + tonumber(hasBonus) do
-          bonuses[#bonuses + 1] = itemSplit[index]
-        end
-        if #bonuses > 0 then
-          simcItemOptions[#simcItemOptions + 1] = 'bonus_id=' .. table.concat(bonuses, '/')
-        end
+      -- Enchant
+      if tonumber(itemSplit[OFFSET_ENCHANT_ID]) > 0 then
+        simcItemOptions[#simcItemOptions + 1] = 'enchant_id=' .. itemSplit[OFFSET_ENCHANT_ID]
       end
 
-	  -- Item upgrade level
-      local upgradeId = itemSplit[#itemSplit]
-      local upgradeLevel = upgradeTable[tonumber(upgradeId)]
-      if upgradeLevel == nil then
-        upgradeLevel = 0
-        --simc_err_str = simc_err_str .. '\n # WARNING: upgradeLevel nil for upgradeId ' .. upgradeId .. ' in itemString ' .. itemString
+      local bonuses = {}
+
+      for index=1, tonumber(itemSplit[OFFSET_BONUS_ID]) do
+        bonuses[#bonuses + 1] = itemSplit[OFFSET_BONUS_ID + index]
       end
-      if tonumber(upgradeLevel) > 0 then
-        simcItemOptions[#simcItemOptions + 1] = 'upgrade=' .. upgradeLevel
+
+      if #bonuses > 0 then
+        simcItemOptions[#simcItemOptions + 1] = 'bonus_id=' .. table.concat(bonuses, '/')
+      end
+
+      local rest = ''
+      local flags = tonumber(itemSplit[OFFSET_FLAGS])
+      local rest_offset = OFFSET_BONUS_ID + #bonuses + 1
+
+      -- Artifacts use this
+      if flags == 256 then
+        rest_offset = rest_offset + 1 -- An unknown field
+        local relic_str = ''
+        while rest_offset < #itemSplit do
+          local n_bonus_ids = tonumber(itemSplit[rest_offset])
+          rest_offset = rest_offset + 1
+
+          if n_bonus_ids == 0 then
+            relic_str = relic_str .. 0
+          else
+            for rbid = 1, n_bonus_ids do
+              relic_str = relic_str .. itemSplit[rest_offset]
+              if rbid < n_bonus_ids then
+                relic_str = relic_str .. ':'
+              end
+              rest_offset = rest_offset + 1
+            end
+          end
+
+          if rest_offset < #itemSplit then
+            relic_str = relic_str .. '/'
+          end
+        end
+
+        if relic_str ~= '' then
+          simcItemOptions[#simcItemOptions + 1] = 'relic_id=' .. relic_str
+        end
+      -- Some leveling quest items seem to use this, it'll include the drop level of the item
+      elseif flags == 512 then
+        simcItemOptions[#simcItemOptions + 1] = 'drop_level=' .. itemSplit[rest_offset]
+        rest_offset = rest_offset + 1
       end
 
       -- Gems
       local gems = {}
-      for i=1, 3 do -- hardcoded here to just grab all 3 sockets
+      for i=1, 4 do -- hardcoded here to just grab all 4 sockets
         local _,gemLink = GetItemGem(itemLink, i)
         if gemLink then
           local gemDetail = string.match(gemLink, "item[%-?%d:]+")
           gems[#gems + 1] = string.match(gemDetail, "item:(%d+):" )
+        elseif flags == 256 then
+          gems[#gems + 1] = "0"
         end
       end
       --simcDebug(#gems)
       if #gems > 0 then
         simcItemOptions[#simcItemOptions + 1] = 'gem_id=' .. table.concat(gems, '/')
-      end
-
-      -- Enchant
-      if tonumber(itemSplit[OFFSET_ENCHANT_ID]) > 0 then
-        simcItemOptions[#simcItemOptions + 1] = 'enchant_id=' .. itemSplit[OFFSET_ENCHANT_ID]
       end
 
       items[slotNum] = simcSlotNames[slotNum] .. "=" .. table.concat(simcItemOptions, ',')
