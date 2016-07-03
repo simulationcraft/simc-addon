@@ -142,11 +142,11 @@ function Simulationcraft:GetItemStrings()
       local simcItemOptions = {}
 
       -- Split data into a table
-      for v in string.gmatch(itemString, "(%d*:)") do
+      for v in string.gmatch(itemString, "(%d*:?)") do
         if v == ":" then
           itemSplit[#itemSplit + 1] = 0
         else
-          itemSplit[#itemSplit + 1] = string.sub(v, 1, -2)
+          itemSplit[#itemSplit + 1] = string.gsub(v, ':', '')
         end
       end
 
@@ -154,15 +154,17 @@ function Simulationcraft:GetItemStrings()
       local itemId = itemSplit[OFFSET_ITEM_ID]
       simcItemOptions[#simcItemOptions + 1] = ',id=' .. itemId
 
+      -- Enchant
+      if tonumber(itemSplit[OFFSET_ENCHANT_ID]) > 0 then
+        simcItemOptions[#simcItemOptions + 1] = 'enchant_id=' .. itemSplit[OFFSET_ENCHANT_ID]
+      end
+
       -- New style item suffix, old suffix style not supported
       if tonumber(itemSplit[OFFSET_SUFFIX_ID]) ~= 0 then
         simcItemOptions[#simcItemOptions + 1] = 'suffix=' .. itemSplit[OFFSET_SUFFIX_ID]
       end
 
-      -- Enchant
-      if tonumber(itemSplit[OFFSET_ENCHANT_ID]) > 0 then
-        simcItemOptions[#simcItemOptions + 1] = 'enchant_id=' .. itemSplit[OFFSET_ENCHANT_ID]
-      end
+      local flags = tonumber(itemSplit[OFFSET_FLAGS])
 
       local bonuses = {}
 
@@ -174,8 +176,6 @@ function Simulationcraft:GetItemStrings()
         simcItemOptions[#simcItemOptions + 1] = 'bonus_id=' .. table.concat(bonuses, '/')
       end
 
-      local rest = ''
-      local flags = tonumber(itemSplit[OFFSET_FLAGS])
       local rest_offset = OFFSET_BONUS_ID + #bonuses + 1
 
       -- Artifacts use this
