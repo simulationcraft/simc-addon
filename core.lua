@@ -19,9 +19,6 @@ local OFFSET_BONUS_ID = 13
 
 function Simulationcraft:OnInitialize()
   self.db = LibStub('AceDB-3.0'):New('SimulationcraftDB', self:CreateDefaults(), true)
-  AceConfig = LibStub("AceConfigDialog-3.0")
-  LibStub("AceConfig-3.0"):RegisterOptionsTable("Simulationcraft", self:CreateOptions())
-  AceConfig:AddToBlizOptions("Simulationcraft", "Simulationcraft")
   Simulationcraft:RegisterChatCommand('simc', 'PrintSimcProfile')
 end
 

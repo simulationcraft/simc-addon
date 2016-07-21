@@ -1,9 +1,16 @@
-## Interface: 60200
+## Interface: 70000
 ## Title: Simulationcraft
 ## Notes: Constructs SimC export strings
 ## Author: Theck
 ## SavedVariables: SimulationcraftDB
-## Version: 1.2.2
+## Version: 1.4.0
+
+libs\LibStub\LibStub.lua
+libs\AceAddon-3.0\AceAddon-3.0.xml
+libs\AceConsole-3.0\AceConsole-3.0.xml
+libs\AceConfig-3.0\AceConfig-3.0.xml
+libs\AceDB-3.0\AceDB-3.0.xml
+libs\AceLocale-3.0\AceLocale-3.0.xml
 
 embeds.xml
 

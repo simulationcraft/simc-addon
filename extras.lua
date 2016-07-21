@@ -34,6 +34,9 @@ Simulationcraft.SpecNames = {
   [250] = 'Blood',
   [251] = 'Frost',
   [252] = 'Unholy',
+-- Demon Hunter
+  [577] = 'Havoc',
+  [581] = 'Vengeance',
 -- Druid 
   [102] = 'Balance',
   [103] = 'Feral',
