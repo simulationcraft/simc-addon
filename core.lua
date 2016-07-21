@@ -11,6 +11,7 @@ local OFFSET_GEM_ID_4 = 6
 local OFFSET_SUFFIX_ID = 7
 local OFFSET_FLAGS = 11
 local OFFSET_BONUS_ID = 13
+local OFFSET_UPGRADE_ID = 14 -- Flags = 0x4
 
 -- Most of the guts of this addon were based on a variety of other ones, including
 -- Statslog, AskMrRobot, and BonusScanner. And a bunch of hacking around with AceGUI.
@@ -175,8 +176,17 @@ function Simulationcraft:GetItemStrings()
 
       local rest_offset = OFFSET_BONUS_ID + #bonuses + 1
 
+      -- Upgrade level
+      if bit.band(flags, 4) == 4 then
+        local upgrade_id = tonumber(itemSplit[rest_offset])
+        if self.upgradeTable[upgrade_id] ~= nil and self.upgradeTable[upgrade_id] > 0 then
+          simcItemOptions[#simcItemOptions + 1] = 'upgrade=' .. self.upgradeTable[upgrade_id]
+        end
+        rest_offset = rest_offset + 1
+      end
+
       -- Artifacts use this
-      if flags == 256 then
+      if bit.band(flags, 256) == 256 then
         rest_offset = rest_offset + 1 -- An unknown field
         local relic_str = ''
         while rest_offset < #itemSplit do
@@ -203,8 +213,10 @@ function Simulationcraft:GetItemStrings()
         if relic_str ~= '' then
           simcItemOptions[#simcItemOptions + 1] = 'relic_id=' .. relic_str
         end
+      end
+
       -- Some leveling quest items seem to use this, it'll include the drop level of the item
-      elseif flags == 512 then
+      if bit.band(flags, 512) == 512 then
         simcItemOptions[#simcItemOptions + 1] = 'drop_level=' .. itemSplit[rest_offset]
         rest_offset = rest_offset + 1
       end
