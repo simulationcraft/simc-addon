@@ -3,7 +3,7 @@
 ## Notes: Constructs SimC export strings
 ## Author: Theck
 ## SavedVariables: SimulationcraftDB
-## Version: 1.4.0
+## Version: 1.4.1
 ## OptionalDependencies: Ace3
 
 libs\LibStub\LibStub.lua
