@@ -64,7 +64,7 @@ Simulationcraft.SpecNames = {
   [258] = 'Shadow',
 -- Rogue 
   [259] = 'Assassination',
-  [260] = 'Combat',
+  [260] = 'Outlaw',
   [261] = 'Subtlety',
 -- Shaman 
   [262] = 'Elemental',
