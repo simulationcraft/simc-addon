@@ -1,24 +1,19 @@
 ## Interface: 70000
 ## Title: Simulationcraft
 ## Notes: Constructs SimC export strings
-## Author: Theck
-## SavedVariables: SimulationcraftDB
-## Version: 1.4.1
-## OptionalDependencies: Ace3
+## Author: Theck, navv_
+## Version: 1.5.0
+## OptionalDependencies: Ace3, LibArtifactData-1.0
 
 libs\LibStub\LibStub.lua
-libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
-libs\AceEvent-3.0\AceEvent-3.0.xml
+libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+#@no-lib-strip@
 libs\AceAddon-3.0\AceAddon-3.0.xml
 libs\AceConsole-3.0\AceConsole-3.0.xml
-libs\AceConfig-3.0\AceConfig-3.0.xml
-libs\AceDB-3.0\AceDB-3.0.xml
-libs\AceLocale-3.0\AceLocale-3.0.xml
+libs\LibArtifactData-1.0\LibArtifactData-1.0.lua
+#@end-no-lib-strip@
 
 embeds.xml
 
-defaults.lua
-locales\enUS.lua
-options.lua
 extras.lua
 core.lua

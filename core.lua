@@ -2,6 +2,10 @@ local _, Simulationcraft = ...
 
 local wowVersion = select(4, GetBuildInfo())
 
+Simulationcraft = LibStub("AceAddon-3.0"):NewAddon(Simulationcraft, "Simulationcraft", "AceConsole-3.0")
+
+local LAD = LibStub("LibArtifactData-1.0")
+
 local OFFSET_ITEM_ID = 1
 local OFFSET_ENCHANT_ID = 2
 local OFFSET_GEM_ID_1 = 3
@@ -13,14 +17,34 @@ local OFFSET_FLAGS = 11
 local OFFSET_BONUS_ID = 13
 local OFFSET_UPGRADE_ID = 14 -- Flags = 0x4
 
+local equippedArtifactId = 0
+
+-- load stuff from extras.lua
+local upgradeTable  = Simulationcraft.upgradeTable
+local slotNames     = Simulationcraft.slotNames
+local simcSlotNames = Simulationcraft.simcSlotNames
+local specNames     = Simulationcraft.SpecNames
+local profNames     = Simulationcraft.ProfNames
+local regionString  = Simulationcraft.RegionString
+local artifactTable = Simulationcraft.ArtifactTable
+
 -- Most of the guts of this addon were based on a variety of other ones, including
 -- Statslog, AskMrRobot, and BonusScanner. And a bunch of hacking around with AceGUI.
 -- Many thanks to the authors of those addons, and to reia for fixing my awful amateur
 -- coding mistakes regarding objects and namespaces.
 
 function Simulationcraft:OnInitialize()
-  self.db = LibStub('AceDB-3.0'):New('SimulationcraftDB', self:CreateDefaults(), true)
   Simulationcraft:RegisterChatCommand('simc', 'PrintSimcProfile')
+  LAD.RegisterCallback(Simulationcraft, "ARTIFACT_ADDED")
+  self.loaded = false
+  self.deferred = false
+
+  -- Figure out if the user has an artifact equipped at all
+  local slotId = GetInventorySlotInfo("MainHandSlot")
+  local itemId = GetInventoryItemID("player", slotId)
+  if artifactTable[itemId] ~= nil then
+    equippedArtifactId = itemId
+  end
 end
 
 function Simulationcraft:OnEnable()
@@ -31,28 +55,14 @@ function Simulationcraft:OnDisable()
 
 end
 
-local L = LibStub("AceLocale-3.0"):GetLocale("Simulationcraft")
+function Simulationcraft:ARTIFACT_ADDED(message, artifactID)
+  if artifactID == equippedArtifactId then
+    self.loaded = true
+  end
 
--- load stuff from extras.lua
-local SimcStatAbbr  = Simulationcraft.SimcStatAbbr
-local upgradeTable  = Simulationcraft.upgradeTable
-local slotNames     = Simulationcraft.slotNames
-local simcSlotNames = Simulationcraft.simcSlotNames
-local enchantNames  = Simulationcraft.enchantNames
-local specNames     = Simulationcraft.SpecNames
-local profNames     = Simulationcraft.ProfNames
-local regionString  = Simulationcraft.RegionString
-
--- error string
-local simc_err_str = ''
-
--- debug flag
-local SIMC_DEBUG = false
-
--- debug function
-local function simcDebug( s )
-  if SIMC_DEBUG then
-    print('debug: '.. tostring(s) )
+  if self.loaded and self.deferred then
+    C_Timer.After(0, function() self:PrintSimcProfile() end)
+    self.deferred = false
   end
 end
 
@@ -93,7 +103,7 @@ local function CreateSimcTalentString()
     for column = 1, maxColumns do
       local talentID, name, iconTexture, selected, available = GetTalentInfo(tier, column, GetActiveSpecGroup())
       if selected then
-    talentInfo[tier] = column
+        talentInfo[tier] = column
       end
     end
   end
@@ -121,9 +131,39 @@ local function translateRole(str)
   else
     return ''
   end
-
 end
 
+-- ================= Artifact Information =======================
+
+function Simulationcraft:GetArtifactString()
+  if not self.loaded or LAD:GetNumObtainedArtifacts() == 0 then
+    return nil
+  end
+
+  local id, data = LAD:GetArtifactInfo(LAD:GetActiveArtifactID())
+  local artifact_id = artifactTable[id]
+  if artifact_id == nil then
+    return nil
+  end
+
+  -- Note, relics are handled by the item string
+  local str = 'artifact=' .. artifact_id .. ':0:0:0:0'
+  if #data.traits > 0 then
+    str = str .. ':'
+  end
+
+  for index, trait in ipairs(data.traits) do
+    -- Only give the base ranks here, relic handling (from item strings) will increase the trait
+    -- levels to correct values
+    str = str .. trait.traitID .. ':' .. (trait.currentRank - trait.bonusRanks)
+
+    if index < #data.traits then
+      str = str .. ':'
+    end
+  end
+
+  return str
+end
 
 -- =================== Item Information =========================
 
@@ -148,7 +188,7 @@ function Simulationcraft:GetItemStrings()
         end
       end
 
-      -- Item tokenized name
+      -- Item id
       local itemId = itemSplit[OFFSET_ITEM_ID]
       simcItemOptions[#simcItemOptions + 1] = ',id=' .. itemId
 
@@ -232,7 +272,6 @@ function Simulationcraft:GetItemStrings()
           gems[#gems + 1] = "0"
         end
       end
-      --simcDebug(#gems)
       if #gems > 0 then
         simcItemOptions[#simcItemOptions + 1] = 'gem_id=' .. table.concat(gems, '/')
       end
@@ -246,6 +285,11 @@ end
 
 -- This is the workhorse function that constructs the profile
 function Simulationcraft:PrintSimcProfile()
+  if equippedArtifactId > 0 and not self.loaded then
+    print("Simulationcraft: Artifact information not loaded yet .. waiting")
+    self.deferred = true
+    return
+  end
 
   -- Basic player info
   local playerName = UnitName('player')
@@ -310,6 +354,7 @@ function Simulationcraft:PrintSimcProfile()
 
   -- Talents are more involved - method to handle them
   local playerTalents = CreateSimcTalentString()
+  local playerArtifact = self:GetArtifactString()
 
   -- Build the output string for the player (not including gear)
   local simulationcraftProfile = player .. '\n'
@@ -320,7 +365,11 @@ function Simulationcraft:PrintSimcProfile()
   simulationcraftProfile = simulationcraftProfile .. playerRole .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerProfessions .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerTalents .. '\n'
-  simulationcraftProfile = simulationcraftProfile .. playerSpec .. '\n\n'
+  simulationcraftProfile = simulationcraftProfile .. playerSpec .. '\n'
+  if playerArtifact ~= nil then
+    simulationcraftProfile = simulationcraftProfile .. playerArtifact .. '\n'
+  end
+  simulationcraftProfile = simulationcraftProfile .. '\n'
 
   -- Method that gets gear information
   local items = Simulationcraft:GetItemStrings()
@@ -337,16 +386,10 @@ function Simulationcraft:PrintSimcProfile()
     simulationcraftProfile = "Error: You need to pick a spec!"
   end
 
-  -- append any error info
-  if simc_err_str ~= '' then
-      simulationcraftProfile = simulationcraftProfile .. '\n\n' ..simc_err_str
-  end
-
   -- show the appropriate frames
   SimcCopyFrame:Show()
   SimcCopyFrameScroll:Show()
   SimcCopyFrameScrollText:Show()
   SimcCopyFrameScrollText:SetText(simulationcraftProfile)
   SimcCopyFrameScrollText:HighlightText()
-
 end
