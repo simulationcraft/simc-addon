@@ -148,18 +148,15 @@ function Simulationcraft:GetArtifactString()
 
   -- Note, relics are handled by the item string
   local str = 'artifact=' .. artifact_id .. ':0:0:0:0'
-  if #data.traits > 0 then
-    str = str .. ':'
-  end
 
   for index, trait in ipairs(data.traits) do
-    -- Only give the base ranks here, relic handling (from item strings) will increase the trait
-    -- levels to correct values
-    str = str .. trait.traitID .. ':' .. (trait.currentRank - trait.bonusRanks)
-
-    if index < #data.traits then
+    if trait.currentRank - trait.bonusRanks > 0 then
       str = str .. ':'
-    end
+
+      -- Only give the base ranks here, relic handling (from item strings) will increase the trait
+      -- levels to correct values
+      str = str .. trait.traitID .. ':' .. (trait.currentRank - trait.bonusRanks)
+     end
   end
 
   return str
