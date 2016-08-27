@@ -2,7 +2,7 @@ local _, Simulationcraft = ...
 
 local wowVersion = select(4, GetBuildInfo())
 
-Simulationcraft = LibStub("AceAddon-3.0"):NewAddon(Simulationcraft, "Simulationcraft", "AceConsole-3.0")
+Simulationcraft = LibStub("AceAddon-3.0"):NewAddon(Simulationcraft, "Simulationcraft", "AceConsole-3.0", "AceEvent-3.0")
 
 local LAD = LibStub("LibArtifactData-1.0")
 
@@ -39,12 +39,17 @@ function Simulationcraft:OnInitialize()
   self.loaded = false
   self.deferred = false
 
+  self:RegisterEvent('PLAYER_ENTERING_WORLD', self.OnEnteringWorld, self)
+end
+
+function Simulationcraft:OnEnteringWorld()
   -- Figure out if the user has an artifact equipped at all
   local slotId = GetInventorySlotInfo("MainHandSlot")
   local itemId = GetInventoryItemID("player", slotId)
   if artifactTable[itemId] ~= nil then
     equippedArtifactId = itemId
   end
+  self:UnregisterEvent('PLAYER_ENTERING_WORLD')
 end
 
 function Simulationcraft:OnEnable()
