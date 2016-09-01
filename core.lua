@@ -1,10 +1,6 @@
 local _, Simulationcraft = ...
 
-local wowVersion = select(4, GetBuildInfo())
-
 Simulationcraft = LibStub("AceAddon-3.0"):NewAddon(Simulationcraft, "Simulationcraft", "AceConsole-3.0", "AceEvent-3.0")
-
-local LAD = LibStub("LibArtifactData-1.0")
 
 local OFFSET_ITEM_ID = 1
 local OFFSET_ENCHANT_ID = 2
@@ -17,7 +13,11 @@ local OFFSET_FLAGS = 11
 local OFFSET_BONUS_ID = 13
 local OFFSET_UPGRADE_ID = 14 -- Flags = 0x4
 
-local equippedArtifactId = 0
+-- Artifact stuff (adapted from LibArtifactData [https://www.wowace.com/addons/libartifactdata-1-0/], thanks!)
+local ArtifactUI          = _G.C_ArtifactUI
+local HasArtifactEquipped = _G.HasArtifactEquipped
+local SocketInventoryItem = _G.SocketInventoryItem
+local Timer               = _G.C_Timer
 
 -- load stuff from extras.lua
 local upgradeTable  = Simulationcraft.upgradeTable
@@ -35,21 +35,6 @@ local artifactTable = Simulationcraft.ArtifactTable
 
 function Simulationcraft:OnInitialize()
   Simulationcraft:RegisterChatCommand('simc', 'PrintSimcProfile')
-  LAD.RegisterCallback(Simulationcraft, "ARTIFACT_ADDED")
-  self.loaded = false
-  self.deferred = false
-
-  self:RegisterEvent('PLAYER_ENTERING_WORLD', self.OnEnteringWorld, self)
-end
-
-function Simulationcraft:OnEnteringWorld()
-  -- Figure out if the user has an artifact equipped at all
-  local slotId = GetInventorySlotInfo("MainHandSlot")
-  local itemId = GetInventoryItemID("player", slotId)
-  if artifactTable[itemId] ~= nil then
-    equippedArtifactId = itemId
-  end
-  self:UnregisterEvent('PLAYER_ENTERING_WORLD')
 end
 
 function Simulationcraft:OnEnable()
@@ -58,17 +43,6 @@ end
 
 function Simulationcraft:OnDisable()
 
-end
-
-function Simulationcraft:ARTIFACT_ADDED(message, artifactID)
-  if artifactID == equippedArtifactId then
-    self.loaded = true
-  end
-
-  if self.loaded and self.deferred then
-    C_Timer.After(0, function() self:PrintSimcProfile() end)
-    self.deferred = false
-  end
 end
 
 -- SimC tokenize function
@@ -140,13 +114,52 @@ end
 
 -- ================= Artifact Information =======================
 
+local function Prepare()
+  local ArtifactFrame = _G.ArtifactFrame
+
+  if not ArtifactFrame or not ArtifactFrame:IsShown() then
+    _G.UIParent:UnregisterEvent("ARTIFACT_UPDATE")
+    if ArtifactFrame then
+      ArtifactFrame:UnregisterEvent("ARTIFACT_UPDATE")
+    end
+  end
+end
+
+local function Restore()
+  local ArtifactFrame = _G.ArtifactFrame
+
+  if not ArtifactFrame or not ArtifactFrame:IsShown() then
+    ArtifactUI.Clear()
+    if ArtifactFrame then
+      ArtifactFrame:RegisterEvent("ARTIFACT_UPDATE")
+    end
+    _G.UIParent:RegisterEvent("ARTIFACT_UPDATE")
+  end
+end
+
+local function IsArtifactFrameOpen()
+  local ArtifactFrame = _G.ArtifactFrame
+  return ArtifactFrame and ArtifactFrame:IsShown() or false
+end
+
 function Simulationcraft:GetArtifactString()
-  if not self.loaded or LAD:GetNumObtainedArtifacts() == 0 then
+  if not HasArtifactEquipped() then
     return nil
   end
 
-  local id, data = LAD:GetArtifactInfo(LAD:GetActiveArtifactID())
-  local artifact_id = artifactTable[id]
+  local ui_open = IsArtifactFrameOpen()
+  -- Artifact UI is not open, so disable events from it while we do our thing
+  if not ui_open then
+    Prepare()
+    SocketInventoryItem(INVSLOT_MAINHAND)
+  end
+
+  local item_id = select(1, ArtifactUI.GetArtifactInfo())
+  if item_id == nil or item_id == 0 then
+    return nil
+  end
+
+  local artifact_id = self.ArtifactTable[item_id]
   if artifact_id == nil then
     return nil
   end
@@ -154,14 +167,19 @@ function Simulationcraft:GetArtifactString()
   -- Note, relics are handled by the item string
   local str = 'artifact=' .. artifact_id .. ':0:0:0:0'
 
-  for index, trait in ipairs(data.traits) do
-    if trait.currentRank - trait.bonusRanks > 0 then
-      str = str .. ':'
+  local powers = ArtifactUI.GetPowers()
+  for i = 1, #powers do
+    local power_id = powers[i]
+    local _, _, currentRank, _, bonusRanks = ArtifactUI.GetPowerInfo(power_id)
+    if currentRank > 0 and currentRank - bonusRanks > 0 then
+      str = str .. ':' .. power_id .. ':' .. (currentRank - bonusRanks)
+    end
+  end
 
-      -- Only give the base ranks here, relic handling (from item strings) will increase the trait
-      -- levels to correct values
-      str = str .. trait.traitID .. ':' .. (trait.currentRank - trait.bonusRanks)
-     end
+  -- Artifact UI was not open, so close the UI and restore events to it
+  if not ui_open then
+    ArtifactUI.Clear()
+    Restore()
   end
 
   return str
@@ -287,12 +305,6 @@ end
 
 -- This is the workhorse function that constructs the profile
 function Simulationcraft:PrintSimcProfile()
-  if equippedArtifactId > 0 and not self.loaded then
-    print("Simulationcraft: Artifact information not loaded yet .. waiting")
-    self.deferred = true
-    return
-  end
-
   -- Basic player info
   local playerName = UnitName('player')
   local _, playerClass = UnitClass('player')
