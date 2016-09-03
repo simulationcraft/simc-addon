@@ -114,29 +114,6 @@ end
 
 -- ================= Artifact Information =======================
 
-local function Prepare()
-  local ArtifactFrame = _G.ArtifactFrame
-
-  if not ArtifactFrame or not ArtifactFrame:IsShown() then
-    _G.UIParent:UnregisterEvent("ARTIFACT_UPDATE")
-    if ArtifactFrame then
-      ArtifactFrame:UnregisterEvent("ARTIFACT_UPDATE")
-    end
-  end
-end
-
-local function Restore()
-  local ArtifactFrame = _G.ArtifactFrame
-
-  if not ArtifactFrame or not ArtifactFrame:IsShown() then
-    ArtifactUI.Clear()
-    if ArtifactFrame then
-      ArtifactFrame:RegisterEvent("ARTIFACT_UPDATE")
-    end
-    _G.UIParent:RegisterEvent("ARTIFACT_UPDATE")
-  end
-end
-
 local function IsArtifactFrameOpen()
   local ArtifactFrame = _G.ArtifactFrame
   return ArtifactFrame and ArtifactFrame:IsShown() or false
@@ -147,10 +124,7 @@ function Simulationcraft:GetArtifactString()
     return nil
   end
 
-  local ui_open = IsArtifactFrameOpen()
-  -- Artifact UI is not open, so disable events from it while we do our thing
-  if not ui_open then
-    Prepare()
+  if not IsArtifactFrameOpen() then
     SocketInventoryItem(INVSLOT_MAINHAND)
   end
 
@@ -174,12 +148,6 @@ function Simulationcraft:GetArtifactString()
     if currentRank > 0 and currentRank - bonusRanks > 0 then
       str = str .. ':' .. power_id .. ':' .. (currentRank - bonusRanks)
     end
-  end
-
-  -- Artifact UI was not open, so close the UI and restore events to it
-  if not ui_open then
-    ArtifactUI.Clear()
-    Restore()
   end
 
   return str
