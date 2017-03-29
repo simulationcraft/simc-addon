@@ -373,6 +373,7 @@ function Simulationcraft:PrintSimcProfile()
     simulationcraftProfile = "Error: You need to pick a spec!"
   end
 
+  HideUIPanel(ArtifactFrame)
   -- show the appropriate frames
   SimcCopyFrame:Show()
   SimcCopyFrameScroll:Show()
