@@ -205,7 +205,7 @@ function Simulationcraft:GetItemStrings()
       local rest_offset = OFFSET_BONUS_ID + #bonuses + 1
 
       -- Upgrade level
-      if bit.band(flags, 4) == 4 then
+      if bit.band(flags, 0x4) == 0x4 then
         local upgrade_id = tonumber(itemSplit[rest_offset])
         if self.upgradeTable[upgrade_id] ~= nil and self.upgradeTable[upgrade_id] > 0 then
           simcItemOptions[#simcItemOptions + 1] = 'upgrade=' .. self.upgradeTable[upgrade_id]
@@ -214,8 +214,13 @@ function Simulationcraft:GetItemStrings()
       end
 
       -- Artifacts use this
-      if bit.band(flags, 256) == 256 then
+      if bit.band(flags, 0x100) == 0x100 then
         rest_offset = rest_offset + 1 -- An unknown field
+        -- 7.2 added a new field to the item string if additional trait ranks are attained
+        -- for the artifact.
+        if bit.band(flags, 0x1000000) == 0x1000000 then
+          rest_offset = rest_offset + 1
+        end
         local relic_str = ''
         while rest_offset < #itemSplit do
           local n_bonus_ids = tonumber(itemSplit[rest_offset])
@@ -244,7 +249,7 @@ function Simulationcraft:GetItemStrings()
       end
 
       -- Some leveling quest items seem to use this, it'll include the drop level of the item
-      if bit.band(flags, 512) == 512 then
+      if bit.band(flags, 0x200) == 0x200 then
         simcItemOptions[#simcItemOptions + 1] = 'drop_level=' .. itemSplit[rest_offset]
         rest_offset = rest_offset + 1
       end
@@ -256,7 +261,7 @@ function Simulationcraft:GetItemStrings()
         if gemLink then
           local gemDetail = string.match(gemLink, "item[%-?%d:]+")
           gems[#gems + 1] = string.match(gemDetail, "item:(%d+):" )
-        elseif flags == 256 then
+        elseif bit.band(flags, 0x100) == 0x100 then
           gems[#gems + 1] = "0"
         end
       end
