@@ -100,13 +100,18 @@ local function CreateSimcTalentString()
 end
 
 -- function that translates between the game's role values and ours
-local function translateRole(str)
+local function translateRole(spec_id, str)
+  local spec_role = Simulationcraft.RoleTable[spec_id]
+  if spec_role ~= nil then
+    return spec_role
+  end
+
   if str == 'TANK' then
-    return tokenize(str)
+    return 'tank'
   elseif str == 'DAMAGER' then
     return 'attack'
   elseif str == 'HEALER' then
-    return 'healer'
+    return 'heal'
   else
     return ''
   end
@@ -334,7 +339,7 @@ function Simulationcraft:PrintSimcProfile()
   local player = tokenize(playerClass) .. '="' .. playerName .. '"'
   playerLevel = 'level=' .. playerLevel
   playerRace = 'race=' .. tokenize(playerRace)
-  playerRole = 'role=' .. translateRole(role)
+  playerRole = 'role=' .. translateRole(globalSpecID, role)
   playerSpec = 'spec=' .. tokenize(playerSpec)
   playerRealm = 'server=' .. tokenize(playerRealm)
   playerRegion = 'region=' .. tokenize(playerRegion)
