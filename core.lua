@@ -145,7 +145,7 @@ function Simulationcraft:GetArtifactString()
   for i = 1, #powers do
     local power_id = powers[i]
     local power_info = ArtifactUI.GetPowerInfo(power_id)
-    if power_info.currentRank > 0 and power_info.currentRank - power_info.bonusRanks > 0 then
+    if power_info ~= nil and power_info.currentRank > 0 and power_info.currentRank - power_info.bonusRanks > 0 then
       str = str .. ':' .. power_id .. ':' .. (power_info.currentRank - power_info.bonusRanks)
     end
   end
