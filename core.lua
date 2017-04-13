@@ -129,7 +129,8 @@ function Simulationcraft:GetArtifactString()
     return nil
   end
 
-  if not IsArtifactFrameOpen() then
+  local artifactFrameOpen = IsArtifactFrameOpen()
+  if artifactFrameOpen then
     SocketInventoryItem(INVSLOT_MAINHAND)
   end
 
@@ -153,6 +154,10 @@ function Simulationcraft:GetArtifactString()
     if power_info ~= nil and power_info.currentRank > 0 and power_info.currentRank - power_info.bonusRanks > 0 then
       str = str .. ':' .. power_id .. ':' .. (power_info.currentRank - power_info.bonusRanks)
     end
+  end
+
+  if not artifactFrameOpen then
+    HideUIPanel(ArtifactFrame)
   end
 
   return str
@@ -378,7 +383,6 @@ function Simulationcraft:PrintSimcProfile()
     simulationcraftProfile = "Error: You need to pick a spec!"
   end
 
-  HideUIPanel(ArtifactFrame)
   -- show the appropriate frames
   SimcCopyFrame:Show()
   SimcCopyFrameScroll:Show()
