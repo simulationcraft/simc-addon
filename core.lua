@@ -130,7 +130,7 @@ function Simulationcraft:GetArtifactString()
   end
 
   local artifactFrameOpen = IsArtifactFrameOpen()
-  if artifactFrameOpen then
+  if not artifactFrameOpen then
     SocketInventoryItem(INVSLOT_MAINHAND)
   end
 
