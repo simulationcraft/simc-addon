@@ -165,6 +165,115 @@ end
 
 -- =================== Item Information =========================
 
+local function GetItemStringFromItemLink(slotNum, itemLink)
+  local itemString = string.match(itemLink, "item:([%-?%d:]+)")
+  local itemSplit = {}
+  local simcItemOptions = {}
+
+  -- Split data into a table
+  for v in string.gmatch(itemString, "(%d*:?)") do
+    if v == ":" then
+      itemSplit[#itemSplit + 1] = 0
+    else
+      itemSplit[#itemSplit + 1] = string.gsub(v, ':', '')
+    end
+  end
+
+  -- Item id
+  local itemId = itemSplit[OFFSET_ITEM_ID]
+  simcItemOptions[#simcItemOptions + 1] = ',id=' .. itemId
+
+  -- Enchant
+  if tonumber(itemSplit[OFFSET_ENCHANT_ID]) > 0 then
+    simcItemOptions[#simcItemOptions + 1] = 'enchant_id=' .. itemSplit[OFFSET_ENCHANT_ID]
+  end
+
+  -- New style item suffix, old suffix style not supported
+  if tonumber(itemSplit[OFFSET_SUFFIX_ID]) ~= 0 then
+    simcItemOptions[#simcItemOptions + 1] = 'suffix=' .. itemSplit[OFFSET_SUFFIX_ID]
+  end
+
+  local flags = tonumber(itemSplit[OFFSET_FLAGS])
+
+  local bonuses = {}
+
+  for index=1, tonumber(itemSplit[OFFSET_BONUS_ID]) do
+    bonuses[#bonuses + 1] = itemSplit[OFFSET_BONUS_ID + index]
+  end
+
+  if #bonuses > 0 then
+    simcItemOptions[#simcItemOptions + 1] = 'bonus_id=' .. table.concat(bonuses, '/')
+  end
+
+  local rest_offset = OFFSET_BONUS_ID + #bonuses + 1
+
+  -- Upgrade level
+  if bit.band(flags, 0x4) == 0x4 then
+    local upgrade_id = tonumber(itemSplit[rest_offset])
+    if self and self.upgradeTable and self.upgradeTable[upgrade_id] ~= nil and self.upgradeTable[upgrade_id] > 0 then
+      simcItemOptions[#simcItemOptions + 1] = 'upgrade=' .. self.upgradeTable[upgrade_id]
+    end
+    rest_offset = rest_offset + 1
+  end
+
+  -- Artifacts use this
+  if bit.band(flags, 0x100) == 0x100 then
+    rest_offset = rest_offset + 1 -- An unknown field
+    -- 7.2 added a new field to the item string if additional trait ranks are attained
+    -- for the artifact.
+    if bit.band(flags, 0x1000000) == 0x1000000 then
+      rest_offset = rest_offset + 1
+    end
+    local relic_str = ''
+    while rest_offset < #itemSplit do
+      local n_bonus_ids = tonumber(itemSplit[rest_offset])
+      rest_offset = rest_offset + 1
+
+      if n_bonus_ids == 0 then
+        relic_str = relic_str .. 0
+      else
+        for rbid = 1, n_bonus_ids do
+          relic_str = relic_str .. itemSplit[rest_offset]
+          if rbid < n_bonus_ids then
+            relic_str = relic_str .. ':'
+          end
+          rest_offset = rest_offset + 1
+        end
+      end
+
+      if rest_offset < #itemSplit then
+        relic_str = relic_str .. '/'
+      end
+    end
+
+    if relic_str ~= '' then
+      simcItemOptions[#simcItemOptions + 1] = 'relic_id=' .. relic_str
+    end
+  end
+
+  -- Some leveling quest items seem to use this, it'll include the drop level of the item
+  if bit.band(flags, 0x200) == 0x200 then
+    simcItemOptions[#simcItemOptions + 1] = 'drop_level=' .. itemSplit[rest_offset]
+    rest_offset = rest_offset + 1
+  end
+
+  -- Gems
+  local gems = {}
+  for i=1, 4 do -- hardcoded here to just grab all 4 sockets
+    local _,gemLink = GetItemGem(itemLink, i)
+    if gemLink then
+      local gemDetail = string.match(gemLink, "item[%-?%d:]+")
+      gems[#gems + 1] = string.match(gemDetail, "item:(%d+):" )
+    elseif bit.band(flags, 0x100) == 0x100 then
+      gems[#gems + 1] = "0"
+    end
+  end
+  if #gems > 0 then
+    simcItemOptions[#simcItemOptions + 1] = 'gem_id=' .. table.concat(gems, '/')
+  end
+  return simcSlotNames[slotNum] .. "=" .. table.concat(simcItemOptions, ',')
+end
+
 function Simulationcraft:GetItemStrings()
   local items = {}
   for slotNum=1, #slotNames do
@@ -173,117 +282,42 @@ function Simulationcraft:GetItemStrings()
 
     -- if we don't have an item link, we don't care
     if itemLink then
-      local itemString = string.match(itemLink, "item:([%-?%d:]+)")
-      local itemSplit = {}
-      local simcItemOptions = {}
-
-      -- Split data into a table
-      for v in string.gmatch(itemString, "(%d*:?)") do
-        if v == ":" then
-          itemSplit[#itemSplit + 1] = 0
-        else
-          itemSplit[#itemSplit + 1] = string.gsub(v, ':', '')
-        end
-      end
-
-      -- Item id
-      local itemId = itemSplit[OFFSET_ITEM_ID]
-      simcItemOptions[#simcItemOptions + 1] = ',id=' .. itemId
-
-      -- Enchant
-      if tonumber(itemSplit[OFFSET_ENCHANT_ID]) > 0 then
-        simcItemOptions[#simcItemOptions + 1] = 'enchant_id=' .. itemSplit[OFFSET_ENCHANT_ID]
-      end
-
-      -- New style item suffix, old suffix style not supported
-      if tonumber(itemSplit[OFFSET_SUFFIX_ID]) ~= 0 then
-        simcItemOptions[#simcItemOptions + 1] = 'suffix=' .. itemSplit[OFFSET_SUFFIX_ID]
-      end
-
-      local flags = tonumber(itemSplit[OFFSET_FLAGS])
-
-      local bonuses = {}
-
-      for index=1, tonumber(itemSplit[OFFSET_BONUS_ID]) do
-        bonuses[#bonuses + 1] = itemSplit[OFFSET_BONUS_ID + index]
-      end
-
-      if #bonuses > 0 then
-        simcItemOptions[#simcItemOptions + 1] = 'bonus_id=' .. table.concat(bonuses, '/')
-      end
-
-      local rest_offset = OFFSET_BONUS_ID + #bonuses + 1
-
-      -- Upgrade level
-      if bit.band(flags, 0x4) == 0x4 then
-        local upgrade_id = tonumber(itemSplit[rest_offset])
-        if self.upgradeTable[upgrade_id] ~= nil and self.upgradeTable[upgrade_id] > 0 then
-          simcItemOptions[#simcItemOptions + 1] = 'upgrade=' .. self.upgradeTable[upgrade_id]
-        end
-        rest_offset = rest_offset + 1
-      end
-
-      -- Artifacts use this
-      if bit.band(flags, 0x100) == 0x100 then
-        rest_offset = rest_offset + 1 -- An unknown field
-        -- 7.2 added a new field to the item string if additional trait ranks are attained
-        -- for the artifact.
-        if bit.band(flags, 0x1000000) == 0x1000000 then
-          rest_offset = rest_offset + 1
-        end
-        local relic_str = ''
-        while rest_offset < #itemSplit do
-          local n_bonus_ids = tonumber(itemSplit[rest_offset])
-          rest_offset = rest_offset + 1
-
-          if n_bonus_ids == 0 then
-            relic_str = relic_str .. 0
-          else
-            for rbid = 1, n_bonus_ids do
-              relic_str = relic_str .. itemSplit[rest_offset]
-              if rbid < n_bonus_ids then
-                relic_str = relic_str .. ':'
-              end
-              rest_offset = rest_offset + 1
-            end
-          end
-
-          if rest_offset < #itemSplit then
-            relic_str = relic_str .. '/'
-          end
-        end
-
-        if relic_str ~= '' then
-          simcItemOptions[#simcItemOptions + 1] = 'relic_id=' .. relic_str
-        end
-      end
-
-      -- Some leveling quest items seem to use this, it'll include the drop level of the item
-      if bit.band(flags, 0x200) == 0x200 then
-        simcItemOptions[#simcItemOptions + 1] = 'drop_level=' .. itemSplit[rest_offset]
-        rest_offset = rest_offset + 1
-      end
-
-      -- Gems
-      local gems = {}
-      for i=1, 4 do -- hardcoded here to just grab all 4 sockets
-        local _,gemLink = GetItemGem(itemLink, i)
-        if gemLink then
-          local gemDetail = string.match(gemLink, "item[%-?%d:]+")
-          gems[#gems + 1] = string.match(gemDetail, "item:(%d+):" )
-        elseif bit.band(flags, 0x100) == 0x100 then
-          gems[#gems + 1] = "0"
-        end
-      end
-      if #gems > 0 then
-        simcItemOptions[#simcItemOptions + 1] = 'gem_id=' .. table.concat(gems, '/')
-      end
-
-      items[slotNum] = simcSlotNames[slotNum] .. "=" .. table.concat(simcItemOptions, ',')
+      items[slotNum] = GetItemStringFromItemLink(slotNum, itemLink)
     end
   end
 
   return items
+end
+
+function Simulationcraft:GetBagItemStrings()
+  local bagItems = {}
+
+  for slotNum=1, #slotNames do
+    local slotName = slotNames[slotNum]
+    if slotName and slotName ~= 'Trinket1Slot' and slotName ~= 'Finger0Slot' then
+      local slotItems = {}
+      local slotId, _, _ = GetInventorySlotInfo(slotNames[slotNum])
+      GetInventoryItemsForSlot(slotId, slotItems)
+      for locationBitstring, itemID in pairs(slotItems) do
+        local player, bank, bags, voidstorage, slot, bag = EquipmentManager_UnpackLocation(locationBitstring)
+        if bags then
+          _, _, _, _, _, _, itemLink, _, _, itemId = GetContainerItemInfo(bag, slot)
+          if itemLink then
+            local name, link, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(itemLink)
+            -- find all equippable, non-artifact items
+            if IsEquippableItem(itemLink) and (class == 'Armor' or class == 'Weapon') and quality ~= 6 then
+              bagItems[#bagItems + 1] = {
+                string = GetItemStringFromItemLink(slotNum, itemLink),
+                name = name .. ' (' .. iLevel .. ')'
+              }
+            end
+          end
+        end
+      end
+    end
+  end
+
+  return bagItems
 end
 
 -- This is the workhorse function that constructs the profile
@@ -376,6 +410,19 @@ function Simulationcraft:PrintSimcProfile()
     if items[slotNum] then
       simulationcraftProfile = simulationcraftProfile .. items[slotNum] .. '\n'
     end
+  end
+
+  simulationcraftProfile = simulationcraftProfile .. '\n'
+
+  -- output gear from bags
+  local bagItems = Simulationcraft:GetBagItemStrings()
+
+  simulationcraftProfile = simulationcraftProfile .. '### Gear from Bags\n'
+  simulationcraftProfile = simulationcraftProfile .. '#\n'
+  for i=1, #bagItems do
+    simulationcraftProfile = simulationcraftProfile .. '# ' .. bagItems[i].name .. '\n'
+    simulationcraftProfile = simulationcraftProfile .. '# ' .. bagItems[i].string .. '\n'
+    simulationcraftProfile = simulationcraftProfile .. '#\n'
   end
 
   -- sanity checks - if there's anything that makes the output completely invalid, punt!
