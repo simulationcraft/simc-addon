@@ -139,7 +139,7 @@ function Simulationcraft:GetArtifactString()
     return nil
   end
 
-  local artifact_id = self.ArtifactTable[item_id]
+  local artifact_id = artifactTable[item_id]
   if artifact_id == nil then
     return nil
   end
@@ -210,8 +210,8 @@ local function GetItemStringFromItemLink(slotNum, itemLink)
   -- Upgrade level
   if bit.band(flags, 0x4) == 0x4 then
     local upgrade_id = tonumber(itemSplit[rest_offset])
-    if self and self.upgradeTable and self.upgradeTable[upgrade_id] ~= nil and self.upgradeTable[upgrade_id] > 0 then
-      simcItemOptions[#simcItemOptions + 1] = 'upgrade=' .. self.upgradeTable[upgrade_id]
+    if upgradeTable and upgradeTable[upgrade_id] ~= nil and upgradeTable[upgrade_id] > 0 then
+      simcItemOptions[#simcItemOptions + 1] = 'upgrade=' .. upgradeTable[upgrade_id]
     end
     rest_offset = rest_offset + 1
   end
