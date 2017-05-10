@@ -294,7 +294,8 @@ function Simulationcraft:GetBagItemStrings()
 
   for slotNum=1, #slotNames do
     local slotName = slotNames[slotNum]
-    if slotName and slotName ~= 'Trinket1Slot' and slotName ~= 'Finger0Slot' then
+    -- Ignore "double" slots, results in doubled output which isn't useful
+    if slotName and slotName ~= 'Trinket1Slot' and slotName ~= 'Finger1Slot' then
       local slotItems = {}
       local slotId, _, _ = GetInventorySlotInfo(slotNames[slotNum])
       GetInventoryItemsForSlot(slotId, slotItems)
@@ -305,7 +306,7 @@ function Simulationcraft:GetBagItemStrings()
           if itemLink then
             local name, link, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(itemLink)
             -- find all equippable, non-artifact items
-            if IsEquippableItem(itemLink) and (class == 'Armor' or class == 'Weapon') and quality ~= 6 then
+            if IsEquippableItem(itemLink) and quality ~= 6 then
               bagItems[#bagItems + 1] = {
                 string = GetItemStringFromItemLink(slotNum, itemLink),
                 name = name .. ' (' .. iLevel .. ')'
