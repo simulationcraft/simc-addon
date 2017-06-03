@@ -139,6 +139,13 @@ function Simulationcraft:GetArtifactString()
     return nil
   end
 
+  local mh_id = select(1, GetInventoryItemID("player", GetInventorySlotInfo("MainHandSlot")))
+  local oh_id = select(1, GetInventoryItemID("player", GetInventorySlotInfo("SecondaryHandSlot")))
+  if mh_id ~= item_id and oh_id ~= item_id then
+    print("|cFFFF0000Warning, attempting to generate Simulationcraft artifact output for the wrong item")
+    return nil
+  end
+
   local artifact_id = artifactTable[item_id]
   if artifact_id == nil then
     return nil
@@ -157,7 +164,7 @@ function Simulationcraft:GetArtifactString()
   end
 
   if not artifactFrameOpen then
-    HideUIPanel(ArtifactFrame)
+    HideUIPanel(_G.ArtifactFrame)
   end
 
   return str
