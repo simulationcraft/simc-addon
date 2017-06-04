@@ -125,6 +125,8 @@ local function IsArtifactFrameOpen()
 end
 
 function Simulationcraft:GetArtifactString()
+  local ArtifactFrame = _G.ArtifactFrame
+
   if not HasArtifactEquipped() then
     return nil
   end
@@ -134,37 +136,50 @@ function Simulationcraft:GetArtifactString()
     SocketInventoryItem(INVSLOT_MAINHAND)
   end
 
-  local item_id = select(1, ArtifactUI.GetArtifactInfo())
-  if item_id == nil or item_id == 0 then
+  local itemId = select(1, ArtifactUI.GetArtifactInfo())
+  if itemId == nil or itemId == 0 then
+    if not artifactFrameOpen then
+      HideUIPanel(ArtifactFrame)
+    end
     return nil
   end
 
-  local mh_id = select(1, GetInventoryItemID("player", GetInventorySlotInfo("MainHandSlot")))
-  local oh_id = select(1, GetInventoryItemID("player", GetInventorySlotInfo("SecondaryHandSlot")))
-  if mh_id ~= item_id and oh_id ~= item_id then
+  if not select(1, IsUsableItem(itemId)) then
+    if not artifactFrameOpen then
+      HideUIPanel(ArtifactFrame)
+    end
+    return nil
+  end
+
+  local mhId = select(1, GetInventoryItemID("player", GetInventorySlotInfo("MainHandSlot")))
+  local ohId = select(1, GetInventoryItemID("player", GetInventorySlotInfo("SecondaryHandSlot")))
+  local correctArtifactOpen = mhId == itemId or ohId == itemId
+
+  if not correctArtifactOpen then
     print("|cFFFF0000Warning, attempting to generate Simulationcraft artifact output for the wrong item")
-    return nil
+    HideUIPanel(ArtifactFrame)
+    SocketInventoryItem(INVSLOT_MAINHAND)
   end
 
-  local artifact_id = artifactTable[item_id]
-  if artifact_id == nil then
+  local artifactId = artifactTable[itemId]
+  if artifactId == nil then
     return nil
   end
 
   -- Note, relics are handled by the item string
-  local str = 'artifact=' .. artifact_id .. ':0:0:0:0'
+  local str = 'artifact=' .. artifactId .. ':0:0:0:0'
 
   local powers = ArtifactUI.GetPowers()
   for i = 1, #powers do
-    local power_id = powers[i]
-    local power_info = ArtifactUI.GetPowerInfo(power_id)
-    if power_info ~= nil and power_info.currentRank > 0 and power_info.currentRank - power_info.bonusRanks > 0 then
-      str = str .. ':' .. power_id .. ':' .. (power_info.currentRank - power_info.bonusRanks)
+    local powerId = powers[i]
+    local powerInfo = ArtifactUI.GetPowerInfo(powerId)
+    if powerInfo ~= nil and powerInfo.currentRank > 0 and powerInfo.currentRank - powerInfo.bonusRanks > 0 then
+      str = str .. ':' .. powerId .. ':' .. (powerInfo.currentRank - powerInfo.bonusRanks)
     end
   end
 
-  if not artifactFrameOpen then
-    HideUIPanel(_G.ArtifactFrame)
+  if not artifactFrameOpen or not correctArtifactOpen then
+    HideUIPanel(ArtifactFrame)
   end
 
   return str
