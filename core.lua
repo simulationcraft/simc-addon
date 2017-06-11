@@ -153,7 +153,7 @@ function Simulationcraft:GetArtifactString()
 
   local mhId = select(1, GetInventoryItemID("player", GetInventorySlotInfo("MainHandSlot")))
   local ohId = select(1, GetInventoryItemID("player", GetInventorySlotInfo("SecondaryHandSlot")))
-  local correctArtifactOpen = mhId == itemId or ohId == itemId
+  local correctArtifactOpen = (mhid ~= nil and mhId == itemId) or (ohid ~= nil and ohId == itemId)
 
   if not correctArtifactOpen then
     print("|cFFFF0000Warning, attempting to generate Simulationcraft artifact output for the wrong item")
