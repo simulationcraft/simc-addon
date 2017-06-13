@@ -153,12 +153,14 @@ function Simulationcraft:GetArtifactString()
 
   local mhId = select(1, GetInventoryItemID("player", GetInventorySlotInfo("MainHandSlot")))
   local ohId = select(1, GetInventoryItemID("player", GetInventorySlotInfo("SecondaryHandSlot")))
-  local correctArtifactOpen = (mhid ~= nil and mhId == itemId) or (ohid ~= nil and ohId == itemId)
+  local correctArtifactOpen = (mhId ~= nil and mhId == itemId) or (ohId ~= nil and ohId == itemId)
 
   if not correctArtifactOpen then
-    print("|cFFFF0000Warning, attempting to generate Simulationcraft artifact output for the wrong item")
+    print("|cFFFF0000Warning, attempting to generate Simulationcraft artifact output for the wrong item (expected "
+      .. (mhId or 0) .. " or " .. (ohId or 0) .. ", got " .. itemId .. ")")
     HideUIPanel(ArtifactFrame)
     SocketInventoryItem(INVSLOT_MAINHAND)
+    itemId = select(1, ArtifactUI.GetArtifactInfo())
   end
 
   local artifactId = artifactTable[itemId]
