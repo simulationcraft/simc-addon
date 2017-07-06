@@ -8,6 +8,7 @@ local OFFSET_GEM_ID_1 = 3
 local OFFSET_GEM_ID_2 = 4
 local OFFSET_GEM_ID_3 = 5
 local OFFSET_GEM_ID_4 = 6
+local OFFSET_GEM_BASE = OFFSET_GEM_ID_1
 local OFFSET_SUFFIX_ID = 7
 local OFFSET_FLAGS = 11
 local OFFSET_BONUS_ID = 13
@@ -125,8 +126,6 @@ local function IsArtifactFrameOpen()
 end
 
 function Simulationcraft:GetArtifactString()
-  local ArtifactFrame = _G.ArtifactFrame
-
   if not HasArtifactEquipped() then
     return nil
   end
@@ -135,6 +134,8 @@ function Simulationcraft:GetArtifactString()
   if not artifactFrameOpen then
     SocketInventoryItem(INVSLOT_MAINHAND)
   end
+
+  local ArtifactFrame = _G.ArtifactFrame
 
   local itemId = select(1, ArtifactUI.GetArtifactInfo())
   if itemId == nil or itemId == 0 then
@@ -188,18 +189,30 @@ function Simulationcraft:GetArtifactString()
 end
 
 -- =================== Item Information =========================
+local function GetGemItemID(itemLink, index)
+  local _, gemLink = GetItemGem(itemLink, index)
+  if gemLink ~= nil then
+    local itemIdStr = string.match(gemLink, "item:(%d+)")
+    if itemIdStr ~= nil then
+      return tonumber(itemIdStr)
+    end
+  end
+  
+  return 0
+end
 
 local function GetItemStringFromItemLink(slotNum, itemLink)
   local itemString = string.match(itemLink, "item:([%-?%d:]+)")
   local itemSplit = {}
   local simcItemOptions = {}
+  local gems = {}
 
   -- Split data into a table
-  for v in string.gmatch(itemString, "(%d*:?)") do
-    if v == ":" then
+  for _, v in ipairs({strsplit(":", itemString)}) do
+    if v == "" then
       itemSplit[#itemSplit + 1] = 0
     else
-      itemSplit[#itemSplit + 1] = string.gsub(v, ':', '')
+      itemSplit[#itemSplit + 1] = tonumber(v)
     end
   end
 
@@ -208,20 +221,42 @@ local function GetItemStringFromItemLink(slotNum, itemLink)
   simcItemOptions[#simcItemOptions + 1] = ',id=' .. itemId
 
   -- Enchant
-  if tonumber(itemSplit[OFFSET_ENCHANT_ID]) > 0 then
+  if itemSplit[OFFSET_ENCHANT_ID] > 0 then
     simcItemOptions[#simcItemOptions + 1] = 'enchant_id=' .. itemSplit[OFFSET_ENCHANT_ID]
   end
 
+  -- Gems
+  for gemOffset = OFFSET_GEM_ID_1, OFFSET_GEM_ID_4 do
+    local gemIndex = (gemOffset - OFFSET_GEM_BASE) + 1
+    if itemSplit[gemOffset] > 0 then
+      local gemId = GetGemItemID(itemLink, gemIndex)
+      if gemId > 0 then
+        gems[gemIndex] = gemId
+      end
+    else
+      gems[gemIndex] = 0
+    end
+  end
+
+  -- Remove any trailing zeros from the gems array
+  while #gems > 0 and gems[#gems] == 0 do
+    table.remove(gems, #gems)
+  end
+
+  if #gems > 0 then
+    simcItemOptions[#simcItemOptions + 1] = 'gem_id=' .. table.concat(gems, '/')
+  end
+
   -- New style item suffix, old suffix style not supported
-  if tonumber(itemSplit[OFFSET_SUFFIX_ID]) ~= 0 then
+  if itemSplit[OFFSET_SUFFIX_ID] ~= 0 then
     simcItemOptions[#simcItemOptions + 1] = 'suffix=' .. itemSplit[OFFSET_SUFFIX_ID]
   end
 
-  local flags = tonumber(itemSplit[OFFSET_FLAGS])
+  local flags = itemSplit[OFFSET_FLAGS]
 
   local bonuses = {}
 
-  for index=1, tonumber(itemSplit[OFFSET_BONUS_ID]) do
+  for index=1, itemSplit[OFFSET_BONUS_ID] do
     bonuses[#bonuses + 1] = itemSplit[OFFSET_BONUS_ID + index]
   end
 
@@ -229,72 +264,64 @@ local function GetItemStringFromItemLink(slotNum, itemLink)
     simcItemOptions[#simcItemOptions + 1] = 'bonus_id=' .. table.concat(bonuses, '/')
   end
 
-  local rest_offset = OFFSET_BONUS_ID + #bonuses + 1
+  local linkOffset = OFFSET_BONUS_ID + #bonuses + 1
 
   -- Upgrade level
   if bit.band(flags, 0x4) == 0x4 then
-    local upgrade_id = tonumber(itemSplit[rest_offset])
-    if upgradeTable and upgradeTable[upgrade_id] ~= nil and upgradeTable[upgrade_id] > 0 then
-      simcItemOptions[#simcItemOptions + 1] = 'upgrade=' .. upgradeTable[upgrade_id]
+    local upgradeId = itemSplit[linkOffset]
+    if upgradeTable and upgradeTable[upgradeId] ~= nil and upgradeTable[upgradeId] > 0 then
+      simcItemOptions[#simcItemOptions + 1] = 'upgrade=' .. upgradeTable[upgradeId]
     end
-    rest_offset = rest_offset + 1
+    linkOffset = linkOffset + 1
   end
 
   -- Artifacts use this
   if bit.band(flags, 0x100) == 0x100 then
-    rest_offset = rest_offset + 1 -- An unknown field
+    linkOffset = linkOffset + 1 -- An unknown field
     -- 7.2 added a new field to the item string if additional trait ranks are attained
     -- for the artifact.
     if bit.band(flags, 0x1000000) == 0x1000000 then
-      rest_offset = rest_offset + 1
+      linkOffset = linkOffset + 1
     end
-    local relic_str = ''
-    while rest_offset < #itemSplit do
-      local n_bonus_ids = tonumber(itemSplit[rest_offset])
-      rest_offset = rest_offset + 1
 
-      if n_bonus_ids == 0 then
-        relic_str = relic_str .. 0
+    -- Relic bonus ids, relic item ids handled by gems
+    local relicStrs = {}
+    local relicIndex = 1
+    while linkOffset < #itemSplit do
+      local nBonusIds = itemSplit[linkOffset]
+      linkOffset = linkOffset + 1
+
+      if nBonusIds == 0 then
+        relicStrs[relicIndex] = "0"
       else
-        for rbid = 1, n_bonus_ids do
-          relic_str = relic_str .. itemSplit[rest_offset]
-          if rbid < n_bonus_ids then
-            relic_str = relic_str .. ':'
-          end
-          rest_offset = rest_offset + 1
+        local relicBonusIds = {}
+        for rbid = 1, nBonusIds do
+          relicBonusIds[#relicBonusIds + 1] = itemSplit[linkOffset]
+          linkOffset = linkOffset + 1
         end
+
+        relicStrs[relicIndex] = table.concat(relicBonusIds, ':')
       end
 
-      if rest_offset < #itemSplit then
-        relic_str = relic_str .. '/'
-      end
+      relicIndex = relicIndex + 1
     end
 
-    if relic_str ~= '' then
-      simcItemOptions[#simcItemOptions + 1] = 'relic_id=' .. relic_str
+    -- Remove any trailing zeros from the relic ids array
+    while #relicStrs > 0 and relicStrs[#relicStrs] == "0" do
+      table.remove(relicStrs, #relicStrs)
+    end
+
+    if #relicStrs > 0 then
+      simcItemOptions[#simcItemOptions + 1] = 'relic_id=' .. table.concat(relicStrs, '/')
     end
   end
 
   -- Some leveling quest items seem to use this, it'll include the drop level of the item
   if bit.band(flags, 0x200) == 0x200 then
-    simcItemOptions[#simcItemOptions + 1] = 'drop_level=' .. itemSplit[rest_offset]
-    rest_offset = rest_offset + 1
+    simcItemOptions[#simcItemOptions + 1] = 'drop_level=' .. itemSplit[linkOffset]
+    linkOffset = linkOffset + 1
   end
 
-  -- Gems
-  local gems = {}
-  for i=1, 4 do -- hardcoded here to just grab all 4 sockets
-    local _,gemLink = GetItemGem(itemLink, i)
-    if gemLink then
-      local gemDetail = string.match(gemLink, "item[%-?%d:]+")
-      gems[#gems + 1] = string.match(gemDetail, "item:(%d+):" )
-    elseif bit.band(flags, 0x100) == 0x100 then
-      gems[#gems + 1] = "0"
-    end
-  end
-  if #gems > 0 then
-    simcItemOptions[#simcItemOptions + 1] = 'gem_id=' .. table.concat(gems, '/')
-  end
   return simcSlotNames[slotNum] .. "=" .. table.concat(simcItemOptions, ',')
 end
 
