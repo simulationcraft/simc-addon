@@ -35,7 +35,7 @@ local artifactTable = Simulationcraft.ArtifactTable
 -- coding mistakes regarding objects and namespaces.
 
 function Simulationcraft:OnInitialize()
-  Simulationcraft:RegisterChatCommand('simc', 'PrintSimcProfile')
+  Simulationcraft:RegisterChatCommand('simc', 'HandleChatCommand')
 end
 
 function Simulationcraft:OnEnable()
@@ -44,6 +44,23 @@ end
 
 function Simulationcraft:OnDisable()
 
+end
+
+function Simulationcraft:HandleChatCommand(input)
+  local args = {strsplit(' ', input)}
+
+  local debugOutput = false
+  local noBags = false
+
+  for _, arg in ipairs(args) do
+    if arg == 'debug' then
+      debugOutput = true
+    elseif arg == 'nobag' or arg == 'nobags' or arg == 'nb' then
+      noBags = true
+    end
+  end
+
+  self:PrintSimcProfile(debugOutput, noBags)
 end
 
 -- SimC tokenize function
@@ -201,7 +218,7 @@ local function GetGemItemID(itemLink, index)
   return 0
 end
 
-local function GetItemStringFromItemLink(slotNum, itemLink)
+local function GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
   local itemString = string.match(itemLink, "item:([%-?%d:]+)")
   local itemSplit = {}
   local simcItemOptions = {}
@@ -322,10 +339,16 @@ local function GetItemStringFromItemLink(slotNum, itemLink)
     linkOffset = linkOffset + 1
   end
 
-  return simcSlotNames[slotNum] .. "=" .. table.concat(simcItemOptions, ',')
+  local itemStr = ''
+  if debugOutput then
+    itemStr = itemStr .. '# ' .. itemString .. '\n'
+  end
+  itemStr = itemStr .. simcSlotNames[slotNum] .. "=" .. table.concat(simcItemOptions, ',')
+
+  return itemStr
 end
 
-function Simulationcraft:GetItemStrings()
+function Simulationcraft:GetItemStrings(debugOutput)
   local items = {}
   for slotNum=1, #slotNames do
     local slotId = GetInventorySlotInfo(slotNames[slotNum])
@@ -333,7 +356,7 @@ function Simulationcraft:GetItemStrings()
 
     -- if we don't have an item link, we don't care
     if itemLink then
-      items[slotNum] = GetItemStringFromItemLink(slotNum, itemLink)
+      items[slotNum] = GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
     end
   end
 
@@ -359,7 +382,7 @@ function Simulationcraft:GetBagItemStrings()
             -- find all equippable, non-artifact items
             if IsEquippableItem(itemLink) and quality ~= 6 then
               bagItems[#bagItems + 1] = {
-                string = GetItemStringFromItemLink(slotNum, itemLink),
+                string = GetItemStringFromItemLink(slotNum, itemLink, false),
                 name = name .. ' (' .. iLevel .. ')'
               }
             end
@@ -373,7 +396,7 @@ function Simulationcraft:GetBagItemStrings()
 end
 
 -- This is the workhorse function that constructs the profile
-function Simulationcraft:PrintSimcProfile()
+function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
   -- Basic player info
   local playerName = UnitName('player')
   local _, playerClass = UnitClass('player')
@@ -455,7 +478,7 @@ function Simulationcraft:PrintSimcProfile()
   simulationcraftProfile = simulationcraftProfile .. '\n'
 
   -- Method that gets gear information
-  local items = Simulationcraft:GetItemStrings()
+  local items = Simulationcraft:GetItemStrings(debugOutput)
 
   -- output gear
   for slotNum=1, #slotNames do
@@ -467,14 +490,16 @@ function Simulationcraft:PrintSimcProfile()
   simulationcraftProfile = simulationcraftProfile .. '\n'
 
   -- output gear from bags
-  local bagItems = Simulationcraft:GetBagItemStrings()
+  if noBags == false then
+    local bagItems = Simulationcraft:GetBagItemStrings()
 
-  simulationcraftProfile = simulationcraftProfile .. '### Gear from Bags\n'
-  simulationcraftProfile = simulationcraftProfile .. '#\n'
-  for i=1, #bagItems do
-    simulationcraftProfile = simulationcraftProfile .. '# ' .. bagItems[i].name .. '\n'
-    simulationcraftProfile = simulationcraftProfile .. '# ' .. bagItems[i].string .. '\n'
+    simulationcraftProfile = simulationcraftProfile .. '### Gear from Bags\n'
     simulationcraftProfile = simulationcraftProfile .. '#\n'
+    for i=1, #bagItems do
+      simulationcraftProfile = simulationcraftProfile .. '# ' .. bagItems[i].name .. '\n'
+      simulationcraftProfile = simulationcraftProfile .. '# ' .. bagItems[i].string .. '\n'
+      simulationcraftProfile = simulationcraftProfile .. '#\n'
+    end
   end
 
   -- sanity checks - if there's anything that makes the output completely invalid, punt!
