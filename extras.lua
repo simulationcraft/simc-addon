@@ -1,5 +1,22 @@
 local _, Simulationcraft = ...
 
+-- 7.3 Crucible traits
+Simulationcraft.CrucibleTable = {
+  1739, -- Netherlifht Fortification
+  1770, -- Light Speed
+  1771, -- Master of Shadows
+  1774, -- Murderous Intent
+  1775, -- Refractive Shell
+  1777, -- Shocklight
+  1778, -- Shadowbind
+  1779, -- Chaotic Darkness
+  1780, -- Torment the Weak
+  1781, -- Dark Sorrows
+  1782, -- Secure in the Light
+  1783, -- Infusion of Light
+  1784  -- Light's Embrace
+}
+
 -- Artifact lookup
 Simulationcraft.ArtifactTable = {
   -- Death Knight

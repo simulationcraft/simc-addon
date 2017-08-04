@@ -142,6 +142,19 @@ local function IsArtifactFrameOpen()
   return ArtifactFrame and ArtifactFrame:IsShown() or false
 end
 
+local function GetPowerData(powerId, isCrucible)
+  if not powerId then
+    return 0, 0
+  end
+
+  local powerInfo = ArtifactUI.GetPowerInfo(powerId)
+  if powerInfo == nil then
+    return powerId, 0
+  end
+
+  return powerId, powerInfo.currentRank - (isCrucible and powerInfo.bonusRanks or 0)
+end
+
 function Simulationcraft:GetArtifactString()
   if not HasArtifactEquipped() then
     return nil
@@ -191,10 +204,17 @@ function Simulationcraft:GetArtifactString()
 
   local powers = ArtifactUI.GetPowers()
   for i = 1, #powers do
-    local powerId = powers[i]
-    local powerInfo = ArtifactUI.GetPowerInfo(powerId)
-    if powerInfo ~= nil and powerInfo.currentRank > 0 and powerInfo.currentRank - powerInfo.bonusRanks > 0 then
-      str = str .. ':' .. powerId .. ':' .. (powerInfo.currentRank - powerInfo.bonusRanks)
+    local powerId, powerRank = GetPowerData(powers[i], false)
+    if powerRank > 0 then
+      str = str .. ':' .. powerId .. ':' .. powerRank
+    end
+  end
+
+  -- Grab 7.3 artifact trait information
+  for _, powerId in ipairs(self.CrucibleTable) do
+    local _, powerRank = GetPowerData(powerId, true)
+    if powerRank > 0 then
+      str = str .. ':' .. powerId .. ':' .. powerRank
     end
   end
 
@@ -214,7 +234,7 @@ local function GetGemItemID(itemLink, index)
       return tonumber(itemIdStr)
     end
   end
-  
+
   return 0
 end
 
