@@ -63,6 +63,22 @@ function Simulationcraft:HandleChatCommand(input)
   self:PrintSimcProfile(debugOutput, noBags)
 end
 
+local function GetItemSplit(itemLink)
+  local itemString = string.match(itemLink, "item:([%-?%d:]+)")
+  local itemSplit = {}
+
+  -- Split data into a table
+  for _, v in ipairs({strsplit(":", itemString)}) do
+    if v == "" then
+      itemSplit[#itemSplit + 1] = 0
+    else
+      itemSplit[#itemSplit + 1] = tonumber(v)
+    end
+  end
+
+  return itemSplit
+end
+
 -- SimC tokenize function
 local function tokenize(str)
   str = str or ""
@@ -144,15 +160,59 @@ end
 
 local function GetPowerData(powerId, isCrucible)
   if not powerId then
-    return 0, 0
+    return 0, 0, 0
   end
 
   local powerInfo = ArtifactUI.GetPowerInfo(powerId)
   if powerInfo == nil then
-    return powerId, 0
+    return powerId, 0, 0
   end
 
-  return powerId, powerInfo.currentRank - (isCrucible and powerInfo.bonusRanks or 0)
+  local relicRanks = 0
+  local crucibleRanks = 0
+  -- A crucible (row 1 or 2)  trait
+  if isCrucible then
+    crucibleRanks = powerInfo.bonusRanks
+  else
+    relicRanks = powerInfo.bonusRanks
+
+    for ridx = 1, ArtifactUI.GetNumRelicSlots() do
+      local link = select(4, ArtifactUI.GetRelicInfo(ridx))
+      if link ~= nil then
+        local relicData   = GetItemSplit(link)
+        local baseLink    = select(2, GetItemInfo(relicData[1]))
+        local basePowers  = ArtifactUI.GetPowersAffectedByRelicItemLink(baseLink)
+        local relicPowers = ArtifactUI.GetPowersAffectedByRelic(ridx)
+
+        if type(basePowers) == 'number' then
+          basePowers = { basePowers }
+        end
+
+        if type(relicPowers) == 'number' then
+          relicPowers = { relicPowers }
+        end
+
+        -- For each power id that is not included in the base powers given for the relic, add one rank
+        -- to crucible ranks, and subtract one from bonus ranks
+        for rpidx=1, #relicPowers do
+          local found = false
+          for bpidx=1, #basePowers do
+            if relicPowers[rpidx] == basePowers[bpidx] then
+              found = true
+              break
+            end
+          end
+
+          if not found then
+            crucibleRanks = crucibleRanks + 1
+            relicRanks = relicRanks - 1
+          end
+        end
+      end
+    end
+  end
+
+  return powerId, powerInfo.currentRank, relicRanks, crucibleRanks
 end
 
 function Simulationcraft:GetArtifactString()
@@ -202,20 +262,40 @@ function Simulationcraft:GetArtifactString()
   -- Note, relics are handled by the item string
   local str = 'artifact=' .. artifactId .. ':0:0:0:0'
 
+  local baseRanks = {}
+  local crucibleRanks = {}
+
   local powers = ArtifactUI.GetPowers()
   for i = 1, #powers do
-    local powerId, powerRank = GetPowerData(powers[i], false)
+    local powerId, powerRank, relicRank, crucibleRank = GetPowerData(powers[i], false)
+
     if powerRank > 0 then
-      str = str .. ':' .. powerId .. ':' .. powerRank
+      baseRanks[#baseRanks + 1] = powerId
+      baseRanks[#baseRanks + 1] = powerRank
+    end
+
+    if crucibleRank > 0 then
+      crucibleRanks[#crucibleRanks + 1] = powerId
+      crucibleRanks[#crucibleRanks + 1] = crucibleRank
     end
   end
 
-  -- Grab 7.3 artifact trait information
+  -- Grab 7.3 netherlight crucible traits. Note that the minor traits are already computed above
   for _, powerId in ipairs(self.CrucibleTable) do
-    local _, powerRank = GetPowerData(powerId, true)
-    if powerRank > 0 then
-      str = str .. ':' .. powerId .. ':' .. powerRank
+    local powerId, powerRank, relicRank, crucibleRank = GetPowerData(powerId, true)
+    if crucibleRank > 0 then
+      crucibleRanks[#crucibleRanks + 1] = powerId
+      crucibleRanks[#crucibleRanks + 1] = crucibleRank
     end
+  end
+
+  if #baseRanks > 0 then
+    str = str .. ':' .. table.concat(baseRanks, ':')
+  end
+
+  if #crucibleRanks > 0 then
+    str = str .. '\n'
+    str = str .. 'crucible=' .. table.concat(crucibleRanks, ':')
   end
 
   if not artifactFrameOpen or not correctArtifactOpen then
@@ -239,19 +319,9 @@ local function GetGemItemID(itemLink, index)
 end
 
 local function GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
-  local itemString = string.match(itemLink, "item:([%-?%d:]+)")
-  local itemSplit = {}
+  local itemSplit = GetItemSplit(itemLink)
   local simcItemOptions = {}
   local gems = {}
-
-  -- Split data into a table
-  for _, v in ipairs({strsplit(":", itemString)}) do
-    if v == "" then
-      itemSplit[#itemSplit + 1] = 0
-    else
-      itemSplit[#itemSplit + 1] = tonumber(v)
-    end
-  end
 
   -- Item id
   local itemId = itemSplit[OFFSET_ITEM_ID]
