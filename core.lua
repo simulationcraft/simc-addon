@@ -170,11 +170,13 @@ local function GetPowerData(powerId, isCrucible)
 
   local relicRanks = 0
   local crucibleRanks = 0
+  local purchasedRanks = powerInfo.currentRank
   -- A crucible (row 1 or 2)  trait
   if isCrucible then
     crucibleRanks = powerInfo.bonusRanks
   else
     relicRanks = powerInfo.bonusRanks
+    purchasedRanks = purchasedRanks - relicRanks
 
     for ridx = 1, ArtifactUI.GetNumRelicSlots() do
       local link = select(4, ArtifactUI.GetRelicInfo(ridx))
@@ -212,7 +214,7 @@ local function GetPowerData(powerId, isCrucible)
     end
   end
 
-  return powerId, powerInfo.currentRank, relicRanks, crucibleRanks
+  return powerId, purchasedRanks, relicRanks, crucibleRanks
 end
 
 function Simulationcraft:GetArtifactString()
