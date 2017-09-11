@@ -158,68 +158,22 @@ local function IsArtifactFrameOpen()
   return ArtifactFrame and ArtifactFrame:IsShown() or false
 end
 
-local function GetPowerData(powerId, isCrucible)
+local function GetPowerData(powerId)
   if not powerId then
-    return 0, 0, 0
+    return 0, 0
   end
 
   local powerInfo = ArtifactUI.GetPowerInfo(powerId)
   if powerInfo == nil then
-    return powerId, 0, 0
+    return powerId, 0
   end
 
-  local relicRanks = 0
-  local crucibleRanks = 0
-  local purchasedRanks = powerInfo.currentRank
-  -- A crucible (row 1 or 2)  trait
-  if isCrucible then
-    crucibleRanks = powerInfo.bonusRanks
-  else
-    relicRanks = powerInfo.bonusRanks
-    purchasedRanks = purchasedRanks - relicRanks
-
-    for ridx = 1, ArtifactUI.GetNumRelicSlots() do
-      local link = select(4, ArtifactUI.GetRelicInfo(ridx))
-      if link ~= nil then
-        local relicData   = GetItemSplit(link)
-        local baseLink    = select(2, GetItemInfo(relicData[1]))
-        local basePowers  = ArtifactUI.GetPowersAffectedByRelicItemLink(baseLink)
-        local relicPowers = ArtifactUI.GetPowersAffectedByRelic(ridx)
-
-        if type(basePowers) == 'number' then
-          basePowers = { basePowers }
-        end
-
-        if type(relicPowers) == 'number' then
-          relicPowers = { relicPowers }
-        end
-
-        -- For each power id that is not included in the base powers given for the relic, add one rank
-        -- to crucible ranks, and subtract one from bonus ranks
-        for rpidx=1, #relicPowers do
-          local found = false
-          for bpidx=1, #basePowers do
-            if relicPowers[rpidx] == basePowers[bpidx] then
-              found = true
-              break
-            end
-          end
-
-          if not found then
-            crucibleRanks = crucibleRanks + 1
-            relicRanks = relicRanks - 1
-          end
-        end
-      end
-    end
-  end
-
-  return powerId, purchasedRanks, relicRanks, crucibleRanks
+  return powerId, powerInfo.currentRank - powerInfo.bonusRanks
 end
 
-function Simulationcraft:GetArtifactString()
+function Simulationcraft:OpenArtifact()
   if not HasArtifactEquipped() then
-    return nil
+    return false, false, 0
   end
 
   local artifactFrameOpen = IsArtifactFrameOpen()
@@ -234,14 +188,14 @@ function Simulationcraft:GetArtifactString()
     if not artifactFrameOpen then
       HideUIPanel(ArtifactFrame)
     end
-    return nil
+    return false, false, 0
   end
 
   if not select(1, IsUsableItem(itemId)) then
     if not artifactFrameOpen then
       HideUIPanel(ArtifactFrame)
     end
-    return nil
+    return false, false, 0
   end
 
   local mhId = select(1, GetInventoryItemID("player", GetInventorySlotInfo("MainHandSlot")))
@@ -256,8 +210,86 @@ function Simulationcraft:GetArtifactString()
     itemId = select(1, ArtifactUI.GetArtifactInfo())
   end
 
+  return artifactFrameOpen, correctArtifactOpen, itemId
+end
+
+function Simulationcraft:CloseArtifactFrame(wasOpen, correctOpen)
+  local ArtifactFrame = _G.ArtifactFrame
+
+  if ArtifactFrame and (not wasOpen or not correctOpen) then
+    HideUIPanel(ArtifactFrame)
+  end
+end
+
+function Simulationcraft:GetCrucibleString()
+  local artifactFrameOpen, correctArtifactOpen, itemId = self:OpenArtifact()
+
+  if not itemId then
+    self:CloseArtifactFrame(artifactFrameOpen, correctArtifactOpen)
+    return nil
+  end
+
   local artifactId = artifactTable[itemId]
   if artifactId == nil then
+    self:CloseArtifactFrame(artifactFrameOpen, correctArtifactOpen)
+    return nil
+  end
+
+  local crucibleData = {}
+  for ridx = 1, ArtifactUI.GetNumRelicSlots() do
+    local link = select(4, ArtifactUI.GetRelicInfo(ridx))
+    if link ~= nil then
+      local relicSplit     = GetItemSplit(link)
+      local baseLink       = select(2, GetItemInfo(relicSplit[1]))
+      local basePowers     = { ArtifactUI.GetPowersAffectedByRelicItemLink(baseLink) }
+      local relicPowers    = { ArtifactUI.GetPowersAffectedByRelic(ridx) }
+      local cruciblePowers = {}
+
+      for rpidx = 1, #relicPowers do
+        local found = false
+        for bpidx = 1, #basePowers do
+          if relicPowers[rpidx] == basePowers[bpidx] then
+            found = true
+            break
+          end
+        end
+
+        if not found then
+          cruciblePowers[#cruciblePowers + 1] = relicPowers[rpidx]
+        end
+      end
+
+      if #cruciblePowers == 0 then
+        crucibleData[ridx] = { 0 }
+      else
+        crucibleData[ridx] = cruciblePowers
+      end
+    else
+      crucibleData[ridx] = { 0 }
+    end
+  end
+
+  local crucibleStrings = {}
+  for ridx = 1, #crucibleData do
+    crucibleStrings[ridx] = table.concat(crucibleData[ridx], ':')
+  end
+
+  self:CloseArtifactFrame(artifactFrameOpen, correctArtifactOpen)
+
+  return 'crucible=' .. table.concat(crucibleStrings, '/')
+end
+
+function Simulationcraft:GetArtifactString()
+  local artifactFrameOpen, correctArtifactOpen, itemId = self:OpenArtifact()
+
+  if not itemId then
+    self:CloseArtifactFrame(artifactFrameOpen, correctArtifactOpen)
+    return nil
+  end
+
+  local artifactId = artifactTable[itemId]
+  if artifactId == nil then
+    self:CloseArtifactFrame(artifactFrameOpen, correctArtifactOpen)
     return nil
   end
 
@@ -269,25 +301,11 @@ function Simulationcraft:GetArtifactString()
 
   local powers = ArtifactUI.GetPowers()
   for i = 1, #powers do
-    local powerId, powerRank, relicRank, crucibleRank = GetPowerData(powers[i], false)
+    local powerId, powerRank = GetPowerData(powers[i])
 
     if powerRank > 0 then
       baseRanks[#baseRanks + 1] = powerId
       baseRanks[#baseRanks + 1] = powerRank
-    end
-
-    if crucibleRank > 0 then
-      crucibleRanks[#crucibleRanks + 1] = powerId
-      crucibleRanks[#crucibleRanks + 1] = crucibleRank
-    end
-  end
-
-  -- Grab 7.3 netherlight crucible traits. Note that the minor traits are already computed above
-  for _, powerId in ipairs(self.CrucibleTable) do
-    local powerId, powerRank, relicRank, crucibleRank = GetPowerData(powerId, true)
-    if crucibleRank > 0 then
-      crucibleRanks[#crucibleRanks + 1] = powerId
-      crucibleRanks[#crucibleRanks + 1] = crucibleRank
     end
   end
 
@@ -295,14 +313,7 @@ function Simulationcraft:GetArtifactString()
     str = str .. ':' .. table.concat(baseRanks, ':')
   end
 
-  if #crucibleRanks > 0 then
-    str = str .. '\n'
-    str = str .. 'crucible=' .. table.concat(crucibleRanks, ':')
-  end
-
-  if not artifactFrameOpen or not correctArtifactOpen then
-    HideUIPanel(ArtifactFrame)
-  end
+  self:CloseArtifactFrame(artifactFrameOpen, correctArtifactOpen)
 
   return str
 end
@@ -553,6 +564,7 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
   -- Talents are more involved - method to handle them
   local playerTalents = CreateSimcTalentString()
   local playerArtifact = self:GetArtifactString()
+  local playerCrucible = self:GetCrucibleString()
 
   -- Build the output string for the player (not including gear)
   local simulationcraftProfile = player .. '\n'
@@ -566,6 +578,9 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
   simulationcraftProfile = simulationcraftProfile .. playerSpec .. '\n'
   if playerArtifact ~= nil then
     simulationcraftProfile = simulationcraftProfile .. playerArtifact .. '\n'
+  end
+  if playerCrucible ~= nil then
+    simulationcraftProfile = simulationcraftProfile .. playerCrucible .. '\n'
   end
   simulationcraftProfile = simulationcraftProfile .. '\n'
 
