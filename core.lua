@@ -478,8 +478,19 @@ function Simulationcraft:GetBagItemStrings()
       GetInventoryItemsForSlot(slotId, slotItems)
       for locationBitstring, itemID in pairs(slotItems) do
         local player, bank, bags, voidstorage, slot, bag = EquipmentManager_UnpackLocation(locationBitstring)
-        if bags then
-          _, _, _, _, _, _, itemLink, _, _, itemId = GetContainerItemInfo(bag, slot)
+        if bags or bank then
+          local container
+          if bags then
+            container = bag
+          elseif bank then
+            -- Default bank slots (the innate ones, not ones from bags-in-the-bank) are weird
+            -- slot starts at 39, I believe that is based on some older location values
+            -- GetContainerItemInfo uses a 0-based slot index
+            -- So take the slot from the unpack and subtract 39 to get the right index for GetContainerItemInfo
+            container = BANK_CONTAINER
+            slot = slot - 39
+          end
+          _, _, _, _, _, _, itemLink, _, _, itemId = GetContainerItemInfo(container, slot)
           if itemLink then
             local name, link, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(itemLink)
             -- find all equippable, non-artifact items
