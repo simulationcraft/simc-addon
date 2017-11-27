@@ -2,11 +2,12 @@
 ## Title: Simulationcraft
 ## Notes: Constructs SimC export strings
 ## Author: Theck, navv_
-## Version: 1.8.4
+## Version: 1.8.5
 ## OptionalDependencies: Ace3
 
 libs\LibStub\LibStub.lua
 libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+libs\LibItemUpgradeInfo-1.0\LibItemUpgradeInfo-1.0.lua
 #@no-lib-strip@
 libs\AceAddon-3.0\AceAddon-3.0.xml
 libs\AceConsole-3.0\AceConsole-3.0.xml
