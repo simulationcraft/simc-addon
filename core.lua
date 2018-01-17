@@ -191,12 +191,12 @@ function Simulationcraft:OpenArtifact()
     return false, false, 0
   end
 
-  if not select(1, IsUsableItem(itemId)) then
-    if not artifactFrameOpen then
-      HideUIPanel(ArtifactFrame)
-    end
-    return false, false, 0
-  end
+  -- if not select(1, IsUsableItem(itemId)) then
+  --   if not artifactFrameOpen then
+  --     HideUIPanel(ArtifactFrame)
+  --   end
+  --   return false, false, 0
+  -- end
 
   local mhId = select(1, GetInventoryItemID("player", GetInventorySlotInfo("MainHandSlot")))
   local ohId = select(1, GetInventoryItemID("player", GetInventorySlotInfo("SecondaryHandSlot")))
