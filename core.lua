@@ -1,6 +1,7 @@
 local _, Simulationcraft = ...
 
 Simulationcraft = LibStub("AceAddon-3.0"):NewAddon(Simulationcraft, "Simulationcraft", "AceConsole-3.0", "AceEvent-3.0")
+ItemUpgradeInfo = LibStub("LibItemUpgradeInfo-1.0")
 
 local OFFSET_ITEM_ID = 1
 local OFFSET_ENCHANT_ID = 2
@@ -79,6 +80,21 @@ local function GetItemSplit(itemLink)
   return itemSplit
 end
 
+-- char size for utf8 strings
+local function chsize(char)
+  if not char then
+      return 0
+  elseif char > 240 then
+      return 4
+  elseif char > 225 then
+      return 3
+  elseif char > 192 then
+      return 2
+  else
+      return 1
+  end
+end
+
 -- SimC tokenize function
 local function tokenize(str)
   str = str or ""
@@ -89,6 +105,7 @@ local function tokenize(str)
   -- keep stuff we want, dumpster everything else
   local s = ""
   for i=1,str:len() do
+    local b = str:byte(i)
     -- keep digits 0-9
     if str:byte(i) >= 48 and str:byte(i) <= 57 then
       s = s .. str:sub(i,i)
@@ -98,6 +115,11 @@ local function tokenize(str)
       -- keep %, +, ., _
     elseif str:byte(i)==37 or str:byte(i)==43 or str:byte(i)==46 or str:byte(i)==95 then
       s = s .. str:sub(i,i)
+      -- save all multibyte chars
+    elseif chsize(b) > 1 then
+      local offset = chsize(b) - 1
+      s = s .. str:sub(i, i + offset)
+      i = i + offset
     end
   end
   -- strip trailing spaces
@@ -191,12 +213,12 @@ function Simulationcraft:OpenArtifact()
     return false, false, 0
   end
 
-  if not select(1, IsUsableItem(itemId)) then
-    if not artifactFrameOpen then
-      HideUIPanel(ArtifactFrame)
-    end
-    return false, false, 0
-  end
+  -- if not select(1, IsUsableItem(itemId)) then
+  --   if not artifactFrameOpen then
+  --     HideUIPanel(ArtifactFrame)
+  --   end
+  --   return false, false, 0
+  -- end
 
   local mhId = select(1, GetInventoryItemID("player", GetInventorySlotInfo("MainHandSlot")))
   local ohId = select(1, GetInventoryItemID("player", GetInventorySlotInfo("SecondaryHandSlot")))
@@ -493,11 +515,15 @@ function Simulationcraft:GetBagItemStrings()
           _, _, _, _, _, _, itemLink, _, _, itemId = GetContainerItemInfo(container, slot)
           if itemLink then
             local name, link, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(itemLink)
+
+            -- get correct level for scaling gear (heirlooms, 13th anniversary world bosses, etc
+            local level = ItemUpgradeInfo:GetUpgradedItemLevel(link) or 0
+
             -- find all equippable, non-artifact items
             if IsEquippableItem(itemLink) and quality ~= 6 then
               bagItems[#bagItems + 1] = {
                 string = GetItemStringFromItemLink(slotNum, itemLink, false),
-                name = name .. ' (' .. iLevel .. ')'
+                name = name .. ' (' .. level .. ')'
               }
             end
           end
