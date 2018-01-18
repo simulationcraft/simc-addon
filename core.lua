@@ -486,9 +486,11 @@ function Simulationcraft:GetBagItemStrings()
             -- Default bank slots (the innate ones, not ones from bags-in-the-bank) are weird
             -- slot starts at 39, I believe that is based on some older location values
             -- GetContainerItemInfo uses a 0-based slot index
-            -- So take the slot from the unpack and subtract 39 to get the right index for GetContainerItemInfo
+            -- So take the slot from the unpack and subtract 39 to get the right index for GetContainerItemInfo.
+            -- 2018/01/17 - Change magic number to 47 to account for new backpack slots. Not sure why it went up by 8
+            -- instead of 4, possible blizz is leaving the door open to more expansion in the future?
             container = BANK_CONTAINER
-            slot = slot - 39
+            slot = slot - 47
           end
           _, _, _, _, _, _, itemLink, _, _, itemId = GetContainerItemInfo(container, slot)
           if itemLink then
