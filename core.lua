@@ -513,6 +513,9 @@ end
 
 -- This is the workhorse function that constructs the profile
 function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
+  -- addon metadata
+  local versionComment = '# SimC Addon ' .. GetAddOnMetadata('Simulationcraft', 'Version')
+
   -- Basic player info
   local playerName = UnitName('player')
   local _, playerClass = UnitClass('player')
@@ -580,7 +583,9 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
   local playerCrucible = self:GetCrucibleString()
 
   -- Build the output string for the player (not including gear)
-  local simulationcraftProfile = player .. '\n'
+  local simulationcraftProfile = versionComment .. '\n'
+  simulationcraftProfile = simulationcraftProfile .. '\n'
+  simulationcraftProfile = simulationcraftProfile .. player .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerLevel .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerRace .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerRegion .. '\n'
