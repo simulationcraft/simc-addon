@@ -551,7 +551,7 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
 
   -- Try Latin name for Russian servers first, then realm name from LibRealmInfo, then Realm Name from the game
   -- Latin name for Russian servers as most APIs use the latin name, not the cyrillic name
-  local playerRealm = realmLatinName() or realmName or GetRealmName()
+  local playerRealm = realmLatinName or realmName or GetRealmName()
 
   -- Try region from LibRealmInfo first, then use default API
   -- Default API can be wrong for region-switching players
