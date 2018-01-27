@@ -543,11 +543,19 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
   local versionComment = '# SimC Addon ' .. GetAddOnMetadata('Simulationcraft', 'Version')
 
   -- Basic player info
+  local _, realmName, _, _, _, _, region, _, _, realmLatinName, _ = LibRealmInfo:GetRealmInfoByUnit('player')
+
   local playerName = UnitName('player')
   local _, playerClass = UnitClass('player')
   local playerLevel = UnitLevel('player')
-  local playerRealm = GetRealmName()
-  local playerRegion = string.lower(LibRealmInfo:GetCurrentRegion())
+
+  -- Try Latin name for Russian servers first, then realm name from LibRealmInfo, then Realm Name from the game
+  -- Latin name for Russian servers as most APIs use the latin name, not the cyrillic name
+  local playerRealm = realmLatinName() or realmName or GetRealmName()
+
+  -- Try region from LibRealmInfo first, then use default API
+  -- Default API can be wrong for region-switching players
+  local playerRegion = region or regionString[GetCurrentRegion()]
 
   -- Race info
   local _, playerRace = UnitRace('player')
