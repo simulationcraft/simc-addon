@@ -2,6 +2,7 @@ local _, Simulationcraft = ...
 
 Simulationcraft = LibStub("AceAddon-3.0"):NewAddon(Simulationcraft, "Simulationcraft", "AceConsole-3.0", "AceEvent-3.0")
 ItemUpgradeInfo = LibStub("LibItemUpgradeInfo-1.0")
+LibRealmInfo = LibStub("LibRealmInfo")
 
 local OFFSET_ITEM_ID = 1
 local OFFSET_ENCHANT_ID = 2
@@ -80,6 +81,21 @@ local function GetItemSplit(itemLink)
   return itemSplit
 end
 
+-- char size for utf8 strings
+local function chsize(char)
+  if not char then
+      return 0
+  elseif char > 240 then
+      return 4
+  elseif char > 225 then
+      return 3
+  elseif char > 192 then
+      return 2
+  else
+      return 1
+  end
+end
+
 -- SimC tokenize function
 local function tokenize(str)
   str = str or ""
@@ -99,6 +115,11 @@ local function tokenize(str)
       -- keep %, +, ., _
     elseif str:byte(i)==37 or str:byte(i)==43 or str:byte(i)==46 or str:byte(i)==95 then
       s = s .. str:sub(i,i)
+      -- save all multibyte chars
+    elseif chsize(b) > 1 then
+      local offset = chsize(b) - 1
+      s = s .. str:sub(i, i + offset)
+      i = i + offset
     end
   end
   -- strip trailing spaces
@@ -526,7 +547,7 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
   local _, playerClass = UnitClass('player')
   local playerLevel = UnitLevel('player')
   local playerRealm = GetRealmName()
-  local playerRegion = regionString[GetCurrentRegion()]
+  local playerRegion = string.lower(LibRealmInfo:GetCurrentRegion())
 
   -- Race info
   local _, playerRace = UnitRace('player')
