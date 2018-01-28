@@ -6,3 +6,6 @@ externals:
   libs/LibItemUpgradeInfo-1.0:
     url: git://git.wowace.com/wow/libitemupgradeinfo-1-0/mainline.git
     tag: latest
+  libs/LibRealmInfo:
+    url: https://github.com/phanx-wow/LibRealmInfo.git
+    tag: latest
