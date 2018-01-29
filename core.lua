@@ -672,4 +672,7 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
   SimcCopyFrameScrollText:Show()
   SimcCopyFrameScrollText:SetText(simulationcraftProfile)
   SimcCopyFrameScrollText:HighlightText()
+  SimcCopyFrameScrollText:SetScript("OnEscapePressed", function(self)
+    SimcCopyFrame:Hide()
+  end)
 end
