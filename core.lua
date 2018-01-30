@@ -114,7 +114,7 @@ local function tokenize(str)
     elseif b >= 97 and b <= 122 then
       s = s .. str:sub(i,i)
       -- keep %, +, ., _
-    elseif b==37 or b==43 or b==46 or b==95 then
+    elseif b == 37 or b == 43 or b == 46 or b == 95 then
       s = s .. str:sub(i,i)
       -- save all multibyte chars
     elseif chsize(b) > 1 then
