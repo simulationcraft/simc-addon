@@ -106,14 +106,15 @@ local function tokenize(str)
   -- keep stuff we want, dumpster everything else
   local s = ""
   for i=1,str:len() do
+    local b = str:byte(i)
     -- keep digits 0-9
-    if str:byte(i) >= 48 and str:byte(i) <= 57 then
+    if b >= 48 and b <= 57 then
       s = s .. str:sub(i,i)
       -- keep lowercase letters
-    elseif str:byte(i) >= 97 and str:byte(i) <= 122 then
+    elseif b >= 97 and b <= 122 then
       s = s .. str:sub(i,i)
       -- keep %, +, ., _
-    elseif str:byte(i)==37 or str:byte(i)==43 or str:byte(i)==46 or str:byte(i)==95 then
+    elseif b==37 or b==43 or b==46 or b==95 then
       s = s .. str:sub(i,i)
       -- save all multibyte chars
     elseif chsize(b) > 1 then
