@@ -17,10 +17,11 @@ local OFFSET_BONUS_ID = 13
 local OFFSET_UPGRADE_ID = 14 -- Flags = 0x4
 
 -- Artifact stuff (adapted from LibArtifactData [https://www.wowace.com/addons/libartifactdata-1-0/], thanks!)
-local ArtifactUI          = _G.C_ArtifactUI
-local HasArtifactEquipped = _G.HasArtifactEquipped
-local SocketInventoryItem = _G.SocketInventoryItem
-local Timer               = _G.C_Timer
+local ArtifactUI            = _G.C_ArtifactUI
+local HasArtifactEquipped   = _G.HasArtifactEquipped
+local SocketInventoryItem   = _G.SocketInventoryItem
+local Timer                 = _G.C_Timer
+local AzeriteEmpoweredItem  = _G.C_AzeriteEmpoweredItem
 
 -- load stuff from extras.lua
 local upgradeTable  = Simulationcraft.upgradeTable
@@ -354,7 +355,7 @@ local function GetGemItemID(itemLink, index)
   return 0
 end
 
-local function GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
+local function GetItemStringFromItemLink(slotNum, itemLink, itemLoc, debugOutput)
   local itemSplit = GetItemSplit(itemLink)
   local simcItemOptions = {}
   local gems = {}
@@ -465,6 +466,27 @@ local function GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
     linkOffset = linkOffset + 1
   end
 
+  -- Azerite powers - only run in BfA client
+  if itemLoc and AzeriteEmpoweredItem then
+    if AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLoc) then
+      -- C_AzeriteEmpoweredItem.GetAllTierInfo(ItemLocation:CreateFromEquipmentSlot(5))
+      -- C_AzeriteEmpoweredItem.GetPowerInfo(ItemLocation:CreateFromEquipmentSlot(5), 111)
+      local azeritePowers = {}
+      local powerIndex = 1
+      local tierInfo = AzeriteEmpoweredItem.GetAllTierInfo(itemLoc)
+      for azeriteTier, tierInfo in pairs(tierInfo) do
+        for _, powerId in pairs(tierInfo.azeritePowerIDs) do
+          local powerInfo = AzeriteEmpoweredItem.GetPowerInfo(itemLoc, powerId)
+          if powerInfo.selected then
+            azeritePowers[powerIndex] = powerId
+            powerIndex = powerIndex + 1
+          end
+        end
+      end
+      simcItemOptions[#simcItemOptions + 1] = 'azerite_powers=' .. table.concat(azeritePowers, '/')
+    end
+  end
+
   local itemStr = ''
   if debugOutput then
     itemStr = itemStr .. '# ' .. itemString .. '\n'
@@ -482,7 +504,12 @@ function Simulationcraft:GetItemStrings(debugOutput)
 
     -- if we don't have an item link, we don't care
     if itemLink then
-      items[slotNum] = GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
+      local itemLoc
+      if ItemLocation then
+        itemLoc = ItemLocation:CreateFromEquipmentSlot(slotId)        
+      end
+      items[slotNum] = GetItemStringFromItemLink(slotNum, itemLink, itemLoc, debugOutput)
+
     end
   end
 
@@ -501,6 +528,10 @@ function Simulationcraft:GetBagItemStrings()
       GetInventoryItemsForSlot(slotId, slotItems)
       for locationBitstring, itemID in pairs(slotItems) do
         local player, bank, bags, voidstorage, slot, bag = EquipmentManager_UnpackLocation(locationBitstring)
+        local itemLoc
+        if ItemLocation then
+          itemLoc = ItemLocation:CreateFromBagAndSlot(bag, slot)        
+        end
         if bags or bank then
           local container
           if bags then
@@ -525,7 +556,7 @@ function Simulationcraft:GetBagItemStrings()
             -- find all equippable, non-artifact items
             if IsEquippableItem(itemLink) and quality ~= 6 then
               bagItems[#bagItems + 1] = {
-                string = GetItemStringFromItemLink(slotNum, itemLink, false),
+                string = GetItemStringFromItemLink(slotNum, itemLink, itemLoc, false),
                 name = name .. ' (' .. level .. ')'
               }
             end
