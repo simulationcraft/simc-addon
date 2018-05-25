@@ -476,8 +476,7 @@ local function GetItemStringFromItemLink(slotNum, itemLink, itemLoc, debugOutput
       local tierInfo = AzeriteEmpoweredItem.GetAllTierInfo(itemLoc)
       for azeriteTier, tierInfo in pairs(tierInfo) do
         for _, powerId in pairs(tierInfo.azeritePowerIDs) do
-          local powerInfo = AzeriteEmpoweredItem.GetPowerInfo(itemLoc, powerId)
-          if powerInfo.selected then
+          if AzeriteEmpoweredItem.IsPowerSelected(itemLoc, powerId) then
             azeritePowers[powerIndex] = powerId
             powerIndex = powerIndex + 1
           end
