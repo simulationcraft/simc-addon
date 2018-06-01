@@ -22,7 +22,7 @@ local HasArtifactEquipped   = _G.HasArtifactEquipped
 local SocketInventoryItem   = _G.SocketInventoryItem
 local Timer                 = _G.C_Timer
 local AzeriteEmpoweredItem  = _G.C_AzeriteEmpoweredItem
-local AzeriteItem           = _G.C_AzeritedItem
+local AzeriteItem           = _G.C_AzeriteItem
 
 -- load stuff from extras.lua
 local upgradeTable  = Simulationcraft.upgradeTable
