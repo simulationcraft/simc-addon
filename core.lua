@@ -22,6 +22,7 @@ local HasArtifactEquipped   = _G.HasArtifactEquipped
 local SocketInventoryItem   = _G.SocketInventoryItem
 local Timer                 = _G.C_Timer
 local AzeriteEmpoweredItem  = _G.C_AzeriteEmpoweredItem
+local AzeriteItem           = _G.C_AzeritedItem
 
 -- load stuff from extras.lua
 local upgradeTable  = Simulationcraft.upgradeTable
@@ -483,6 +484,9 @@ local function GetItemStringFromItemLink(slotNum, itemLink, itemLoc, debugOutput
         end
       end
       simcItemOptions[#simcItemOptions + 1] = 'azerite_powers=' .. table.concat(azeritePowers, '/')
+    end
+    if AzeriteItem.IsAzeriteItem(itemLoc) then
+      simcItemOptions[#simcItemOptions + 1] = 'azerite_level=' .. AzeriteItem.GetPowerLevel(itemLoc)
     end
   end
 
