@@ -533,7 +533,12 @@ function Simulationcraft:GetBagItemStrings()
         local player, bank, bags, voidstorage, slot, bag = EquipmentManager_UnpackLocation(locationBitstring)
         local itemLoc
         if ItemLocation then
-          itemLoc = ItemLocation:CreateFromBagAndSlot(bag, slot)        
+          if bag == nil then
+            -- this is a default bank slot (not a bank bag). these exist on the character equipment, not a bag
+            itemLoc = ItemLocation:CreateFromEquipmentSlot(slot)
+          else
+            itemLoc = ItemLocation:CreateFromBagAndSlot(bag, slot)
+          end
         end
         if bags or bank then
           local container
