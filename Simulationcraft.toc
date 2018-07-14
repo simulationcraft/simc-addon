@@ -1,8 +1,8 @@
-## Interface: 70300
+## Interface: 80000
 ## Title: Simulationcraft
 ## Notes: Constructs SimC export strings
 ## Author: Theck, navv_, seriallos
-## Version: 1.10.0-alpha-5
+## Version: 1.10.0
 ## OptionalDependencies: Ace3
 
 libs\LibStub\LibStub.lua
