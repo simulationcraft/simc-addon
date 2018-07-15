@@ -2,7 +2,7 @@
 ## Title: Simulationcraft
 ## Notes: Constructs SimC export strings
 ## Author: Theck, navv_, seriallos
-## Version: 1.10.0
+## Version: 1.10.1
 ## OptionalDependencies: Ace3
 
 libs\LibStub\LibStub.lua
