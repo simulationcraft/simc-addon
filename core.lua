@@ -170,7 +170,7 @@ local function translateRole(spec_id, str)
   elseif str == 'DAMAGER' then
     return 'attack'
   elseif str == 'HEALER' then
-    return 'heal'
+    return 'attack'
   else
     return ''
   end
