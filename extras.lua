@@ -64,7 +64,7 @@ Simulationcraft.RoleTable = {
   [102] = 'spell',
   [103] = 'attack',
   [104] = 'tank',
-  [105] = 'heal',
+  [105] = 'attack',
   -- Hunter
   [253] = 'attack',
   [254] = 'attack',
@@ -78,12 +78,12 @@ Simulationcraft.RoleTable = {
   [269] = 'attack',
   [270] = 'hybrid',
   -- Paladin
-  [65] = 'heal',
+  [65] = 'attack',
   [66] = 'tank',
   [70] = 'attack',
   -- Priest
   [256] = 'spell',
-  [257] = 'heal',
+  [257] = 'attack',
   [258] = 'spell',
   -- Rogue
   [259] = 'attack',
@@ -92,7 +92,7 @@ Simulationcraft.RoleTable = {
   -- Shaman
   [262] = 'spell',
   [263] = 'attack',
-  [264] = 'heal',
+  [264] = 'attack',
   -- Warlock
   [265] = 'spell',
   [266] = 'spell',
