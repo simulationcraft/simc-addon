@@ -16,9 +16,6 @@ local OFFSET_FLAGS = 11
 local OFFSET_BONUS_ID = 13
 local OFFSET_UPGRADE_ID = 14 -- Flags = 0x4
 
--- Artifact stuff (adapted from LibArtifactData [https://www.wowace.com/addons/libartifactdata-1-0/], thanks!)
-local ArtifactUI            = _G.C_ArtifactUI
-local HasArtifactEquipped   = _G.HasArtifactEquipped
 local SocketInventoryItem   = _G.SocketInventoryItem
 local Timer                 = _G.C_Timer
 local AzeriteEmpoweredItem  = _G.C_AzeriteEmpoweredItem
@@ -31,7 +28,6 @@ local simcSlotNames = Simulationcraft.simcSlotNames
 local specNames     = Simulationcraft.SpecNames
 local profNames     = Simulationcraft.ProfNames
 local regionString  = Simulationcraft.RegionString
-local artifactTable = Simulationcraft.ArtifactTable
 
 -- Most of the guts of this addon were based on a variety of other ones, including
 -- Statslog, AskMrRobot, and BonusScanner. And a bunch of hacking around with AceGUI.
@@ -176,173 +172,6 @@ local function translateRole(spec_id, str)
   end
 end
 
--- ================= Artifact Information =======================
-
-local function IsArtifactFrameOpen()
-  local ArtifactFrame = _G.ArtifactFrame
-  return ArtifactFrame and ArtifactFrame:IsShown() or false
-end
-
-local function GetPowerData(powerId)
-  if not powerId then
-    return 0, 0
-  end
-
-  local powerInfo = ArtifactUI.GetPowerInfo(powerId)
-  if powerInfo == nil then
-    return powerId, 0
-  end
-
-  return powerId, powerInfo.currentRank - powerInfo.bonusRanks
-end
-
-function Simulationcraft:OpenArtifact()
-  if not HasArtifactEquipped() then
-    return false, false, 0
-  end
-
-  local artifactFrameOpen = IsArtifactFrameOpen()
-  if not artifactFrameOpen then
-    SocketInventoryItem(INVSLOT_MAINHAND)
-  end
-
-  local ArtifactFrame = _G.ArtifactFrame
-
-  local itemId = select(1, ArtifactUI.GetArtifactInfo())
-  if itemId == nil or itemId == 0 then
-    if not artifactFrameOpen then
-      HideUIPanel(ArtifactFrame)
-    end
-    return false, false, 0
-  end
-
-  -- if not select(1, IsUsableItem(itemId)) then
-  --   if not artifactFrameOpen then
-  --     HideUIPanel(ArtifactFrame)
-  --   end
-  --   return false, false, 0
-  -- end
-
-  local mhId = select(1, GetInventoryItemID("player", GetInventorySlotInfo("MainHandSlot")))
-  local ohId = select(1, GetInventoryItemID("player", GetInventorySlotInfo("SecondaryHandSlot")))
-  local correctArtifactOpen = (mhId ~= nil and mhId == itemId) or (ohId ~= nil and ohId == itemId)
-
-  if not correctArtifactOpen then
-    print("|cFFFF0000Warning, attempting to generate Simulationcraft artifact output for the wrong item (expected "
-      .. (mhId or 0) .. " or " .. (ohId or 0) .. ", got " .. itemId .. ")")
-    HideUIPanel(ArtifactFrame)
-    SocketInventoryItem(INVSLOT_MAINHAND)
-    itemId = select(1, ArtifactUI.GetArtifactInfo())
-  end
-
-  return artifactFrameOpen, correctArtifactOpen, itemId
-end
-
-function Simulationcraft:CloseArtifactFrame(wasOpen, correctOpen)
-  local ArtifactFrame = _G.ArtifactFrame
-
-  if ArtifactFrame and (not wasOpen or not correctOpen) then
-    HideUIPanel(ArtifactFrame)
-  end
-end
-
-function Simulationcraft:GetCrucibleString()
-  local artifactFrameOpen, correctArtifactOpen, itemId = self:OpenArtifact()
-
-  if not itemId then
-    self:CloseArtifactFrame(artifactFrameOpen, correctArtifactOpen)
-    return nil
-  end
-
-  local artifactId = artifactTable[itemId]
-  if artifactId == nil then
-    self:CloseArtifactFrame(artifactFrameOpen, correctArtifactOpen)
-    return nil
-  end
-
-  local crucibleData = {}
-  for ridx = 1, ArtifactUI.GetNumRelicSlots() do
-    local link = select(4, ArtifactUI.GetRelicInfo(ridx))
-    if link ~= nil then
-      local relicSplit     = GetItemSplit(link)
-      local baseLink       = select(2, GetItemInfo(relicSplit[1]))
-      local basePowers     = { ArtifactUI.GetPowersAffectedByRelicItemLink(baseLink) }
-      local relicPowers    = { ArtifactUI.GetPowersAffectedByRelic(ridx) }
-      local cruciblePowers = {}
-
-      for rpidx = 1, #relicPowers do
-        local found = false
-        for bpidx = 1, #basePowers do
-          if relicPowers[rpidx] == basePowers[bpidx] then
-            found = true
-            break
-          end
-        end
-
-        if not found then
-          cruciblePowers[#cruciblePowers + 1] = relicPowers[rpidx]
-        end
-      end
-
-      if #cruciblePowers == 0 then
-        crucibleData[ridx] = { 0 }
-      else
-        crucibleData[ridx] = cruciblePowers
-      end
-    else
-      crucibleData[ridx] = { 0 }
-    end
-  end
-
-  local crucibleStrings = {}
-  for ridx = 1, #crucibleData do
-    crucibleStrings[ridx] = table.concat(crucibleData[ridx], ':')
-  end
-
-  self:CloseArtifactFrame(artifactFrameOpen, correctArtifactOpen)
-
-  return 'crucible=' .. table.concat(crucibleStrings, '/')
-end
-
-function Simulationcraft:GetArtifactString()
-  local artifactFrameOpen, correctArtifactOpen, itemId = self:OpenArtifact()
-
-  if not itemId then
-    self:CloseArtifactFrame(artifactFrameOpen, correctArtifactOpen)
-    return nil
-  end
-
-  local artifactId = artifactTable[itemId]
-  if artifactId == nil then
-    self:CloseArtifactFrame(artifactFrameOpen, correctArtifactOpen)
-    return nil
-  end
-
-  -- Note, relics are handled by the item string
-  local str = 'artifact=' .. artifactId .. ':0:0:0:0'
-
-  local baseRanks = {}
-  local crucibleRanks = {}
-
-  local powers = ArtifactUI.GetPowers()
-  for i = 1, #powers do
-    local powerId, powerRank = GetPowerData(powers[i])
-
-    if powerRank > 0 then
-      baseRanks[#baseRanks + 1] = powerId
-      baseRanks[#baseRanks + 1] = powerRank
-    end
-  end
-
-  if #baseRanks > 0 then
-    str = str .. ':' .. table.concat(baseRanks, ':')
-  end
-
-  self:CloseArtifactFrame(artifactFrameOpen, correctArtifactOpen)
-
-  return str
-end
-
 -- =================== Item Information =========================
 local function GetGemItemID(itemLink, index)
   local _, gemLink = GetItemGem(itemLink, index)
@@ -418,47 +247,6 @@ local function GetItemStringFromItemLink(slotNum, itemLink, itemLoc, debugOutput
       simcItemOptions[#simcItemOptions + 1] = 'upgrade=' .. upgradeTable[upgradeId]
     end
     linkOffset = linkOffset + 1
-  end
-
-  -- Artifacts use this
-  if bit.band(flags, 0x100) == 0x100 then
-    linkOffset = linkOffset + 1 -- An unknown field
-    -- 7.2 added a new field to the item string if additional trait ranks are attained
-    -- for the artifact.
-    if bit.band(flags, 0x1000000) == 0x1000000 then
-      linkOffset = linkOffset + 1
-    end
-
-    -- Relic bonus ids, relic item ids handled by gems
-    local relicStrs = {}
-    local relicIndex = 1
-    while linkOffset < #itemSplit do
-      local nBonusIds = itemSplit[linkOffset]
-      linkOffset = linkOffset + 1
-
-      if nBonusIds == 0 then
-        relicStrs[relicIndex] = "0"
-      else
-        local relicBonusIds = {}
-        for rbid = 1, nBonusIds do
-          relicBonusIds[#relicBonusIds + 1] = itemSplit[linkOffset]
-          linkOffset = linkOffset + 1
-        end
-
-        relicStrs[relicIndex] = table.concat(relicBonusIds, ':')
-      end
-
-      relicIndex = relicIndex + 1
-    end
-
-    -- Remove any trailing zeros from the relic ids array
-    while #relicStrs > 0 and relicStrs[#relicStrs] == "0" do
-      table.remove(relicStrs, #relicStrs)
-    end
-
-    if #relicStrs > 0 then
-      simcItemOptions[#simcItemOptions + 1] = 'relic_id=' .. table.concat(relicStrs, '/')
-    end
   end
 
   -- Some leveling quest items seem to use this, it'll include the drop level of the item
@@ -653,8 +441,6 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
 
   -- Talents are more involved - method to handle them
   local playerTalents = CreateSimcTalentString()
-  local playerArtifact = self:GetArtifactString()
-  local playerCrucible = self:GetCrucibleString()
 
   -- Build the output string for the player (not including gear)
   local simulationcraftProfile = versionComment .. '\n'
@@ -668,12 +454,6 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
   simulationcraftProfile = simulationcraftProfile .. playerProfessions .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerTalents .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerSpec .. '\n'
-  if playerArtifact ~= nil then
-    simulationcraftProfile = simulationcraftProfile .. playerArtifact .. '\n'
-  end
-  if playerCrucible ~= nil then
-    simulationcraftProfile = simulationcraftProfile .. playerCrucible .. '\n'
-  end
   simulationcraftProfile = simulationcraftProfile .. '\n'
 
   -- Method that gets gear information
