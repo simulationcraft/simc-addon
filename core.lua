@@ -13,6 +13,7 @@ local OFFSET_GEM_ID_4 = 6
 local OFFSET_GEM_BASE = OFFSET_GEM_ID_1
 local OFFSET_SUFFIX_ID = 7
 local OFFSET_FLAGS = 11
+local OFFSET_CONTEXT = 12
 local OFFSET_BONUS_ID = 13
 local OFFSET_UPGRADE_ID = 14 -- Flags = 0x4
 
@@ -255,6 +256,13 @@ local function GetItemStringFromItemLink(slotNum, itemLink, itemLoc, debugOutput
     linkOffset = linkOffset + 1
   end
 
+  -- Get item creation context. Can be used to determine unlock/availability of azerite tiers for 3rd parties
+  -- To reduce issues with SimC, use reforge= for now
+  -- context= will be supported by simc soon and we can switch over for 8.1
+  if itemSplit[OFFSET_CONTEXT] ~= 0 then
+    simcItemOptions[#simcItemOptions + 1] = 'reforge=' .. itemSplit[OFFSET_CONTEXT]
+  end
+
   -- Azerite powers - only run in BfA client
   if itemLoc and AzeriteEmpoweredItem then
     if AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLoc) then
@@ -369,6 +377,7 @@ end
 function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
   -- addon metadata
   local versionComment = '# SimC Addon ' .. GetAddOnMetadata('Simulationcraft', 'Version')
+  local reforgeWarning = '# 8.0 Note: reforge= is being used as a hacky way to capture item context. This will be changed in 8.1'
 
   -- Basic player info
   local _, realmName, _, _, _, _, region, _, _, realmLatinName, _ = LibRealmInfo:GetRealmInfoByUnit('player')
@@ -444,6 +453,7 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
 
   -- Build the output string for the player (not including gear)
   local simulationcraftProfile = versionComment .. '\n'
+  simulationcraftProfile = simulationcraftProfile .. reforgeWarning .. '\n'
   simulationcraftProfile = simulationcraftProfile .. '\n'
   simulationcraftProfile = simulationcraftProfile .. player .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerLevel .. '\n'
