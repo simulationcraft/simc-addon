@@ -3,7 +3,7 @@
 ## Notes: Constructs SimC export strings
 ## Author: Theck, navv_, seriallos
 ## Version: 1.10.6
-## OptionalDependencies: Ace3
+## OptionalDependencies: Ace3, LibRealmInfo
 
 libs\LibStub\LibStub.lua
 libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
