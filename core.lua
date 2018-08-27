@@ -129,6 +129,16 @@ local function tokenize(str)
   return s
 end
 
+-- method to add spaces to UnitRace names for proper tokenization
+local function format_race(str)
+  str = str or ""
+  local matches = {}
+  for match, _ in string.gmatch(str, '([%u][%l]*)') do
+    matches[#matches+1] = match
+  end
+  return string.join(' ', unpack(matches))
+end
+
 -- method for constructing the talent string
 local function CreateSimcTalentString()
   local talentInfo = {}
@@ -397,16 +407,10 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
   -- Race info
   local _, playerRace = UnitRace('player')
   -- fix some races to match SimC format
-  if playerRace == 'BloodElf' then
-    playerRace = 'Blood Elf'
-  elseif playerRace == 'NightElf' then
-    playerRace = 'Night Elf'
-  elseif playerRace == 'MagharOrc' then
-    playerRace = 'Maghar Orc'
-  elseif playerRace == 'DarkIronDwarf' then
-    playerRace = 'Dark Iron Dwarf'
-  elseif playerRace == 'Scourge' then --lulz
+  if playerRace == 'Scourge' then --lulz
     playerRace = 'Undead'
+  else
+    playerRace = format_race(playerRace)
   end
 
   -- Spec info
