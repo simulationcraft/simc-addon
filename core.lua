@@ -407,6 +407,10 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
     playerRace = 'Dark Iron Dwarf'
   elseif playerRace == 'Scourge' then --lulz
     playerRace = 'Undead'
+  elseif playerRace == 'DarkIronDwarf' then
+    playerRace = 'Dark Iron Dwarf'
+  elseif playerRace == 'MagharOrc' then
+    playerRace = 'Maghar Orc'
   end
 
   -- Spec info
