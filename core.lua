@@ -383,6 +383,20 @@ function Simulationcraft:GetBagItemStrings()
   return bagItems
 end
 
+function Simulationcraft:GetReoriginationArrayStacks()
+  local questStart = 53571
+  local questEnd = 53580
+  local stacks = 0
+
+  for questId = questStart, questEnd do
+    if IsQuestFlaggedCompleted(questId) then
+      stacks = stacks + 1
+    end
+  end
+
+  return stacks
+end
+
 -- This is the workhorse function that constructs the profile
 function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
   -- addon metadata
@@ -491,12 +505,19 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
     local bagItems = Simulationcraft:GetBagItemStrings()
 
     simulationcraftProfile = simulationcraftProfile .. '### Gear from Bags\n'
-    simulationcraftProfile = simulationcraftProfile .. '#\n'
     for i=1, #bagItems do
+      simulationcraftProfile = simulationcraftProfile .. '#\n'
       simulationcraftProfile = simulationcraftProfile .. '# ' .. bagItems[i].name .. '\n'
       simulationcraftProfile = simulationcraftProfile .. '# ' .. bagItems[i].string .. '\n'
-      simulationcraftProfile = simulationcraftProfile .. '#\n'
     end
+  end
+
+  -- collect additional info and output in comments
+  local reoriginationArrayStacks = Simulationcraft:GetReoriginationArrayStacks()
+  if reoriginationArrayStacks > 0 then
+    simulationcraftProfile = simulationcraftProfile .. '\n'
+    simulationcraftProfile = simulationcraftProfile .. '# Stacks of reorigination array based on hidden quest completion\n'
+    simulationcraftProfile = simulationcraftProfile .. '# bfa.reorigination_array_stacks=' .. reoriginationArrayStacks .. '\n'
   end
 
   -- sanity checks - if there's anything that makes the output completely invalid, punt!
