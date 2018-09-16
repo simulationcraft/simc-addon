@@ -81,7 +81,7 @@ local function GetItemSplit(itemLink)
 end
 
 -- char size for utf8 strings
-local function chsize(char)
+local function ChrSize(char)
   if not char then
       return 0
   elseif char > 240 then
@@ -96,7 +96,7 @@ local function chsize(char)
 end
 
 -- SimC tokenize function
-local function tokenize(str)
+local function Tokenize(str)
   str = str or ""
   -- convert to lowercase and remove spaces
   str = string.lower(str)
@@ -116,8 +116,8 @@ local function tokenize(str)
     elseif b == 37 or b == 43 or b == 46 or b == 95 then
       s = s .. str:sub(i,i)
       -- save all multibyte chars
-    elseif chsize(b) > 1 then
-      local offset = chsize(b) - 1
+    elseif ChrSize(b) > 1 then
+      local offset = ChrSize(b) - 1
       s = s .. str:sub(i, i + offset)
       i = i + offset
     end
@@ -130,7 +130,7 @@ local function tokenize(str)
 end
 
 -- method to add spaces to UnitRace names for proper tokenization
-local function format_race(str)
+local function FormatRace(str)
   str = str or ""
   local matches = {}
   for match, _ in string.gmatch(str, '([%u][%l]*)') do
@@ -166,7 +166,7 @@ local function CreateSimcTalentString()
 end
 
 -- function that translates between the game's role values and ours
-local function translateRole(spec_id, str)
+local function TranslateRole(spec_id, str)
   local spec_role = Simulationcraft.RoleTable[spec_id]
   if spec_role ~= nil then
     return spec_role
@@ -424,7 +424,7 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
   if playerRace == 'Scourge' then --lulz
     playerRace = 'Undead'
   else
-    playerRace = format_race(playerRace)
+    playerRace = FormatRace(playerRace)
   end
 
   -- Spec info
@@ -452,23 +452,23 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
   if pid1 or pid2 then
     playerProfessions = 'professions='
     if pid1 then
-      playerProfessions = playerProfessions..tokenize(firstProf)..'='..tostring(firstProfRank)..'/'
+      playerProfessions = playerProfessions..Tokenize(firstProf)..'='..tostring(firstProfRank)..'/'
     end
     if pid2 then
-      playerProfessions = playerProfessions..tokenize(secondProf)..'='..tostring(secondProfRank)
+      playerProfessions = playerProfessions..Tokenize(secondProf)..'='..tostring(secondProfRank)
     end
   else
     playerProfessions = ''
   end
 
   -- Construct SimC-compatible strings from the basic information
-  local player = tokenize(playerClass) .. '="' .. playerName .. '"'
+  local player = Tokenize(playerClass) .. '="' .. playerName .. '"'
   playerLevel = 'level=' .. playerLevel
-  playerRace = 'race=' .. tokenize(playerRace)
-  playerRole = 'role=' .. translateRole(globalSpecID, role)
-  playerSpec = 'spec=' .. tokenize(playerSpec)
-  playerRealm = 'server=' .. tokenize(playerRealm)
-  playerRegion = 'region=' .. tokenize(playerRegion)
+  playerRace = 'race=' .. Tokenize(playerRace)
+  playerRole = 'role=' .. TranslateRole(globalSpecID, role)
+  playerSpec = 'spec=' .. Tokenize(playerSpec)
+  playerRealm = 'server=' .. Tokenize(playerRealm)
+  playerRegion = 'region=' .. Tokenize(playerRegion)
 
   -- Talents are more involved - method to handle them
   local playerTalents = CreateSimcTalentString()
