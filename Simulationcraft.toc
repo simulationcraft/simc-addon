@@ -2,8 +2,9 @@
 ## Title: Simulationcraft
 ## Notes: Constructs SimC export strings
 ## Author: Theck, navv_, seriallos
-## Version: 1.10.7
-## OptionalDependencies: Ace3, LibRealmInfo
+## Version: 1.10.8-alpha-1
+## OptionalDependencies: Ace3, LibRealmInfo, LibDBIcon
+## SavedVariables: SimulationCraftDB
 
 libs\LibStub\LibStub.lua
 libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
@@ -13,6 +14,8 @@ libs\AceConsole-3.0\AceConsole-3.0.xml
 libs\AceEvent-3.0\AceEvent-3.0.xml
 libs\LibItemUpgradeInfo-1.0\LibItemUpgradeInfo-1.0.xml
 libs\LibRealmInfo\LibRealmInfo.lua
+libs\libdatabroker-1-1\LibDataBroker-1.1.lua
+Libs\LibDBIcon-1.0\lib.xml
 #@end-no-lib-strip@
 
 embeds.xml
