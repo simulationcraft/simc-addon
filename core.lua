@@ -53,8 +53,6 @@ local specNames     = Simulationcraft.SpecNames
 local profNames     = Simulationcraft.ProfNames
 local regionString  = Simulationcraft.RegionString
 
-local IsWindowOpen = false
-
 -- Most of the guts of this addon were based on a variety of other ones, including
 -- Statslog, AskMrRobot, and BonusScanner. And a bunch of hacking around with AceGUI.
 -- Many thanks to the authors of those addons, and to reia for fixing my awful amateur
@@ -579,6 +577,4 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
   SimcCopyFrameScrollText:SetScript("OnEscapePressed", function(self)
     SimcCopyFrame:Hide()
   end)
-
-  IsWindowOpen = true
 end
