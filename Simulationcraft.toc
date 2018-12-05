@@ -3,7 +3,7 @@
 ## Notes: Constructs SimC export strings
 ## Author: Theck, navv_, seriallos
 ## Version: 1.10.8-alpha-2
-## OptionalDependencies: Ace3, LibRealmInfo, LibDBIcon
+## OptionalDependencies: Ace3, LibRealmInfo, LibDBIcon, LibDataBroker-1.1
 ## SavedVariables: SimulationCraftDB
 
 libs\LibStub\LibStub.lua
