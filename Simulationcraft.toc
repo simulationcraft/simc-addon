@@ -14,7 +14,7 @@ libs\AceConsole-3.0\AceConsole-3.0.xml
 libs\AceEvent-3.0\AceEvent-3.0.xml
 libs\LibItemUpgradeInfo-1.0\LibItemUpgradeInfo-1.0.xml
 libs\LibRealmInfo\LibRealmInfo.lua
-libs\libdatabroker-1-1\LibDataBroker-1.1.lua
+libs\LibDataBroker-1-1\LibDataBroker-1.1.lua
 Libs\LibDBIcon-1.0\lib.xml
 #@end-no-lib-strip@
 
