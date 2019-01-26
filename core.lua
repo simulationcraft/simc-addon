@@ -94,9 +94,38 @@ function Simulationcraft:HandleChatCommand(input)
 
   local debugOutput = false
   local noBags = false
+  local links = {}
 
+  -- Links often have spaces in them and will therefore show up as multiple
+  -- arguments. This flag is true when we are parsing a link or multiple links
+  -- not separated by spaces, the end of which has not yet been found.
+  local concatenatingLink = false;
   for _, arg in ipairs(args) do
-    if arg == 'debug' then
+    if concatenatingLink then
+      links[#links] = links[#links] .. " " .. arg
+
+      if select(2, strfind(arg, '|r')) == strlen(arg) then -- arg ends with the end of a link.
+        concatenatingLink = false
+
+        -- Additionally, I want it to be possible to link multiple items in
+        -- succession with no space inbetween. This code breaks these item
+        -- strings apart. Now that one or more links have been collected,
+        -- split them apart.
+        local link = links[#links]
+        local i = #links
+        while true do
+          local _,firstLinkEnd = string.find(link, '|r')
+          if firstLinkEnd == string.len(link) then -- link only contains one link.
+            links[i] = link
+            break
+          end
+  
+          links[i] = strsub(link, 0, firstLinkEnd)
+          link = strsub(link, firstLinkEnd + 1)
+          i = i + 1
+        end
+      end
+    elseif arg == 'debug' then
       debugOutput = true
     elseif arg == 'nobag' or arg == 'nobags' or arg == 'nb' then
       noBags = true
@@ -105,10 +134,13 @@ function Simulationcraft:HandleChatCommand(input)
       DEFAULT_CHAT_FRAME:AddMessage("SimulationCraft: Minimap button is now " .. (self.db.profile.minimap.hide and "hidden" or "shown"))
       Simulationcraft:UpdateMinimapButton()
       return
+    elseif string.sub(arg,1,1) == '|' then -- Looks like the start of a link.
+      concatenatingLink = true
+      links[#links + 1] = arg
     end
   end
 
-  self:PrintSimcProfile(debugOutput, noBags)
+  self:PrintSimcProfile(debugOutput, noBags, links)
 end
 
 
@@ -444,7 +476,7 @@ function Simulationcraft:GetReoriginationArrayStacks()
 end
 
 -- This is the workhorse function that constructs the profile
-function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
+function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
   -- addon metadata
   local versionComment = '# SimC Addon ' .. GetAddOnMetadata('Simulationcraft', 'Version')
 
@@ -520,6 +552,7 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
 
   -- Build the output string for the player (not including gear)
   local simulationcraftProfile = versionComment .. '\n'
+  local simcPrintError = nil
   simulationcraftProfile = simulationcraftProfile .. player .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerLevel .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerRace .. '\n'
@@ -563,16 +596,31 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
     simulationcraftProfile = simulationcraftProfile .. '# bfa.reorigination_array_stacks=' .. reoriginationArrayStacks .. '\n'
   end
 
+  if links and #links > 0 then
+    simulationcraftProfile = simulationcraftProfile .. '\n### Linked gear\n'
+    for i,v in pairs(links) do
+      local name,_,_,_,_,_,_,_,slotName = GetItemInfo(v)
+      if name and slotName ~= "" then
+        simulationcraftProfile = simulationcraftProfile .. '#\n'
+        simulationcraftProfile = simulationcraftProfile .. '# ' .. name .. '\n'
+        simulationcraftProfile = simulationcraftProfile .. '# ' .. GetItemStringFromItemLink(Simulationcraft.slotIds[slotName], v, nil, debugOutput) .. "\n"
+      else -- Someone linked something that was not gear.
+        simcPrintError = "Error: " .. v .. " is not gear."
+        break
+      end
+    end
+  end
+
   -- sanity checks - if there's anything that makes the output completely invalid, punt!
   if specId==nil then
-    simulationcraftProfile = "Error: You need to pick a spec!"
+    simcPrintError = "Error: You need to pick a spec!"
   end
 
   -- show the appropriate frames
   SimcCopyFrame:Show()
   SimcCopyFrameScroll:Show()
   SimcCopyFrameScrollText:Show()
-  SimcCopyFrameScrollText:SetText(simulationcraftProfile)
+  SimcCopyFrameScrollText:SetText(simcPrintError or simulationcraftProfile)
   SimcCopyFrameScrollText:HighlightText()
   SimcCopyFrameScrollText:SetScript("OnEscapePressed", function(self)
     SimcCopyFrame:Hide()
