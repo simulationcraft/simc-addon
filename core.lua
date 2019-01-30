@@ -89,6 +89,21 @@ function Simulationcraft:UpdateMinimapButton()
   end
 end
 
+local function splitLinks(links)
+  local separatedLinks = {}
+  while true do
+    local _,firstLinkEnd = strfind(links, '|r')
+    if firstLinkEnd == strlen(links) then -- link only contains one link.
+      separatedLinks[#separatedLinks + 1] = links
+      break
+    end
+
+    separatedLinks[#separatedLinks + 1] = strsub(links, 0, firstLinkEnd)
+    links = strsub(links, firstLinkEnd + 1)
+  end
+  return separatedLinks
+end
+
 function Simulationcraft:HandleChatCommand(input)
   local args = {strsplit(' ', input)}
 
@@ -97,34 +112,27 @@ function Simulationcraft:HandleChatCommand(input)
   local links = {}
 
   -- Links often have spaces in them and will therefore show up as multiple
-  -- arguments. This flag is true when we are parsing a link or multiple links
-  -- not separated by spaces, the end of which has not yet been found.
-  local concatenatingLink = false;
+  -- arguments. This variable is non-nil when we are parsing a link or multiple
+  -- links not separated by spaces, the end of which has not yet been found.
+  local reassemblingLink = nil;
+
   for _, arg in ipairs(args) do
-    if concatenatingLink then
-      links[#links] = links[#links] .. " " .. arg
+    if reassemblingLink then
+      reassemblingLink = reassemblingLink .. " " .. arg
 
       if select(2, strfind(arg, '|r')) == strlen(arg) then -- arg ends with the end of a link.
-        concatenatingLink = false
 
         -- Additionally, I want it to be possible to link multiple items in
-        -- succession with no space inbetween. This code breaks these item
-        -- strings apart. Now that one or more links have been collected,
-        -- split them apart.
-        local link = links[#links]
-        local i = #links
-        while true do
-          local _,firstLinkEnd = string.find(link, '|r')
-          if firstLinkEnd == string.len(link) then -- link only contains one link.
-            links[i] = link
-            break
-          end
-  
-          links[i] = strsub(link, 0, firstLinkEnd)
-          link = strsub(link, firstLinkEnd + 1)
-          i = i + 1
-        end
+        -- succession with no space inbetween. If this happens, the links will
+		  -- have to be separated.
+		  local separatedLinks = splitLinks(reassemblingLink)
+		  for _,link in pairs(separatedLinks) do
+		    links[#links + 1] = link
+		  end
+        reassemblingLink = nil
       end
+    elseif strfind(arg,'|') == 1 then -- Looks like the start of a link.
+      reassemblingLink = arg
     elseif arg == 'debug' then
       debugOutput = true
     elseif arg == 'nobag' or arg == 'nobags' or arg == 'nb' then
@@ -134,9 +142,6 @@ function Simulationcraft:HandleChatCommand(input)
       DEFAULT_CHAT_FRAME:AddMessage("SimulationCraft: Minimap button is now " .. (self.db.profile.minimap.hide and "hidden" or "shown"))
       Simulationcraft:UpdateMinimapButton()
       return
-    elseif string.sub(arg,1,1) == '|' then -- Looks like the start of a link.
-      concatenatingLink = true
-      links[#links + 1] = arg
     end
   end
 
