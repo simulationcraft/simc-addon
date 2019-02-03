@@ -89,17 +89,10 @@ function Simulationcraft:UpdateMinimapButton()
   end
 end
 
-local function splitLinks(links)
+local function getLinks(input)
   local separatedLinks = {}
-  while true do
-    local _,firstLinkEnd = strfind(links, '|r')
-    if firstLinkEnd == strlen(links) then -- link only contains one link.
-      separatedLinks[#separatedLinks + 1] = links
-      break
-    end
-
-    separatedLinks[#separatedLinks + 1] = strsub(links, 0, firstLinkEnd)
-    links = strsub(links, firstLinkEnd + 1)
+  for link in input:gmatch("|c.-|h|r") do
+     separatedLinks[#separatedLinks + 1] = link
   end
   return separatedLinks
 end
@@ -109,31 +102,10 @@ function Simulationcraft:HandleChatCommand(input)
 
   local debugOutput = false
   local noBags = false
-  local links = {}
-
-  -- Links often have spaces in them and will therefore show up as multiple
-  -- arguments. This variable is non-nil when we are parsing a link or multiple
-  -- links not separated by spaces, the end of which has not yet been found.
-  local reassemblingLink = nil;
+  local links = getLinks(input)
 
   for _, arg in ipairs(args) do
-    if reassemblingLink then
-      reassemblingLink = reassemblingLink .. " " .. arg
-
-      if select(2, strfind(arg, '|r')) == strlen(arg) then -- arg ends with the end of a link.
-
-        -- Additionally, I want it to be possible to link multiple items in
-        -- succession with no space inbetween. If this happens, the links will
-		  -- have to be separated.
-		  local separatedLinks = splitLinks(reassemblingLink)
-		  for _,link in pairs(separatedLinks) do
-		    links[#links + 1] = link
-		  end
-        reassemblingLink = nil
-      end
-    elseif strfind(arg,'|') == 1 then -- Looks like the start of a link.
-      reassemblingLink = arg
-    elseif arg == 'debug' then
+    if arg == 'debug' then
       debugOutput = true
     elseif arg == 'nobag' or arg == 'nobags' or arg == 'nb' then
       noBags = true
@@ -604,11 +576,12 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
   if links and #links > 0 then
     simulationcraftProfile = simulationcraftProfile .. '\n### Linked gear\n'
     for i,v in pairs(links) do
-      local name,_,_,_,_,_,_,_,slotName = GetItemInfo(v)
-      if name and slotName ~= "" then
+      local name,_,_,_,_,_,_,_,invType = GetItemInfo(v)
+      if name and invType ~= "" then
+        local slotNum = Simulationcraft.invTypeToSlotNum[invType]
         simulationcraftProfile = simulationcraftProfile .. '#\n'
         simulationcraftProfile = simulationcraftProfile .. '# ' .. name .. '\n'
-        simulationcraftProfile = simulationcraftProfile .. '# ' .. GetItemStringFromItemLink(Simulationcraft.slotIds[slotName], v, nil, debugOutput) .. "\n"
+        simulationcraftProfile = simulationcraftProfile .. '# ' .. GetItemStringFromItemLink(slotNum, v, nil, debugOutput) .. "\n"
       else -- Someone linked something that was not gear.
         simcPrintError = "Error: " .. v .. " is not gear."
         break
