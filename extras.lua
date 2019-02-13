@@ -133,7 +133,7 @@ Simulationcraft.SpecNames = {
 
 -- slot name conversion stuff
 
--- The array indexes are NOT the slot ids.
+-- The array indexes are NOT the slot ids - they are the "slot numbers" used by this addons.
 Simulationcraft.slotNames = {
 	"HeadSlot", -- [1]
 	"NeckSlot", -- [2]
@@ -155,7 +155,7 @@ Simulationcraft.slotNames = {
 	"SecondaryHandSlot", -- [18]
 	"AmmoSlot" -- [19]
 }
--- The array indexes are NOT the slot ids.
+-- The array indexes are NOT the slot ids - they are the "slot numbers" used by this addons.
 Simulationcraft.simcSlotNames = {
 	'head', -- [1]
 	'neck', -- [2]
@@ -177,12 +177,13 @@ Simulationcraft.simcSlotNames = {
 	'off_hand', -- [18]
 	'ammo', -- [19]
 }
+-- Map of the INVTYPE_ returned by GetItemInfo to the slot number (NOT the slot id).
 Simulationcraft.invTypeToSlotNum = {
 	INVTYPE_HEAD=1,
 	INVTYPE_NECK=2,
 	INVTYPE_SHOULDER=3,
 	INVTYPE_CLOAK=4,
-	INVTYPE_CHEST=5, INVTYPE_ROBE=5, -- These are the same slot - whether the model covers the legs determines which one GetItemInfo returns.
+	INVTYPE_CHEST=5, INVTYPE_ROBE=5, -- These are the same slot - which one is used appears to differ based on whether the item's model covers the legs.
 	INVTYPE_BODY=6, -- shirt.
 	INVTYPE_TABARD=7,
 	INVTYPE_WRIST=8,
@@ -191,9 +192,9 @@ Simulationcraft.invTypeToSlotNum = {
 	INVTYPE_LEGS=11,
 	INVTYPE_FEET=12,
 	INVTYPE_FINGER=13,
-	-- 14 is also a finger slotNum.
+	-- 14 is also a finger slot number.
 	INVTYPE_TRINKET=15,
-	-- 16 is also a finger slotNum.
+	-- 16 is also a trinket slot number.
 	INVTYPE_WEAPON=17, -- 1h weapon.
 	INVTYPE_2HWEAPON=17, -- 2h weapon.
 	INVTYPE_RANGED=17, -- bows.
@@ -204,8 +205,8 @@ Simulationcraft.invTypeToSlotNum = {
 	-- These types are no longer used in current content.
 	INVTYPE_WEAPONMAINHAND=17, -- Likely no items have this type anymore.
 	INVTYPE_WEAPONOFFHAND=18, -- Likely no items have this type anymore.
-	INVTYPE_THROWN=17, -- Thrown weapons. I do not know if this slotNum is correct, but it should not matter since these are no longer obtainable and those that do exist are now gray items.
-	--INVTYPE_RELIC=?, -- No corresponding slotNum, and I do not think any such items exist. Existing relics were turned into non-equipable gray items.
+	INVTYPE_THROWN=17, -- Thrown weapons. I do not know if this slot number is correct, but it shouldn't matter since these are no longer obtainable and those that do exist are now gray items.
+	--INVTYPE_RELIC=?, -- No corresponding slot number, and I do not think any such items exist. Existing relics were turned into non-equipable gray items. This is value is not used for legion relics either.
 }
 
 -- table for conversion to upgrade level, stolen from AMR (<3)
