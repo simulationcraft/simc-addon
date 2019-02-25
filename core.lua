@@ -89,11 +89,20 @@ function Simulationcraft:UpdateMinimapButton()
   end
 end
 
+local function getLinks(input)
+  local separatedLinks = {}
+  for link in input:gmatch("|c.-|h|r") do
+     separatedLinks[#separatedLinks + 1] = link
+  end
+  return separatedLinks
+end
+
 function Simulationcraft:HandleChatCommand(input)
   local args = {strsplit(' ', input)}
 
   local debugOutput = false
   local noBags = false
+  local links = getLinks(input)
 
   for _, arg in ipairs(args) do
     if arg == 'debug' then
@@ -108,7 +117,7 @@ function Simulationcraft:HandleChatCommand(input)
     end
   end
 
-  self:PrintSimcProfile(debugOutput, noBags)
+  self:PrintSimcProfile(debugOutput, noBags, links)
 end
 
 
@@ -444,7 +453,7 @@ function Simulationcraft:GetReoriginationArrayStacks()
 end
 
 -- This is the workhorse function that constructs the profile
-function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
+function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
   -- addon metadata
   local versionComment = '# SimC Addon ' .. GetAddOnMetadata('Simulationcraft', 'Version')
 
@@ -520,6 +529,7 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
 
   -- Build the output string for the player (not including gear)
   local simulationcraftProfile = versionComment .. '\n'
+  local simcPrintError = nil
   simulationcraftProfile = simulationcraftProfile .. player .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerLevel .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerRace .. '\n'
@@ -563,16 +573,32 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags)
     simulationcraftProfile = simulationcraftProfile .. '# bfa.reorigination_array_stacks=' .. reoriginationArrayStacks .. '\n'
   end
 
+  if links and #links > 0 then
+    simulationcraftProfile = simulationcraftProfile .. '\n### Linked gear\n'
+    for i,v in pairs(links) do
+      local name,_,_,_,_,_,_,_,invType = GetItemInfo(v)
+      if name and invType ~= "" then
+        local slotNum = Simulationcraft.invTypeToSlotNum[invType]
+        simulationcraftProfile = simulationcraftProfile .. '#\n'
+        simulationcraftProfile = simulationcraftProfile .. '# ' .. name .. '\n'
+        simulationcraftProfile = simulationcraftProfile .. '# ' .. GetItemStringFromItemLink(slotNum, v, nil, debugOutput) .. "\n"
+      else -- Someone linked something that was not gear.
+        simcPrintError = "Error: " .. v .. " is not gear."
+        break
+      end
+    end
+  end
+
   -- sanity checks - if there's anything that makes the output completely invalid, punt!
   if specId==nil then
-    simulationcraftProfile = "Error: You need to pick a spec!"
+    simcPrintError = "Error: You need to pick a spec!"
   end
 
   -- show the appropriate frames
   SimcCopyFrame:Show()
   SimcCopyFrameScroll:Show()
   SimcCopyFrameScrollText:Show()
-  SimcCopyFrameScrollText:SetText(simulationcraftProfile)
+  SimcCopyFrameScrollText:SetText(simcPrintError or simulationcraftProfile)
   SimcCopyFrameScrollText:HighlightText()
   SimcCopyFrameScrollText:SetScript("OnEscapePressed", function(self)
     SimcCopyFrame:Hide()

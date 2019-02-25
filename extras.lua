@@ -133,8 +133,81 @@ Simulationcraft.SpecNames = {
 
 -- slot name conversion stuff
 
-Simulationcraft.slotNames = {"HeadSlot", "NeckSlot", "ShoulderSlot", "BackSlot", "ChestSlot", "ShirtSlot", "TabardSlot", "WristSlot", "HandsSlot", "WaistSlot", "LegsSlot", "FeetSlot", "Finger0Slot", "Finger1Slot", "Trinket0Slot", "Trinket1Slot", "MainHandSlot", "SecondaryHandSlot", "AmmoSlot" };    
-Simulationcraft.simcSlotNames = {'head','neck','shoulder','back','chest','shirt','tabard','wrist','hands','waist','legs','feet','finger1','finger2','trinket1','trinket2','main_hand','off_hand','ammo'}
+-- The array indexes are NOT the slot ids - they are the "slot numbers" used by this addons.
+Simulationcraft.slotNames = {
+	"HeadSlot", -- [1]
+	"NeckSlot", -- [2]
+	"ShoulderSlot", -- [3]
+	"BackSlot", -- [4]
+	"ChestSlot", -- [5]
+	"ShirtSlot", -- [6]
+	"TabardSlot", -- [7]
+	"WristSlot", -- [8]
+	"HandsSlot", -- [9]
+	"WaistSlot", -- [10]
+	"LegsSlot", -- [11]
+	"FeetSlot", -- [12]
+	"Finger0Slot", -- [13]
+	"Finger1Slot", -- [14]
+	"Trinket0Slot", -- [15]
+	"Trinket1Slot", -- [16]
+	"MainHandSlot", -- [17]
+	"SecondaryHandSlot", -- [18]
+	"AmmoSlot" -- [19]
+}
+-- The array indexes are NOT the slot ids - they are the "slot numbers" used by this addons.
+Simulationcraft.simcSlotNames = {
+	'head', -- [1]
+	'neck', -- [2]
+	'shoulder', -- [3]
+	'back', -- [4]
+	'chest', -- [5]
+	'shirt', -- [6]
+	'tabard', -- [7]
+	'wrist', -- [8]
+	'hands', -- [9]
+	'waist', -- [10]
+	'legs', -- [11]
+	'feet', -- [12]
+	'finger1', -- [13]
+	'finger2', -- [14]
+	'trinket1', -- [15]
+	'trinket2', -- [16]
+	'main_hand', -- [17]
+	'off_hand', -- [18]
+	'ammo', -- [19]
+}
+-- Map of the INVTYPE_ returned by GetItemInfo to the slot number (NOT the slot id).
+Simulationcraft.invTypeToSlotNum = {
+	INVTYPE_HEAD=1,
+	INVTYPE_NECK=2,
+	INVTYPE_SHOULDER=3,
+	INVTYPE_CLOAK=4,
+	INVTYPE_CHEST=5, INVTYPE_ROBE=5, -- These are the same slot - which one is used appears to differ based on whether the item's model covers the legs.
+	INVTYPE_BODY=6, -- shirt.
+	INVTYPE_TABARD=7,
+	INVTYPE_WRIST=8,
+	INVTYPE_HAND=9,
+	INVTYPE_WAIST=10,
+	INVTYPE_LEGS=11,
+	INVTYPE_FEET=12,
+	INVTYPE_FINGER=13,
+	-- 14 is also a finger slot number.
+	INVTYPE_TRINKET=15,
+	-- 16 is also a trinket slot number.
+	INVTYPE_WEAPON=17, -- 1h weapon.
+	INVTYPE_2HWEAPON=17, -- 2h weapon.
+	INVTYPE_RANGED=17, -- bows.
+	INVTYPE_RANGEDRIGHT=17, -- Guns, wands, crossbows.
+	INVTYPE_SHIELD=18,
+	INVTYPE_HOLDABLE=18, -- off hand, but not a weapon or shield.
+
+	-- These types are no longer used in current content.
+	INVTYPE_WEAPONMAINHAND=17, -- Likely no items have this type anymore.
+	INVTYPE_WEAPONOFFHAND=18, -- Likely no items have this type anymore.
+	INVTYPE_THROWN=17, -- Thrown weapons. I do not know if this slot number is correct, but it shouldn't matter since these are no longer obtainable and those that do exist are now gray items.
+	--INVTYPE_RELIC=?, -- No corresponding slot number, and I do not think any such items exist. Existing relics were turned into non-equipable gray items. This is value is not used for legion relics either.
+}
 
 -- table for conversion to upgrade level, stolen from AMR (<3)
 
