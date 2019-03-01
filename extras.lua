@@ -48,7 +48,7 @@ Simulationcraft.RoleTable = {
   -- Warrior
   [71] = 'attack',
   [72] = 'attack',
-  [73] = 'attack'
+  [73] = 'tank'
 }
 
 -- regionID lookup
