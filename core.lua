@@ -46,12 +46,13 @@ local AzeriteEmpoweredItem  = _G.C_AzeriteEmpoweredItem
 local AzeriteItem           = _G.C_AzeriteItem
 
 -- load stuff from extras.lua
-local upgradeTable  = Simulationcraft.upgradeTable
-local slotNames     = Simulationcraft.slotNames
-local simcSlotNames = Simulationcraft.simcSlotNames
-local specNames     = Simulationcraft.SpecNames
-local profNames     = Simulationcraft.ProfNames
-local regionString  = Simulationcraft.RegionString
+local upgradeTable        = Simulationcraft.upgradeTable
+local slotNames           = Simulationcraft.slotNames
+local simcSlotNames       = Simulationcraft.simcSlotNames
+local specNames           = Simulationcraft.SpecNames
+local profNames           = Simulationcraft.ProfNames
+local regionString        = Simulationcraft.RegionString
+local zandalariLoaBuffs   = Simulationcraft.zandalariLoaBuffs
 
 -- Most of the guts of this addon were based on a variety of other ones, including
 -- Statslog, AskMrRobot, and BonusScanner. And a bunch of hacking around with AceGUI.
@@ -452,6 +453,22 @@ function Simulationcraft:GetReoriginationArrayStacks()
   return stacks
 end
 
+-- Scan buffs to determine which loa racial this player has, if any
+function Simulationcraft:GetZandalariLoa()
+  local zandalariLoa = nil
+  for index = 1, 32 do
+    local _, _, _, _, _, _, _, _, _, spellId = UnitBuff("player", index)
+    if spellId == nil then
+      break
+    end
+    if zandalariLoaBuffs[spellId] then
+      zandalariLoa = zandalariLoaBuffs[spellId]
+      break
+    end
+  end
+  return zandalariLoa
+end
+
 -- This is the workhorse function that constructs the profile
 function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
   -- addon metadata
@@ -474,11 +491,17 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
 
   -- Race info
   local _, playerRace = UnitRace('player')
+
   -- fix some races to match SimC format
   if playerRace == 'Scourge' then --lulz
     playerRace = 'Undead'
   else
     playerRace = FormatRace(playerRace)
+  end
+
+  local isZandalariTroll = false
+  if Tokenize(playerRace) == 'zandalari_troll' then
+    isZandalariTroll = true
   end
 
   -- Spec info
@@ -533,6 +556,9 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
   simulationcraftProfile = simulationcraftProfile .. player .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerLevel .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerRace .. '\n'
+  if isZandalariTroll then
+    simulationcraftProfile = simulationcraftProfile .. "zandalari_loa=" .. Simulationcraft:GetZandalariLoa() .. '\n'
+  end
   simulationcraftProfile = simulationcraftProfile .. playerRegion .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerRealm .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerRole .. '\n'
