@@ -557,7 +557,10 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
   simulationcraftProfile = simulationcraftProfile .. playerLevel .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerRace .. '\n'
   if isZandalariTroll then
-    simulationcraftProfile = simulationcraftProfile .. "zandalari_loa=" .. Simulationcraft:GetZandalariLoa() .. '\n'
+    local zandalari_loa = Simulationcraft:GetZandalariLoa()
+    if zandalari_loa then
+      simulationcraftProfile = simulationcraftProfile .. "zandalari_loa=" .. zandalari_loa .. '\n'
+    end
   end
   simulationcraftProfile = simulationcraftProfile .. playerRegion .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerRealm .. '\n'
