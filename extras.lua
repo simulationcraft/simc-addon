@@ -263,3 +263,12 @@ Simulationcraft.upgradeTable = {
   [531] = 2 -- 2/2 -> 10
 }
 
+Simulationcraft.zandalariLoaBuffs = {
+  [292359] = 'akunda',
+  [292360] = 'bwonsamdi',
+  [292362] = 'gonk',
+  [292363] = 'kimbul',
+  [292364] = 'kragwa',
+  [292361] = 'paku',
+}
+
