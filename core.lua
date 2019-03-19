@@ -473,6 +473,7 @@ end
 function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
   -- addon metadata
   local versionComment = '# SimC Addon ' .. GetAddOnMetadata('Simulationcraft', 'Version')
+  local simcVersionWarning = '# Requires SimulationCraft 815-01 or newer'
 
   -- Basic player info
   local _, realmName, _, _, _, _, region, _, _, realmLatinName, _ = LibRealmInfo:GetRealmInfoByUnit('player')
@@ -553,6 +554,10 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
   -- Build the output string for the player (not including gear)
   local simulationcraftProfile = versionComment .. '\n'
   local simcPrintError = nil
+
+  simulationcraftProfile = simulationcraftProfile .. simcVersionWarning .. '\n'
+  simulationcraftProfile = simulationcraftProfile .. '\n'
+
   simulationcraftProfile = simulationcraftProfile .. player .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerLevel .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerRace .. '\n'
