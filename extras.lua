@@ -272,3 +272,11 @@ Simulationcraft.zandalariLoaBuffs = {
   [292361] = 'paku',
 }
 
+Simulationcraft.azeriteEssenceSlotsMajor = {
+  0
+}
+
+Simulationcraft.azeriteEssenceSlotsMinor = {
+  1,
+  2
+}
