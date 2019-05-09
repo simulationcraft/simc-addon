@@ -503,10 +503,23 @@ function Simulationcraft:GetEssenceSlotInfo(essenceSlot)
     return nil
   end
 
-  local essenceId = AzeriteEssence.GetActiveEssence(essenceSlot)
-  if essenceId then
-    return AzeriteEssence.GetEssenceInfo(essenceId)
+  -- find milestone for this slot
+  local milestones = AzeriteEssence.GetMilestones()
+  if milestones then
+    for _, milestone in pairs(milestones) do
+      if milestone.slot == essenceSlot then
+        local essenceId = AzeriteEssence.GetMilestoneEssence(milestone.ID)
+        if essenceId then
+          return AzeriteEssence.GetEssenceInfo(essenceId)
+        end
+      end
+    end
   end
+
+  --local essenceId = AzeriteEssence.GetActiveEssence(essenceSlot)
+  --if essenceId then
+  --  return AzeriteEssence.GetEssenceInfo(essenceId)
+  --end
 
   return nil
 end
@@ -550,9 +563,11 @@ function Simulationcraft:GetUnlockedAzeriteEssencesString()
 
   local unlockedEssences = {}
   local essences = AzeriteEssence.GetEssences()
-  for _, essence in pairs(essences) do
-    if essence.unlocked then
-      unlockedEssences[#unlockedEssences + 1] = essence.ID .. ':' .. essence.rank
+  if essences then
+    for _, essence in pairs(essences) do
+      if essence.unlocked then
+        unlockedEssences[#unlockedEssences + 1] = essence.ID .. ':' .. essence.rank
+      end
     end
   end
 
@@ -754,5 +769,7 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
   SimcCopyFrameScrollText:SetScript("OnEscapePressed", function(self)
     SimcCopyFrame:Hide()
   end)
+  SimcCopyFrameButton:SetScript("OnClick", function(self)
+    SimcCopyFrame:Hide()
+  end)
 end
-
