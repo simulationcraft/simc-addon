@@ -275,7 +275,7 @@ local function GetGemBonuses(itemLink, index)
     return table.concat(bonuses, ':')
   end
 
-  return nil
+  return 0
 end
 
 local function GetItemStringFromItemLink(slotNum, itemLink, itemLoc, debugOutput)
@@ -300,19 +300,21 @@ local function GetItemStringFromItemLink(slotNum, itemLink, itemLoc, debugOutput
       local gemId = GetGemItemID(itemLink, gemIndex)
       if gemId > 0 then
         gems[gemIndex] = gemId
-        local gemBonusTmp = GetGemBonuses(itemLink, gemIndex)
-        if gemBonusTmp then
-          gemBonuses[gemIndex] = gemBonusTmp
-        end
+        gemBonuses[gemIndex] = GetGemBonuses(itemLink, gemIndex)
       end
     else
       gems[gemIndex] = 0
+      gemBonuses[gemIndex] = 0
     end
   end
 
   -- Remove any trailing zeros from the gems array
   while #gems > 0 and gems[#gems] == 0 do
     table.remove(gems, #gems)
+  end
+  -- Remove any trailing zeros from the gem bonuses
+  while #gemBonuses > 0 and gemBonuses[#gemBonuses] == 0 do
+    table.remove(gemBonuses, #gemBonuses)
   end
 
   if #gems > 0 then
