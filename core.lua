@@ -261,13 +261,9 @@ local function GetGemBonuses(itemLink, index)
   local bonuses = {}
   local _, gemLink = GetItemGem(itemLink, index)
   if gemLink ~= nil then
-    local bonuses = {}
     local gemSplit = GetItemSplit(gemLink)
     for index=1, gemSplit[OFFSET_BONUS_ID] do
-      local bonus = gemSplit[OFFSET_BONUS_ID + index]
-      if bonus > 0 then
-        bonuses[#bonuses + 1] = bonus
-      end
+      bonuses[#bonuses + 1] = gemSplit[OFFSET_BONUS_ID + index]
     end
   end
 
@@ -581,7 +577,7 @@ end
 function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
   -- addon metadata
   local versionComment = '# SimC Addon ' .. GetAddOnMetadata('Simulationcraft', 'Version')
-  local simcVersionWarning = '# Requires SimulationCraft 815-01 or newer'
+  local simcVersionWarning = '# Requires SimulationCraft 820-01 or newer'
 
   -- Basic player info
   local _, realmName, _, _, _, _, region, _, _, realmLatinName, _ = LibRealmInfo:GetRealmInfoByUnit('player')
