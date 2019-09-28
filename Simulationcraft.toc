@@ -1,4 +1,4 @@
-## Interface: 80200
+## Interface: 80205
 ## Title: Simulationcraft
 ## Notes: Constructs SimC export strings
 ## Author: Theck, navv_, seriallos
