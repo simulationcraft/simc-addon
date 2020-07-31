@@ -1,7 +1,7 @@
 <Ui xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
-  <GameTooltip name="SimulationcraftTooltip" frameStrata="TOOLTIP" hidden="true" parent="UIParent" inherits="GameTooltipTemplate"/>
+  <GameTooltip name="SimulationcraftTooltip" frameStrata="TOOLTIP" hidden="true" parent="UIParent"/>
 
-  <Frame name="SimcCopyFrame" parent="UIParent" movable="true" enableMouse="true" hidden="true">
+  <Frame name="SimcCopyFrame" parent="UIParent" inherits="BackdropTemplate" movable="true" enableMouse="true" hidden="true">
     <Size>
       <AbsDimension x="700" y="450"/>
     </Size>
@@ -33,7 +33,7 @@
       </Layer>
     </Layers>
     <Frames>
-      <Button name="SimcCopyFrameButton" text="Okay" inherits="GameMenuButtonTemplate">
+      <Button name="SimcCopyFrameButton" text="Close" inherits="GameMenuButtonTemplate">
         <Anchors>
           <Anchor point="BOTTOM" relativeTo="SimcCopyFrame" relativePoint="BOTTOM">
             <Offset>

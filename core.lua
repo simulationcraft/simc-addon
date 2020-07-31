@@ -46,6 +46,9 @@ local AzeriteEmpoweredItem  = _G.C_AzeriteEmpoweredItem
 local AzeriteItem           = _G.C_AzeriteItem
 local AzeriteEssence        = _G.C_AzeriteEssence
 
+local Covenants             = _G.C_Covenants
+local Soulbinds             = _G.C_Soulbinds
+
 -- load stuff from extras.lua
 local upgradeTable        = Simulationcraft.upgradeTable
 local slotNames           = Simulationcraft.slotNames
@@ -561,12 +564,54 @@ function Simulationcraft:GetUnlockedAzeriteEssencesString()
   end
 end
 
+-- Shadowlands helpers: covenants, soulbinds, conduits
+function Simulationcraft:CovenantsAvailable()
+  if Covenants then
+    return true
+  else
+    return false
+  end
+end
+
+function Simulationcraft:GetActiveCovenantID()
+  return Covenants.GetActiveCovenantID()
+end
+function Simulationcraft:GetActiveCovenantData()
+  local activeCovenantID = Simulationcraft.GetActiveCovenantID()
+  if activeCovenantID > 0 then
+    return Covenants.GetCovenantData(Simulationcraft.GetActiveCovenantID())
+  end
+  return nil
+end
+function Simulationcraft:GetCovenantString()
+  local covenantData = Simulationcraft.GetActiveCovenantData()
+  if covenantData then
+    return 'covenant=' .. Tokenize(covenantData.name)
+  end
+  return nil
+end
+
+function Simulationcraft:GetSoulbindString(id)
+  local soulbindStrings = {}
+  local soulbindData = Soulbinds.GetSoulbindData(id)
+  for _, node in pairs(soulbindData.tree.nodes) do
+    if node.state == Enum.SoulbindNodeState.Selected then
+      if node.spellID ~= 0 then
+        soulbindStrings[#soulbindStrings + 1] = node.spellID
+      elseif node.conduitID ~= 0 then
+        soulbindStrings[#soulbindStrings + 1] = node.conduitID .. ":" .. node.conduitRank
+      end
+    end
+  end
+  return "soulbind=" .. Tokenize(soulbindData.name) .. ',' .. table.concat(soulbindStrings, '/')
+end
+
 
 -- This is the workhorse function that constructs the profile
 function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
   -- addon metadata
   local versionComment = '# SimC Addon ' .. GetAddOnMetadata('Simulationcraft', 'Version')
-  local simcVersionWarning = '# Requires SimulationCraft 820-01 or newer'
+  local simcVersionWarning = '# Requires SimulationCraft 901-01 or newer'
 
   -- Basic player info
   local _, realmName, _, _, _, _, region, _, _, realmLatinName, _ = LibRealmInfo:GetRealmInfoByUnit('player')
@@ -674,6 +719,7 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
   simulationcraftProfile = simulationcraftProfile .. playerSpec .. '\n'
   simulationcraftProfile = simulationcraftProfile .. '\n'
 
+  -- BFA SYSTEMS
   -- gate all azerite essence stuff behind this check so addon will work in live and 8.2 PTR
   if Simulationcraft:AzeriteEssencesAvailable() then
     local essences = Simulationcraft:GetAzeriteEssencesString()
@@ -690,6 +736,32 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
     if essences or unlockedEssences then
       simulationcraftProfile = simulationcraftProfile .. '\n'
     end
+  end
+
+  -- SHADOWLANDS SYSTEMS
+  -- gate covenant/soulbind code behind this check so addon will work in 8.3
+  if Simulationcraft:CovenantsAvailable() then
+    local covenantString = Simulationcraft:GetCovenantString()
+    if covenantString then
+      simulationcraftProfile = simulationcraftProfile .. covenantString .. '\n'
+    end
+
+    -- iterate over soulbinds, inactive soulbinds are commented out
+    local activeSoulbindID = Soulbinds:GetActiveSoulbindID()
+    local covenantsData = Soulbinds.GetSoulbindIDs(Simulationcraft:GetActiveCovenantID())
+    for _, soulbindID in pairs(covenantsData) do
+      local soulbindData = Soulbinds.GetSoulbindData(soulbindID)
+      if soulbindData.unlocked then
+        local soulbindString = Simulationcraft:GetSoulbindString(soulbindID)
+        if soulbindID == activeSoulbindID then
+          simulationcraftProfile = simulationcraftProfile .. soulbindString .. '\n'
+        else
+          simulationcraftProfile = simulationcraftProfile .. '# ' .. soulbindString .. '\n'
+        end
+      end
+    end
+
+    simulationcraftProfile = simulationcraftProfile .. '\n'
   end
 
   -- Method that gets gear information
