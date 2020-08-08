@@ -38,6 +38,8 @@ local OFFSET_SUFFIX_ID = 7
 local OFFSET_FLAGS = 11
 local OFFSET_CONTEXT = 12
 local OFFSET_BONUS_ID = 13
+
+-- TODO: Might be gone in Shadowlands
 local OFFSET_UPGRADE_ID = 14 -- Flags = 0x4
 
 local SocketInventoryItem   = _G.SocketInventoryItem
@@ -342,6 +344,7 @@ local function GetItemStringFromItemLink(slotNum, itemLink, itemLoc, debugOutput
 
   local linkOffset = OFFSET_BONUS_ID + #bonuses + 1
 
+  -- TODO: Is this even a thing any more?
   -- Upgrade level
   if bit.band(flags, 0x4) == 0x4 then
     local upgradeId = itemSplit[linkOffset]
@@ -351,10 +354,10 @@ local function GetItemStringFromItemLink(slotNum, itemLink, itemLoc, debugOutput
     linkOffset = linkOffset + 1
   end
 
-  -- Some leveling quest items seem to use this, it'll include the drop level of the item
-  if bit.band(flags, 0x200) == 0x200 then
-    simcItemOptions[#simcItemOptions + 1] = 'drop_level=' .. itemSplit[linkOffset]
-    linkOffset = linkOffset + 1
+  -- TODO: Determine the other fields around this, determine if this is actaully a fixed locationa after bonus IDs
+  local dropLevelOffset = OFFSET_BONUS_ID + #bonuses + 3
+  if itemSplit[dropLevelOffset] ~= 0 then
+    simcItemOptions[#simcItemOptions + 1] = 'drop_level=' .. itemSplit[dropLevelOffset]
   end
 
   -- Get item creation context. Can be used to determine unlock/availability of azerite tiers for 3rd parties
@@ -387,7 +390,7 @@ local function GetItemStringFromItemLink(slotNum, itemLink, itemLoc, debugOutput
 
   local itemStr = ''
   if debugOutput then
-    itemStr = itemStr .. '# ' .. itemString .. '\n'
+    itemStr = itemStr .. '# ' .. gsub(itemLink, "\124", "\124\124") .. '\n'
   end
   itemStr = itemStr .. simcSlotNames[slotNum] .. "=" .. table.concat(simcItemOptions, ',')
 
