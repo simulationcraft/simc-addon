@@ -41,9 +41,6 @@ local OFFSET_BONUS_ID = 13
 
 local TYPE_DROP_LEVEL = 9
 
--- TODO: Might be gone in Shadowlands
-local OFFSET_UPGRADE_ID = 14 -- Flags = 0x4
-
 local SocketInventoryItem   = _G.SocketInventoryItem
 local Timer                 = _G.C_Timer
 local AzeriteEmpoweredItem  = _G.C_AzeriteEmpoweredItem
@@ -332,8 +329,6 @@ local function GetItemStringFromItemLink(slotNum, itemLink, itemLoc, debugOutput
     simcItemOptions[#simcItemOptions + 1] = 'suffix=' .. itemSplit[OFFSET_SUFFIX_ID]
   end
 
-  local flags = itemSplit[OFFSET_FLAGS]
-
   local bonuses = {}
 
   for index=1, itemSplit[OFFSET_BONUS_ID] do
@@ -358,28 +353,6 @@ local function GetItemStringFromItemLink(slotNum, itemLink, itemLoc, debugOutput
     end
     -- Unknown types:
     -- 28
-  end
-
-
-  -- TODO: Is this even a thing any more?
-  -- Upgrade level
-  -- if bit.band(flags, 0x4) == 0x4 then
-  --   local upgradeId = itemSplit[linkOffset]
-  --   if upgradeTable and upgradeTable[upgradeId] ~= nil and upgradeTable[upgradeId] > 0 then
-  --     simcItemOptions[#simcItemOptions + 1] = 'upgrade=' .. upgradeTable[upgradeId]
-  --   end
-  --   linkOffset = linkOffset + 1
-  -- end
-
-  -- -- TODO: Determine the other fields around this, determine if this is actaully a fixed locationa after bonus IDs
-  -- local dropLevelOffset = OFFSET_BONUS_ID + #bonuses + 3
-  -- if itemSplit[dropLevelOffset] ~= 0 then
-  --   simcItemOptions[#simcItemOptions + 1] = 'drop_level=' .. itemSplit[dropLevelOffset]
-  -- end
-
-  -- Get item creation context. Can be used to determine unlock/availability of azerite tiers for 3rd parties
-  if itemSplit[OFFSET_CONTEXT] ~= 0 then
-    simcItemOptions[#simcItemOptions + 1] = 'context=' .. itemSplit[OFFSET_CONTEXT]
   end
 
   -- Azerite powers - only run in BfA client
@@ -424,7 +397,7 @@ function Simulationcraft:GetItemStrings(debugOutput)
     if itemLink then
       local itemLoc
       if ItemLocation then
-        itemLoc = ItemLocation:CreateFromEquipmentSlot(slotId)        
+        itemLoc = ItemLocation:CreateFromEquipmentSlot(slotId)
       end
       items[slotNum] = GetItemStringFromItemLink(slotNum, itemLink, itemLoc, debugOutput)
 
