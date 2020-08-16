@@ -741,7 +741,7 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
 
     -- iterate over soulbinds, inactive soulbinds are commented out
     local activeSoulbindID = Soulbinds:GetActiveSoulbindID()
-    local covenantsData = Soulbinds.GetSoulbindIDs(Simulationcraft:GetActiveCovenantID())
+    local covenantsData = Simulationcraft:GetActiveCovenantData().soulbindIDs
     for _, soulbindID in pairs(covenantsData) do
       local soulbindData = Soulbinds.GetSoulbindData(soulbindID)
       if soulbindData.unlocked then
