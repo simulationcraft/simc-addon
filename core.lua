@@ -741,15 +741,17 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
 
     -- iterate over soulbinds, inactive soulbinds are commented out
     local activeSoulbindID = Soulbinds:GetActiveSoulbindID()
-    local covenantsData = Simulationcraft:GetActiveCovenantData().soulbindIDs
-    for _, soulbindID in pairs(covenantsData) do
-      local soulbindData = Soulbinds.GetSoulbindData(soulbindID)
-      if soulbindData.unlocked then
-        local soulbindString = Simulationcraft:GetSoulbindString(soulbindID)
-        if soulbindID == activeSoulbindID then
-          simulationcraftProfile = simulationcraftProfile .. soulbindString .. '\n'
-        else
-          simulationcraftProfile = simulationcraftProfile .. '# ' .. soulbindString .. '\n'
+    if activeSoulbindID > 0 then
+      local covenantsData = Simulationcraft:GetActiveCovenantData().soulbindIDs
+      for _, soulbindID in pairs(covenantsData) do
+        local soulbindData = Soulbinds.GetSoulbindData(soulbindID)
+        if soulbindData.unlocked then
+          local soulbindString = Simulationcraft:GetSoulbindString(soulbindID)
+          if soulbindID == activeSoulbindID then
+            simulationcraftProfile = simulationcraftProfile .. soulbindString .. '\n'
+          else
+            simulationcraftProfile = simulationcraftProfile .. '# ' .. soulbindString .. '\n'
+          end
         end
       end
     end
