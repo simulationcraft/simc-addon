@@ -756,6 +756,19 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
       end
     end
 
+    -- Export conduit collection
+    -- TODO: Figure out if addon needs to care about spec fields or if
+    -- there's any other deduping to do
+    local conduitsAvailable = {}
+    for _, conduitType in pairs(Enum.SoulbindConduitType) do
+      local conduits = Soulbinds.GetConduitCollection(conduitType)
+      for _, conduit in pairs(conduits) do
+        conduitsAvailable[#conduitsAvailable + 1] = conduit.conduitID .. ':' .. conduit.conduitRank
+      end
+    end
+    local conduitsAvailableStr = table.concat(conduitsAvailable, '/')
+    simulationcraftProfile = simulationcraftProfile .. '# conduits_available=' .. conduitsAvailableStr .. '\n'
+
     simulationcraftProfile = simulationcraftProfile .. '\n'
   end
 
