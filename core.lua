@@ -585,10 +585,17 @@ function Simulationcraft:GetCovenantString()
   return nil
 end
 
+function sortByRow(a, b)
+  return a.row < b.row
+end
+
 function Simulationcraft:GetSoulbindString(id)
   local soulbindStrings = {}
   local soulbindData = Soulbinds.GetSoulbindData(id)
-  for _, node in pairs(soulbindData.tree.nodes) do
+  -- sort nodes by row order
+  local nodes = soulbindData.tree.nodes
+  table.sort(nodes, sortByRow)
+  for _, node in pairs(nodes) do
     if node.state == Enum.SoulbindNodeState.Selected then
       if node.spellID ~= 0 then
         soulbindStrings[#soulbindStrings + 1] = node.spellID
