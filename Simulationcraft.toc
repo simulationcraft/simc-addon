@@ -2,7 +2,7 @@
 ## Title: Simulationcraft
 ## Notes: Constructs SimC export strings
 ## Author: Theck, navv_, seriallos
-## Version: 9.0.1-alpha-8
+## Version: 9.0.1-alpha-9
 ## OptionalDependencies: Ace3, LibRealmInfo, LibDBIcon, LibDataBroker-1.1
 ## SavedVariables: SimulationCraftDB
 
@@ -18,8 +18,6 @@ libs\LibRealmInfo\LibRealmInfo.lua
 libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 Libs\LibDBIcon-1.0\lib.xml
 #@end-no-lib-strip@
-
-embeds.xml
 
 extras.lua
 core.lua

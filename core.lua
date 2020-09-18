@@ -11,8 +11,8 @@ SimcLDB = LibStub("LibDataBroker-1.1"):NewDataObject("SimulationCraft", {
   label = "SimulationCraft",
   icon = "Interface\\AddOns\\SimulationCraft\\logo",
   OnClick = function()
-    if SimcCopyFrame:IsShown() then
-      SimcCopyFrame:Hide()
+    if SimcFrame:IsShown() then
+      SimcFrame:Hide()
     else
       Simulationcraft:PrintSimcProfile(false, false)
     end
@@ -26,6 +26,8 @@ SimcLDB = LibStub("LibDataBroker-1.1"):NewDataObject("SimulationCraft", {
 })
 
 LibDBIcon = LibStub("LibDBIcon-1.0")
+
+local SimcFrame = nil
 
 local OFFSET_ITEM_ID = 1
 local OFFSET_ENCHANT_ID = 2
@@ -74,6 +76,15 @@ function Simulationcraft:OnInitialize()
       minimap = {
         hide = false,
       },
+      frame = {
+        point = "CENTER",
+        relativeFrame = nil,
+        relativePoint = "CENTER",
+        ofsx = 0,
+        ofsy = 0,
+        width = 750,
+        height = 400,
+      },
     },
   });
   LibDBIcon:Register("SimulationCraft", SimcLDB, self.db.profile.minimap)
@@ -83,7 +94,7 @@ function Simulationcraft:OnInitialize()
 end
 
 function Simulationcraft:OnEnable()
-  SimulationcraftTooltip:SetOwner(_G["UIParent"],"ANCHOR_NONE")
+
 end
 
 function Simulationcraft:OnDisable()
@@ -607,6 +618,95 @@ function Simulationcraft:GetSoulbindString(id)
   return "soulbind=" .. Tokenize(soulbindData.name) .. ',' .. table.concat(soulbindStrings, '/')
 end
 
+function Simulationcraft:GetMainFrame(text)
+  -- Frame code largely adapted from https://www.wowinterface.com/forums/showpost.php?p=323901&postcount=2
+  if not SimcFrame then
+    -- Main Frame
+    frameConfig = self.db.profile.frame
+    local f = CreateFrame("Frame", "SimcFrame", UIParent, "DialogBoxFrame")
+    f:ClearAllPoints()
+    -- load position from local DB
+    f:SetPoint(
+      frameConfig.point,
+      frameConfig.relativeFrame,
+      frameConfig.relativePoint,
+      frameConfig.ofsx,
+      frameConfig.ofsy
+    )
+    f:SetSize(frameConfig.width, frameConfig.height)
+    f:SetBackdrop({
+      bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+      edgeFile = "Interface\\PVPFrame\\UI-Character-PVP-Highlight",
+      edgeSize = 16,
+      insets = { left = 8, right = 8, top = 8, bottom = 8 },
+    })
+    f:SetMovable(true)
+    f:SetClampedToScreen(true)
+    f:SetScript("OnMouseDown", function(self, button)
+      if button == "LeftButton" then
+        self:StartMoving()
+      end
+    end)
+    f:SetScript("OnMouseUp", function(self, button)
+      self:StopMovingOrSizing()
+      -- save position between sessions
+      point, relativeFrame, relativeTo, ofsx, ofsy = self:GetPoint()
+      frameConfig.point = point
+      frameConfig.relativeFrame = relativeFrame
+      frameConfig.relativePoint = relativeTo
+      frameConfig.ofsx = ofsx
+      frameConfig.ofsy = ofsy
+    end)
+
+    -- scroll frame
+    local sf = CreateFrame("ScrollFrame", "SimcScrollFrame", f, "UIPanelScrollFrameTemplate")
+    sf:SetPoint("LEFT", 16, 0)
+    sf:SetPoint("RIGHT", -32, 0)
+    sf:SetPoint("TOP", 0, -32)
+    sf:SetPoint("BOTTOM", SimcFrameButton, "TOP", 0, 0)
+
+    -- edit box
+    local eb = CreateFrame("EditBox", "SimcEditBox", SimcScrollFrame)
+    eb:SetSize(sf:GetSize())
+    eb:SetMultiLine(true)
+    eb:SetAutoFocus(true)
+    eb:SetFontObject("ChatFontNormal")
+    eb:SetScript("OnEscapePressed", function() f:Hide() end)
+    sf:SetScrollChild(eb)
+
+    -- resizing
+    f:SetResizable(true)
+    f:SetMinResize(150, 100)
+    local rb = CreateFrame("Button", "SimcResizeButton", f)
+    rb:SetPoint("BOTTOMRIGHT", -6, 7)
+    rb:SetSize(16, 16)
+
+    rb:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+    rb:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+    rb:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+
+    rb:SetScript("OnMouseDown", function(self, button)
+        if button == "LeftButton" then
+            f:StartSizing("BOTTOMRIGHT")
+            self:GetHighlightTexture():Hide() -- more noticeable
+        end
+    end)
+    rb:SetScript("OnMouseUp", function(self, button)
+        f:StopMovingOrSizing()
+        self:GetHighlightTexture():Show()
+        eb:SetWidth(sf:GetWidth())
+
+        -- save size between sessions
+        frameConfig.width = f:GetWidth()
+        frameConfig.height = f:GetHeight()
+    end)
+
+    SimcFrame = f
+  end
+  SimcEditBox:SetText(text)
+  SimcEditBox:HighlightText()
+  return SimcFrame
+end
 
 -- This is the workhorse function that constructs the profile
 function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
@@ -834,16 +934,7 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
     simcPrintError = "Error: You need to pick a spec!"
   end
 
-  -- show the appropriate frames
-  SimcCopyFrame:Show()
-  SimcCopyFrameScroll:Show()
-  SimcCopyFrameScrollText:Show()
-  SimcCopyFrameScrollText:SetText(simcPrintError or simulationcraftProfile)
-  SimcCopyFrameScrollText:HighlightText()
-  SimcCopyFrameScrollText:SetScript("OnEscapePressed", function(self)
-    SimcCopyFrame:Hide()
-  end)
-  SimcCopyFrameButton:SetScript("OnClick", function(self)
-    SimcCopyFrame:Hide()
-  end)
+
+  local f = Simulationcraft:GetMainFrame(simcPrintError or simulationcraftProfile)
+  f:Show()
 end
