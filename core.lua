@@ -52,6 +52,7 @@ local AzeriteEssence        = _G.C_AzeriteEssence
 local Covenants             = _G.C_Covenants
 local Soulbinds             = _G.C_Soulbinds
 local CovenantSanctumUI     = _G.C_CovenantSanctumUI
+local WeeklyRewards         = _G.C_WeeklyRewards
 
 -- load stuff from extras.lua
 local upgradeTable        = Simulationcraft.upgradeTable
@@ -913,6 +914,26 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
     end
   end
 
+  -- output weekly reward gear
+  if WeeklyRewards:HasAvailableRewards() then
+    simulationcraftProfile = simulationcraftProfile .. '\n'
+    simulationcraftProfile = simulationcraftProfile .. '### Weekly Reward Choices\n'
+    local activities = WeeklyRewards.GetActivities()
+    for i, activityInfo in ipairs(activities) do
+      for j, rewardInfo in ipairs(activityInfo.rewards) do
+        local itemName, _, _, _, _, _, _, _, itemEquipLoc = GetItemInfo(rewardInfo.id);
+        if itemEquipLoc ~= "" then
+          local itemLink = WeeklyRewards.GetItemHyperlink(rewardInfo.itemDBID)
+          local slotNum = Simulationcraft.invTypeToSlotNum[itemEquipLoc]
+          simulationcraftProfile = simulationcraftProfile .. '#\n'
+          simulationcraftProfile = simulationcraftProfile .. '# ' .. itemName .. '\n'
+          simulationcraftProfile = simulationcraftProfile .. '# ' .. GetItemStringFromItemLink(slotNum, itemLink, nil, debugOutput) .. "\n"
+        end
+      end
+    end
+  end
+
+  -- output item links that were included in the /simc chat line
   if links and #links > 0 then
     simulationcraftProfile = simulationcraftProfile .. '\n### Linked gear\n'
     for i,v in pairs(links) do
