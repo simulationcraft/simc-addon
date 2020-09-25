@@ -621,10 +621,12 @@ end
 
 function Simulationcraft:GetMainFrame(text)
   -- Frame code largely adapted from https://www.wowinterface.com/forums/showpost.php?p=323901&postcount=2
+  -- H.Sch. - ReglohPri - since Shadowlands 9.0.1 shouldn't be used "SetBackdrop". CreateFrame needs a Template.
   if not SimcFrame then
     -- Main Frame
     frameConfig = self.db.profile.frame
-    local f = CreateFrame("Frame", "SimcFrame", UIParent, "DialogBoxFrame")
+    -- H.Sch. local f = CreateFrame("Frame", "SimcFrame", UIParent, "DialogBoxFrame")
+    local f = CreateFrame("Frame", "SimcFrame", UIParent, "BackdropTemplate")
     f:ClearAllPoints()
     -- load position from local DB
     f:SetPoint(
@@ -635,12 +637,23 @@ function Simulationcraft:GetMainFrame(text)
       frameConfig.ofsy
     )
     f:SetSize(frameConfig.width, frameConfig.height)
-    f:SetBackdrop({
+	-- H.Sch. - ReglohPri
+    --[[f:SetBackdrop({
       bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
       edgeFile = "Interface\\PVPFrame\\UI-Character-PVP-Highlight",
       edgeSize = 16,
       insets = { left = 8, right = 8, top = 8, bottom = 8 },
-    })
+    })--]]
+
+    f.backdropInfo = {
+      bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+      edgeFile = "Interface\\PVPFrame\\UI-Character-PVP-Highlight",
+      edgeSize = 16,
+      insets = { left = 8, right = 8, top = 8, bottom = 8 },
+    }
+	f:ApplyBackdrop()
+	-- H.Sch. End of Shadowlands changes
+
     f:SetMovable(true)
     f:SetClampedToScreen(true)
     f:SetScript("OnMouseDown", function(self, button)
