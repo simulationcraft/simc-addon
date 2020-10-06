@@ -915,19 +915,21 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
   end
 
   -- output weekly reward gear
-  if WeeklyRewards:HasAvailableRewards() then
-    simulationcraftProfile = simulationcraftProfile .. '\n'
-    simulationcraftProfile = simulationcraftProfile .. '### Weekly Reward Choices\n'
-    local activities = WeeklyRewards.GetActivities()
-    for i, activityInfo in ipairs(activities) do
-      for j, rewardInfo in ipairs(activityInfo.rewards) do
-        local itemName, _, _, _, _, _, _, _, itemEquipLoc = GetItemInfo(rewardInfo.id);
-        if itemEquipLoc ~= "" then
-          local itemLink = WeeklyRewards.GetItemHyperlink(rewardInfo.itemDBID)
-          local slotNum = Simulationcraft.invTypeToSlotNum[itemEquipLoc]
-          simulationcraftProfile = simulationcraftProfile .. '#\n'
-          simulationcraftProfile = simulationcraftProfile .. '# ' .. itemName .. '\n'
-          simulationcraftProfile = simulationcraftProfile .. '# ' .. GetItemStringFromItemLink(slotNum, itemLink, nil, debugOutput) .. "\n"
+  if WeeklyRewards then
+    if WeeklyRewards:HasAvailableRewards() then
+      simulationcraftProfile = simulationcraftProfile .. '\n'
+      simulationcraftProfile = simulationcraftProfile .. '### Weekly Reward Choices\n'
+      local activities = WeeklyRewards.GetActivities()
+      for i, activityInfo in ipairs(activities) do
+        for j, rewardInfo in ipairs(activityInfo.rewards) do
+          local itemName, _, _, _, _, _, _, _, itemEquipLoc = GetItemInfo(rewardInfo.id);
+          if itemEquipLoc ~= "" then
+            local itemLink = WeeklyRewards.GetItemHyperlink(rewardInfo.itemDBID)
+            local slotNum = Simulationcraft.invTypeToSlotNum[itemEquipLoc]
+            simulationcraftProfile = simulationcraftProfile .. '#\n'
+            simulationcraftProfile = simulationcraftProfile .. '# ' .. itemName .. '\n'
+            simulationcraftProfile = simulationcraftProfile .. '# ' .. GetItemStringFromItemLink(slotNum, itemLink, nil, debugOutput) .. "\n"
+          end
         end
       end
     end
