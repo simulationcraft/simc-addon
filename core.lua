@@ -11,7 +11,8 @@ SimcLDB = LibStub("LibDataBroker-1.1"):NewDataObject("SimulationCraft", {
   label = "SimulationCraft",
   icon = "Interface\\AddOns\\SimulationCraft\\logo",
   OnClick = function()
-    if SimcFrame:IsShown() then
+	-- H.Sch. - ReglohPri - the first use is SimcFram = nil, so we check if SimcFram exists.
+    if SimcFrame and SimcFrame:IsShown() then
       SimcFrame:Hide()
     else
       Simulationcraft:PrintSimcProfile(false, false)
