@@ -1,8 +1,8 @@
-## Interface: 80300
+## Interface: 90001
 ## Title: Simulationcraft
 ## Notes: Constructs SimC export strings
 ## Author: Theck, navv_, seriallos
-## Version: 8.3.0
+## Version: 9.0.1-01
 ## OptionalDependencies: Ace3, LibRealmInfo, LibDBIcon, LibDataBroker-1.1
 ## SavedVariables: SimulationCraftDB
 
