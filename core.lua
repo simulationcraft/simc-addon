@@ -65,6 +65,24 @@ local zandalariLoaBuffs   = Simulationcraft.zandalariLoaBuffs
 local essenceMinorSlots   = Simulationcraft.azeriteEssenceSlotsMinor
 local essenceMajorSlots   = Simulationcraft.azeriteEssenceSlotsMajor
 
+-- Settings for interface
+local simulationcraftSettings = {
+  name = "Simulationcraft",
+  handler = Simulationcraft,
+  type = 'group',
+  args = {
+    btnHide = {
+      type = 'toggle',
+      name = 'Hide minimap button',
+      desc = 'Do you want to hide the minimap button ?',
+      set = 'setHideMinimapButton',
+      get = 'isMinimapButtonHidden',
+    },
+  },
+}
+local simulationcraftSettingsTable = LibStub("AceConfig-3.0"):RegisterOptionsTable("Simulationcraft", simulationcraftSettings, nil)
+local AceConfigDialog = LibStub("AceConfigDialog-3.0")
+
 -- Most of the guts of this addon were based on a variety of other ones, including
 -- Statslog, AskMrRobot, and BonusScanner. And a bunch of hacking around with AceGUI.
 -- Many thanks to the authors of those addons, and to reia for fixing my awful amateur
@@ -89,8 +107,8 @@ function Simulationcraft:OnInitialize()
     },
   });
   LibDBIcon:Register("SimulationCraft", SimcLDB, self.db.profile.minimap)
+  AceConfigDialog:AddToBlizOptions("Simulationcraft", "SimulationCraft")
   Simulationcraft:UpdateMinimapButton()
-
   Simulationcraft:RegisterChatCommand('simc', 'HandleChatCommand')
 end
 
@@ -100,6 +118,16 @@ end
 
 function Simulationcraft:OnDisable()
 
+end
+
+function Simulationcraft:setHideMinimapButton(info, input)
+  Simulationcraft.db.profile.minimap.hide = input
+  DEFAULT_CHAT_FRAME:AddMessage("SimulationCraft: Minimap button is now " .. (self.db.profile.minimap.hide and "hidden" or "shown"))
+  Simulationcraft:UpdateMinimapButton()
+end
+
+function Simulationcraft:isMinimapButtonHidden(info)
+  return Simulationcraft.db.profile.minimap.hide
 end
 
 function Simulationcraft:UpdateMinimapButton()
