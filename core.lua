@@ -828,7 +828,13 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
     local unlockedEssences = Simulationcraft:GetUnlockedAzeriteEssencesString()
 
     if essences then
-      simulationcraftProfile = simulationcraftProfile .. essences .. '\n'
+      if playerLevel > 50 then
+        -- Essences generally have no effect in Shadowlands content so export as a comment.
+        -- Otherwise, SimC will sim the essences for level 60 characters
+        simulationcraftProfile = simulationcraftProfile .. '# ' .. essences .. '\n'
+      else
+        simulationcraftProfile = simulationcraftProfile .. essences .. '\n'
+      end
     end
     if unlockedEssences then
       -- output as a comment, SimC doesn't care about unlocked powers but users might
