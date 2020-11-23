@@ -592,7 +592,7 @@ end
 function Simulationcraft:GetCovenantString()
   local covenantData = Simulationcraft.GetActiveCovenantData()
   if covenantData then
-    return 'covenant=' .. Tokenize(covenantData.name)
+    return 'covenant=' .. Simulationcraft.covenants[covenantData.ID]
   end
   return nil
 end

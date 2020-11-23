@@ -280,3 +280,10 @@ Simulationcraft.azeriteEssenceSlotsMinor = {
   1,
   2
 }
+
+Simulationcraft.covenants = {
+  [1] = 'kyrian',
+  [2] = 'venthyr',
+  [3] = 'night_fae',
+  [4] = 'necrolord',
+}
