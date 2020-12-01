@@ -1,7 +1,6 @@
 local _, Simulationcraft = ...
 
 Simulationcraft = LibStub("AceAddon-3.0"):NewAddon(Simulationcraft, "Simulationcraft", "AceConsole-3.0", "AceEvent-3.0")
-ItemUpgradeInfo = LibStub("LibItemUpgradeInfo-1.0")
 LibRealmInfo = LibStub("LibRealmInfo")
 
 -- Set up DataBroker for minimap button
@@ -423,8 +422,14 @@ function Simulationcraft:GetItemStrings(debugOutput)
       if ItemLocation then
         itemLoc = ItemLocation:CreateFromEquipmentSlot(slotId)
       end
-      items[slotNum] = GetItemStringFromItemLink(slotNum, itemLink, itemLoc, debugOutput)
+      local name, _, _, _, _, _, _, _, _, _, _ = GetItemInfo(itemLink)
 
+      -- get correct level for scaling gear
+      local level, _, _ = GetDetailedItemLevelInfo(itemLink)
+      items[slotNum] = {
+        string = GetItemStringFromItemLink(slotNum, itemLink, itemLoc, debugOutput),
+        name = name .. ' (' .. level .. ')',
+      }
     end
   end
 
@@ -471,10 +476,10 @@ function Simulationcraft:GetBagItemStrings()
           end
           _, _, _, _, _, _, itemLink, _, _, itemId = GetContainerItemInfo(container, slot)
           if itemLink then
-            local name, link, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(itemLink)
+            local name, link, quality, baseItemLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(itemLink)
 
             -- get correct level for scaling gear
-            local level = ItemUpgradeInfo:GetUpgradedItemLevel(link) or 0
+            local level, _, _ = GetDetailedItemLevelInfo(itemLink)
 
             -- find all equippable, non-artifact items
             if IsEquippableItem(itemLink) and quality ~= 6 then
@@ -913,7 +918,7 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
   -- output gear
   for slotNum=1, #slotNames do
     if items[slotNum] then
-      simulationcraftProfile = simulationcraftProfile .. items[slotNum] .. '\n'
+      simulationcraftProfile = simulationcraftProfile .. items[slotNum].string .. '\n'
     end
   end
 

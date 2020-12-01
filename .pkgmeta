@@ -6,9 +6,6 @@ externals:
   libs/AceEvent-3.0: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceEvent-3.0
   libs/AceDB-3.0: svn://svn.wowace.com/wow/ace3/mainline/trunk/AceDB-3.0
   libs/LibDBIcon-1.0: svn://svn.wowace.com/wow/libdbicon-1-0/mainline/trunk/LibDBIcon-1.0
-  libs/LibItemUpgradeInfo-1.0:
-    url: git://git.wowace.com/wow/libitemupgradeinfo-1-0/mainline.git
-    tag: latest
   libs/LibRealmInfo:
     url: https://github.com/phanx-wow/LibRealmInfo.git
     tag: latest
