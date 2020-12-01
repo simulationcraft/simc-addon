@@ -47,9 +47,6 @@ local ITEM_MOD_TYPE_CRAFT_STATS_2 = 30
 
 local SocketInventoryItem   = _G.SocketInventoryItem
 local Timer                 = _G.C_Timer
-local AzeriteEmpoweredItem  = _G.C_AzeriteEmpoweredItem
-local AzeriteItem           = _G.C_AzeriteItem
-local AzeriteEssence        = _G.C_AzeriteEssence
 
 local Covenants             = _G.C_Covenants
 local Soulbinds             = _G.C_Soulbinds
@@ -64,8 +61,6 @@ local specNames           = Simulationcraft.SpecNames
 local profNames           = Simulationcraft.ProfNames
 local regionString        = Simulationcraft.RegionString
 local zandalariLoaBuffs   = Simulationcraft.zandalariLoaBuffs
-local essenceMinorSlots   = Simulationcraft.azeriteEssenceSlotsMinor
-local essenceMajorSlots   = Simulationcraft.azeriteEssenceSlotsMajor
 
 -- Most of the guts of this addon were based on a variety of other ones, including
 -- Statslog, AskMrRobot, and BonusScanner. And a bunch of hacking around with AceGUI.
@@ -378,29 +373,6 @@ local function GetItemStringFromItemLink(slotNum, itemLink, itemLoc, debugOutput
     simcItemOptions[#simcItemOptions + 1] = 'crafted_stats=' .. table.concat(craftedStats, '/')
   end
 
-  -- Azerite powers - only run in BfA client
-  if itemLoc and AzeriteEmpoweredItem then
-    if AzeriteEmpoweredItem.IsAzeriteEmpoweredItem(itemLoc) then
-      -- C_AzeriteEmpoweredItem.GetAllTierInfo(ItemLocation:CreateFromEquipmentSlot(5))
-      -- C_AzeriteEmpoweredItem.GetPowerInfo(ItemLocation:CreateFromEquipmentSlot(5), 111)
-      local azeritePowers = {}
-      local powerIndex = 1
-      local tierInfo = AzeriteEmpoweredItem.GetAllTierInfo(itemLoc)
-      for azeriteTier, tierInfo in pairs(tierInfo) do
-        for _, powerId in pairs(tierInfo.azeritePowerIDs) do
-          if AzeriteEmpoweredItem.IsPowerSelected(itemLoc, powerId) then
-            azeritePowers[powerIndex] = powerId
-            powerIndex = powerIndex + 1
-          end
-        end
-      end
-      simcItemOptions[#simcItemOptions + 1] = 'azerite_powers=' .. table.concat(azeritePowers, '/')
-    end
-    if AzeriteItem.IsAzeriteItem(itemLoc) then
-      simcItemOptions[#simcItemOptions + 1] = 'azerite_level=' .. AzeriteItem.GetPowerLevel(itemLoc)
-    end
-  end
-
   local itemStr = ''
   if debugOutput then
     itemStr = itemStr .. '# ' .. gsub(itemLink, "\124", "\124\124") .. '\n'
@@ -513,78 +485,6 @@ function Simulationcraft:GetZandalariLoa()
   return zandalariLoa
 end
 
-function Simulationcraft:AzeriteEssencesAvailable()
-  if AzeriteEssence then
-    return true
-  else
-    return false
-  end
-end
-
-function Simulationcraft:GetAzeriteEssencesString()
-  -- defensive check for live/PTR
-  if not Simulationcraft:AzeriteEssencesAvailable() then
-    return nil
-  end
-
-  local essenceStrings = {}
-  -- track if we've found something to export
-  -- characters that haven't unlocked the essences still report slot 0 as unlocked
-  local found = false
-
-  local milestones = AzeriteEssence.GetMilestones()
-  if milestones then
-    for _, milestone in pairs(milestones) do
-      if milestone.unlocked then
-        local essenceID = AzeriteEssence.GetMilestoneEssence(milestone.ID)
-        local spellID = AzeriteEssence.GetMilestoneSpell(milestone.ID)
-        if milestone.slot ~= nil then
-          if essenceID then
-            found = true
-            local essence = AzeriteEssence.GetEssenceInfo(essenceID)
-            essenceStrings[#essenceStrings + 1] = essence.ID .. ':' .. essence.rank
-          else
-            essenceStrings[#essenceStrings + 1] = 0 .. ':' .. 0
-          end
-        elseif spellID then
-          found = true
-          essenceStrings[#essenceStrings + 1] = spellID
-        else
-          -- shouldn't happen?
-        end
-      end
-    end
-  end
-
-  if #essenceStrings > 0 and found then
-    return "azerite_essences=" .. table.concat(essenceStrings, '/')
-  else
-    return nil
-  end
-end
-
-function Simulationcraft:GetUnlockedAzeriteEssencesString()
-  -- defensive check for live/PTR
-  if not Simulationcraft:AzeriteEssencesAvailable() then
-    return nil
-  end
-
-  local unlockedEssences = {}
-  local essences = AzeriteEssence.GetEssences()
-  if essences then
-    for _, essence in pairs(essences) do
-      if essence.unlocked then
-        unlockedEssences[#unlockedEssences + 1] = essence.ID .. ':' .. essence.rank
-      end
-    end
-  end
-
-  if #unlockedEssences > 0 then
-    return 'azerite_essences_available=' .. table.concat(unlockedEssences, '/')
-  else
-    return nil
-  end
-end
 
 -- Shadowlands helpers: covenants, soulbinds, conduits
 function Simulationcraft:CovenantsAvailable()
@@ -837,31 +737,6 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
   simulationcraftProfile = simulationcraftProfile .. playerSpec .. '\n'
   simulationcraftProfile = simulationcraftProfile .. '\n'
 
-  -- BFA SYSTEMS
-  -- gate all azerite essence stuff behind this check so addon will work in live and 8.2 PTR
-  if Simulationcraft:AzeriteEssencesAvailable() then
-    local essences = Simulationcraft:GetAzeriteEssencesString()
-    local unlockedEssences = Simulationcraft:GetUnlockedAzeriteEssencesString()
-
-    if essences then
-      if UnitLevel('player') > 50 then
-        -- Essences generally have no effect in Shadowlands content so export as a comment.
-        -- Otherwise, SimC will sim the essences for level 60 characters
-        simulationcraftProfile = simulationcraftProfile .. '# ' .. essences .. '\n'
-      else
-        simulationcraftProfile = simulationcraftProfile .. essences .. '\n'
-      end
-    end
-    if unlockedEssences then
-      -- output as a comment, SimC doesn't care about unlocked powers but users might
-      simulationcraftProfile = simulationcraftProfile .. '# ' .. unlockedEssences .. '\n'
-    end
-
-    if essences or unlockedEssences then
-      simulationcraftProfile = simulationcraftProfile .. '\n'
-    end
-  end
-
   -- SHADOWLANDS SYSTEMS
   -- gate covenant/soulbind code behind this check so addon will work in 8.3
   if Simulationcraft:CovenantsAvailable() then
@@ -922,17 +797,18 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
     end
   end
 
-  simulationcraftProfile = simulationcraftProfile .. '\n'
-
   -- output gear from bags
   if noBags == false then
     local bagItems = Simulationcraft:GetBagItemStrings()
 
-    simulationcraftProfile = simulationcraftProfile .. '### Gear from Bags\n'
-    for i=1, #bagItems do
-      simulationcraftProfile = simulationcraftProfile .. '#\n'
-      simulationcraftProfile = simulationcraftProfile .. '# ' .. bagItems[i].name .. '\n'
-      simulationcraftProfile = simulationcraftProfile .. '# ' .. bagItems[i].string .. '\n'
+    if #bagItems > 0 then
+      simulationcraftProfile = simulationcraftProfile .. '\n'
+      simulationcraftProfile = simulationcraftProfile .. '### Gear from Bags\n'
+      for i=1, #bagItems do
+        simulationcraftProfile = simulationcraftProfile .. '#\n'
+        simulationcraftProfile = simulationcraftProfile .. '# ' .. bagItems[i].name .. '\n'
+        simulationcraftProfile = simulationcraftProfile .. '# ' .. bagItems[i].string .. '\n'
+      end
     end
   end
 
@@ -959,6 +835,7 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
 
   -- output item links that were included in the /simc chat line
   if links and #links > 0 then
+    simulationcraftProfile = simulationcraftProfile .. '\n'
     simulationcraftProfile = simulationcraftProfile .. '\n### Linked gear\n'
     for i,v in pairs(links) do
       local name,_,_,_,_,_,_,_,invType = GetItemInfo(v)
