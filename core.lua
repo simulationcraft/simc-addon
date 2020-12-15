@@ -835,6 +835,13 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
             simulationcraftProfile = simulationcraftProfile .. '#\n'
             simulationcraftProfile = simulationcraftProfile .. '# ' .. itemName .. '\n'
             simulationcraftProfile = simulationcraftProfile .. '# ' .. GetItemStringFromItemLink(slotNum, itemLink, nil, debugOutput) .. "\n"
+          else
+            local itemLink = WeeklyRewards.GetItemHyperlink(rewardInfo.itemDBID)
+            -- probably a weapon token?
+            simulationcraftProfile = simulationcraftProfile .. '#\n'
+            simulationcraftProfile = simulationcraftProfile .. '# Alpha addon debugging - possible weapon token\n'
+            simulationcraftProfile = simulationcraftProfile .. '# ' .. rewardInfo.id .. ' ' .. activityInfo.level .. '\n'
+            simulationcraftProfile = simulationcraftProfile .. '# ' .. itemLink '\n'
           end
         end
       end
