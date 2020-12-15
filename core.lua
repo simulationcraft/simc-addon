@@ -377,7 +377,7 @@ local function GetItemStringFromItemLink(slotNum, itemLink, itemLoc, debugOutput
   if debugOutput then
     itemStr = itemStr .. '# ' .. gsub(itemLink, "\124", "\124\124") .. '\n'
   end
-  itemStr = itemStr .. simcSlotNames[slotNum] .. "=" .. table.concat(simcItemOptions, ',')
+  itemStr = itemStr .. (simcSlotNames[slotNum] or 'unknown') .. "=" .. table.concat(simcItemOptions, ',')
 
   return itemStr
 end
@@ -830,17 +830,29 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
         for j, rewardInfo in ipairs(activityInfo.rewards) do
           local itemName, _, _, _, _, _, _, _, itemEquipLoc = GetItemInfo(rewardInfo.id);
           local itemLink = WeeklyRewards.GetItemHyperlink(rewardInfo.itemDBID)
-          if itemEquipLoc ~= "" then
-            local slotNum = Simulationcraft.invTypeToSlotNum[itemEquipLoc]
-            simulationcraftProfile = simulationcraftProfile .. '#\n'
-            simulationcraftProfile = simulationcraftProfile .. '# ' .. itemName .. '\n'
-            simulationcraftProfile = simulationcraftProfile .. '# ' .. GetItemStringFromItemLink(slotNum, itemLink, nil, debugOutput) .. "\n"
+          if itemName then
+            if itemEquipLoc ~= "" then
+              local slotNum = Simulationcraft.invTypeToSlotNum[itemEquipLoc]
+              simulationcraftProfile = simulationcraftProfile .. '#\n'
+              simulationcraftProfile = simulationcraftProfile .. '# ' .. itemName .. '\n'
+              simulationcraftProfile = simulationcraftProfile .. '# ' .. GetItemStringFromItemLink(slotNum, itemLink, nil, debugOutput) .. "\n"
+            else
+              local name, _, _, baseItemLevel, _, class, subclass, _, _, _, _, classId, subClassId = GetItemInfo(itemLink)
+              -- weapon tokens
+              if classId == 5 and subClassId == 2 then
+                local level, _, _ = GetDetailedItemLevelInfo(itemLink)
+                simulationcraftProfile = simulationcraftProfile .. '#\n'
+                simulationcraftProfile = simulationcraftProfile .. '# Weapon token debug info:\n'
+                simulationcraftProfile = simulationcraftProfile .. '# ' .. name .. '\n'
+                simulationcraftProfile = simulationcraftProfile .. '# ' .. 'base level: ' .. baseItemLevel .. ', level: ' .. level .. ', activityInfo.level: ' .. activityInfo.level .. '\n'
+                simulationcraftProfile = simulationcraftProfile .. '# ID: ' .. rewardInfo.id .. ', level: ' .. activityInfo.level .. '\n'
+                simulationcraftProfile = simulationcraftProfile .. '# Class: ' .. classId .. ', subclass: ' .. subClassId .. '\n'
+                simulationcraftProfile = simulationcraftProfile .. '# ' .. gsub(itemLink, "\124", "\124\124") .. '\n'
+                simulationcraftProfile = simulationcraftProfile .. '# ' .. GetItemStringFromItemLink('token', itemLink, nil, debugOutput) .. "\n"
+              end
+            end
           else
-            -- probably a weapon token?
-            simulationcraftProfile = simulationcraftProfile .. '#\n'
-            simulationcraftProfile = simulationcraftProfile .. '# Alpha addon debugging - possible weapon token\n'
-            simulationcraftProfile = simulationcraftProfile .. '# ' .. rewardInfo.id .. ' ' .. activityInfo.level .. '\n'
-            simulationcraftProfile = simulationcraftProfile .. '# ' .. itemLink .. '\n'
+            print("Warning: SimC was unable to retrieve an item name from your Great Vault, try again")
           end
         end
       end
