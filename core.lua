@@ -838,17 +838,12 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, links)
               simulationcraftProfile = simulationcraftProfile .. '# ' .. GetItemStringFromItemLink(slotNum, itemLink, nil, debugOutput) .. "\n"
             else
               local name, _, _, baseItemLevel, _, class, subclass, _, _, _, _, classId, subClassId = GetItemInfo(itemLink)
-              -- weapon tokens
+              -- Shadowlands weapon tokens
               if classId == 5 and subClassId == 2 then
                 local level, _, _ = GetDetailedItemLevelInfo(itemLink)
                 simulationcraftProfile = simulationcraftProfile .. '#\n'
-                simulationcraftProfile = simulationcraftProfile .. '# Weapon token debug info:\n'
-                simulationcraftProfile = simulationcraftProfile .. '# ' .. name .. '\n'
-                simulationcraftProfile = simulationcraftProfile .. '# ' .. 'base level: ' .. baseItemLevel .. ', level: ' .. level .. ', activityInfo.level: ' .. activityInfo.level .. '\n'
-                simulationcraftProfile = simulationcraftProfile .. '# ID: ' .. rewardInfo.id .. ', level: ' .. activityInfo.level .. '\n'
-                simulationcraftProfile = simulationcraftProfile .. '# Class: ' .. classId .. ', subclass: ' .. subClassId .. '\n'
-                simulationcraftProfile = simulationcraftProfile .. '# ' .. gsub(itemLink, "\124", "\124\124") .. '\n'
-                simulationcraftProfile = simulationcraftProfile .. '# ' .. GetItemStringFromItemLink('token', itemLink, nil, debugOutput) .. "\n"
+                simulationcraftProfile = simulationcraftProfile .. '# ' .. itemName .. ' ' .. (level or '') .. '\n'
+                simulationcraftProfile = simulationcraftProfile .. '# ' .. GetItemStringFromItemLink(nil, itemLink, nil, debugOutput) .. "\n"
               end
             end
           else
