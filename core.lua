@@ -788,7 +788,7 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, lin
       if CovenantSanctumUI then
         local renown = CovenantSanctumUI.GetRenownLevel()
         if renown > 0 then
-          simulationcraftProfile = simulationcraftProfile .. '# renown=' .. renown .. '\n'
+          simulationcraftProfile = simulationcraftProfile .. 'renown=' .. renown .. '\n'
         end
       end
 
