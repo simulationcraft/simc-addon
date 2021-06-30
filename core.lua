@@ -537,7 +537,13 @@ function Simulationcraft:GetSoulbindString(id)
       if node.spellID ~= 0 then
         soulbindStrings[#soulbindStrings + 1] = node.spellID
       elseif node.conduitID ~= 0 then
-        soulbindStrings[#soulbindStrings + 1] = node.conduitID .. ":" .. node.conduitRank
+        local enhancedStr
+        if node.socketEnhanced then
+          enhancedStr = "1"
+        else
+          enhancedStr = "0"
+        end
+        soulbindStrings[#soulbindStrings + 1] = node.conduitID .. ":" .. node.conduitRank .. ":" .. enhancedStr
       end
     end
   end
@@ -638,7 +644,7 @@ end
 function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, links)
   -- addon metadata
   local versionComment = '# SimC Addon ' .. GetAddOnMetadata('Simulationcraft', 'Version')
-  local simcVersionWarning = '# Requires SimulationCraft 901-01 or newer'
+  local simcVersionWarning = '# Requires SimulationCraft 910-01 or newer'
 
   -- Basic player info
   local _, realmName, _, _, _, _, region, _, _, realmLatinName, _ = LibRealmInfo:GetRealmInfoByUnit('player')
