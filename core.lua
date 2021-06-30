@@ -45,9 +45,6 @@ local ITEM_MOD_TYPE_DROP_LEVEL = 9
 local ITEM_MOD_TYPE_CRAFT_STATS_1 = 29
 local ITEM_MOD_TYPE_CRAFT_STATS_2 = 30
 
-local SocketInventoryItem   = _G.SocketInventoryItem
-local Timer                 = _G.C_Timer
-
 local Covenants             = _G.C_Covenants
 local Soulbinds             = _G.C_Soulbinds
 local CovenantSanctumUI     = _G.C_CovenantSanctumUI
@@ -224,7 +221,7 @@ local function CreateSimcTalentString()
   local maxColumns = 3
   for tier = 1, maxTiers do
     for column = 1, maxColumns do
-      local talentID, name, iconTexture, selected, available = GetTalentInfo(tier, column, GetActiveSpecGroup())
+      local _, _, _, selected, _ = GetTalentInfo(tier, column, GetActiveSpecGroup())
       if selected then
         talentInfo[tier] = column
       end
@@ -455,9 +452,9 @@ function Simulationcraft:GetBagItemStrings()
             container = BANK_CONTAINER
             slot = slot - 51
           end
-          _, _, _, _, _, _, itemLink, _, _, itemId = GetContainerItemInfo(container, slot)
+          local _, _, _, _, _, _, itemLink, _, _, _ = GetContainerItemInfo(container, slot)
           if itemLink then
-            local name, link, quality, baseItemLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(itemLink)
+            local name, _, quality, _, _, _, _, _, _, _, _ = GetItemInfo(itemLink)
 
             -- get correct level for scaling gear
             local level, _, _ = GetDetailedItemLevelInfo(itemLink)
@@ -522,7 +519,7 @@ function Simulationcraft:GetCovenantString()
   return nil
 end
 
-function sortByRow(a, b)
+function SortByRow(a, b)
   return a.row < b.row
 end
 
@@ -531,7 +528,7 @@ function Simulationcraft:GetSoulbindString(id)
   local soulbindData = Soulbinds.GetSoulbindData(id)
   -- sort nodes by row order
   local nodes = soulbindData.tree.nodes
-  table.sort(nodes, sortByRow)
+  table.sort(nodes, SortByRow)
   for _, node in pairs(nodes) do
     if node.state == Enum.SoulbindNodeState.Selected then
       if node.spellID ~= 0 then
@@ -554,7 +551,7 @@ function Simulationcraft:GetMainFrame(text)
   -- Frame code largely adapted from https://www.wowinterface.com/forums/showpost.php?p=323901&postcount=2
   if not SimcFrame then
     -- Main Frame
-    frameConfig = self.db.profile.frame
+    local frameConfig = self.db.profile.frame
     local f = CreateFrame("Frame", "SimcFrame", UIParent, "DialogBoxFrame")
     f:ClearAllPoints()
     -- load position from local DB
@@ -582,7 +579,7 @@ function Simulationcraft:GetMainFrame(text)
     f:SetScript("OnMouseUp", function(self, button)
       self:StopMovingOrSizing()
       -- save position between sessions
-      point, relativeFrame, relativeTo, ofsx, ofsy = self:GetPoint()
+      local point, relativeFrame, relativeTo, ofsx, ofsy = self:GetPoint()
       frameConfig.point = point
       frameConfig.relativeFrame = relativeFrame
       frameConfig.relativePoint = relativeTo
@@ -677,7 +674,7 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, lin
   end
 
   -- Spec info
-  local role, globalSpecID
+  local role, globalSpecID, playerRole
   local specId = GetSpecialization()
   if specId then
     globalSpecID,_,_,_,_,role = GetSpecializationInfo(specId)
