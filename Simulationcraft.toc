@@ -2,7 +2,7 @@
 ## Title: Simulationcraft
 ## Notes: Constructs SimC export strings
 ## Author: Theck, navv_, seriallos
-## Version: 9.2.0-alpha-02
+## Version: 9.2.0-alpha-03
 ## OptionalDependencies: Ace3, LibRealmInfo, LibDBIcon, LibDataBroker-1.1
 ## SavedVariables: SimulationCraftDB
 
