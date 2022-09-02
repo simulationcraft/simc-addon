@@ -45,10 +45,16 @@ local ITEM_MOD_TYPE_DROP_LEVEL = 9
 local ITEM_MOD_TYPE_CRAFT_STATS_1 = 29
 local ITEM_MOD_TYPE_CRAFT_STATS_2 = 30
 
+local WeeklyRewards         = _G.C_WeeklyRewards
+
+-- Shadowlands
 local Covenants             = _G.C_Covenants
 local Soulbinds             = _G.C_Soulbinds
 local CovenantSanctumUI     = _G.C_CovenantSanctumUI
-local WeeklyRewards         = _G.C_WeeklyRewards
+
+-- New talents for Dragonflight
+local ClassTalents          = _G.C_ClassTalents
+local Traits                = _G.C_Traits
 
 -- load stuff from extras.lua
 local upgradeTable        = Simulationcraft.upgradeTable
@@ -239,6 +245,37 @@ local function CreateSimcTalentString()
 
   return str
 end
+
+-- class_talents= builder for dragonflight
+local function GetTalentString(configId)
+  local entryStrings = {}
+
+  local active = false
+  if configId == ClassTalents.GetActiveConfigID() then
+    active = true
+  end
+
+  local configInfo = Traits.GetConfigInfo(configId)
+  for _, treeId in pairs(configInfo.treeIDs) do
+    local nodes = Traits.GetTreeNodes(treeId)
+    for _, nodeId in pairs(nodes) do
+      local node = Traits.GetNodeInfo(configId, nodeId)
+      if node.ranksPurchased > 0 then
+        entryStrings[#entryStrings + 1] = node.activeEntry.entryID .. ":" .. node.activeEntry.rank
+      end
+    end
+  end
+
+  local str = "class_talents=" .. table.concat(entryStrings, '/')
+  if not active then
+    -- comment out the class_talents and then prepend a comment with the loadout name
+    str = '# ' .. str
+    str = '# Saved Loadout: ' .. configInfo.name .. '\n' .. str
+  end
+
+  return str
+end
+
 
 -- function that translates between the game's role values and ours
 local function TranslateRole(spec_id, str)
@@ -605,7 +642,14 @@ function Simulationcraft:GetMainFrame(text)
 
     -- resizing
     f:SetResizable(true)
-    f:SetMinResize(150, 100)
+    if f.SetMinResize then
+      -- older function from shadowlands and before
+      -- Can remove when Dragonflight is in full swing
+      f:SetMinResize(150, 100)
+    else
+      -- new func for dragonflight
+      f:SetResizeBounds(150, 100, nil, nil)
+    end
     local rb = CreateFrame("Button", "SimcResizeButton", f)
     rb:SetPoint("BOTTOMRIGHT", -6, 7)
     rb:SetSize(16, 16)
@@ -720,9 +764,6 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, lin
   playerRealm = 'server=' .. Tokenize(playerRealm)
   playerRegion = 'region=' .. Tokenize(playerRegion)
 
-  -- Talents are more involved - method to handle them
-  local playerTalents = CreateSimcTalentString()
-
   -- Build the output string for the player (not including gear)
   local simcPrintError = nil
   local simulationcraftProfile = ''
@@ -745,57 +786,80 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, lin
   simulationcraftProfile = simulationcraftProfile .. playerRealm .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerRole .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerProfessions .. '\n'
-  simulationcraftProfile = simulationcraftProfile .. playerTalents .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerSpec .. '\n'
   simulationcraftProfile = simulationcraftProfile .. '\n'
 
-  -- SHADOWLANDS SYSTEMS
-  -- gate covenant/soulbind code behind this check so addon will work in 8.3
-  if Simulationcraft:CovenantsAvailable() then
-    local covenantString = Simulationcraft:GetCovenantString()
-    if covenantString then
-      simulationcraftProfile = simulationcraftProfile .. covenantString .. '\n'
+  -- DRAGONFLIGHT
+  if ClassTalents then
+    -- new dragonflight talents
+    local currentConfigId = ClassTalents.GetActiveConfigID()
 
-      -- iterate over soulbinds, inactive soulbinds are commented out
-      local activeSoulbindID = Soulbinds:GetActiveSoulbindID()
-      if activeSoulbindID > 0 then
-        local covenantsData = Simulationcraft:GetActiveCovenantData().soulbindIDs
-        for _, soulbindID in pairs(covenantsData) do
-          local soulbindData = Soulbinds.GetSoulbindData(soulbindID)
-          if soulbindData.unlocked then
-            local soulbindString = Simulationcraft:GetSoulbindString(soulbindID)
-            if soulbindID == activeSoulbindID then
-              simulationcraftProfile = simulationcraftProfile .. soulbindString .. '\n'
-            else
-              simulationcraftProfile = simulationcraftProfile .. '# ' .. soulbindString .. '\n'
+    simulationcraftProfile = simulationcraftProfile .. GetTalentString(currentConfigId) .. '\n'
+    simulationcraftProfile = simulationcraftProfile .. '\n'
+
+    local specConfigs = ClassTalents.GetConfigIDsBySpecID(globalSpecID)
+
+    for _, configId in pairs(specConfigs) do
+      simulationcraftProfile = simulationcraftProfile .. GetTalentString(configId) .. '\n'
+    end
+  else
+    -- old talents
+    local playerTalents = CreateSimcTalentString()
+    simulationcraftProfile = simulationcraftProfile .. playerTalents .. '\n'
+  end
+
+  simulationcraftProfile = simulationcraftProfile .. '\n'
+
+  -- ClassTalents was added in Dragonflight
+  if not ClassTalents then
+    -- SHADOWLANDS SYSTEMS
+    -- gate covenant/soulbind code behind this check so addon will work in 8.3
+    if Simulationcraft:CovenantsAvailable() then
+      local covenantString = Simulationcraft:GetCovenantString()
+      if covenantString then
+        simulationcraftProfile = simulationcraftProfile .. covenantString .. '\n'
+
+        -- iterate over soulbinds, inactive soulbinds are commented out
+        local activeSoulbindID = Soulbinds:GetActiveSoulbindID()
+        if activeSoulbindID > 0 then
+          local covenantsData = Simulationcraft:GetActiveCovenantData().soulbindIDs
+          for _, soulbindID in pairs(covenantsData) do
+            local soulbindData = Soulbinds.GetSoulbindData(soulbindID)
+            if soulbindData.unlocked then
+              local soulbindString = Simulationcraft:GetSoulbindString(soulbindID)
+              if soulbindID == activeSoulbindID then
+                simulationcraftProfile = simulationcraftProfile .. soulbindString .. '\n'
+              else
+                simulationcraftProfile = simulationcraftProfile .. '# ' .. soulbindString .. '\n'
+              end
             end
           end
         end
-      end
 
-      -- Export conduit collection
-      -- TODO: Figure out if addon needs to care about spec fields or if
-      -- there's any other deduping to do
-      local conduitsAvailable = {}
-      for _, conduitType in pairs(Enum.SoulbindConduitType) do
-        local conduits = Soulbinds.GetConduitCollection(conduitType)
-        for _, conduit in pairs(conduits) do
-          conduitsAvailable[#conduitsAvailable + 1] = conduit.conduitID .. ':' .. conduit.conduitRank
+        -- Export conduit collection
+        -- TODO: Figure out if addon needs to care about spec fields or if
+        -- there's any other deduping to do
+        local conduitsAvailable = {}
+        for _, conduitType in pairs(Enum.SoulbindConduitType) do
+          local conduits = Soulbinds.GetConduitCollection(conduitType)
+          for _, conduit in pairs(conduits) do
+            conduitsAvailable[#conduitsAvailable + 1] = conduit.conduitID .. ':' .. conduit.conduitRank
+          end
         end
-      end
 
-      local conduitsAvailableStr = table.concat(conduitsAvailable, '/')
-      simulationcraftProfile = simulationcraftProfile .. '# conduits_available=' .. conduitsAvailableStr .. '\n'
+        local conduitsAvailableStr = table.concat(conduitsAvailable, '/')
+        simulationcraftProfile = simulationcraftProfile .. '# conduits_available=' .. conduitsAvailableStr .. '\n'
 
-      -- Export renown level as a comment, useful to determine how much of a soulbind tree is currently usable
-      if CovenantSanctumUI then
-        local renown = CovenantSanctumUI.GetRenownLevel()
-        if renown > 0 then
-          simulationcraftProfile = simulationcraftProfile .. 'renown=' .. renown .. '\n'
+        -- Export renown level as a comment, useful to determine how much of a soulbind tree is currently usable
+        if CovenantSanctumUI then
+          local renown = CovenantSanctumUI.GetRenownLevel()
+          if renown > 0 then
+            simulationcraftProfile = simulationcraftProfile .. 'renown=' .. renown .. '\n'
+          end
         end
-      end
 
-      simulationcraftProfile = simulationcraftProfile .. '\n'
+        simulationcraftProfile = simulationcraftProfile .. '\n'
+      end
     end
   end
 
