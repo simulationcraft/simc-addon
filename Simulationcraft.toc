@@ -1,8 +1,8 @@
-## Interface: 90205
+## Interface: 90207
 ## Title: Simulationcraft
 ## Notes: Constructs SimC export strings
 ## Author: Theck, navv_, seriallos
-## Version: 10.0.0-alpha-02
+## Version: 10.0.0-alpha-03
 ## OptionalDependencies: Ace3, LibRealmInfo, LibDBIcon, LibDataBroker-1.1
 ## SavedVariables: SimulationCraftDB
 
