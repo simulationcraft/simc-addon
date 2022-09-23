@@ -685,7 +685,9 @@ end
 function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, links)
   -- addon metadata
   local versionComment = '# SimC Addon ' .. GetAddOnMetadata('Simulationcraft', 'Version')
-  local simcVersionWarning = '# Requires SimulationCraft 920-01 or newer'
+  local wowVersion, wowBuild, _, wowToc = GetBuildInfo()
+  local wowVersionComment = '# WoW ' .. wowVersion .. '.' .. wowBuild .. ', TOC ' .. wowToc
+  local simcVersionWarning = '# Requires SimulationCraft 1000-01 or newer'
 
   -- Basic player info
   local _, realmName, _, _, _, _, region, _, _, realmLatinName, _ = LibRealmInfo:GetRealmInfoByUnit('player')
@@ -770,6 +772,7 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, lin
 
   simulationcraftProfile = simulationcraftProfile .. headerComment .. '\n'
   simulationcraftProfile = simulationcraftProfile .. versionComment .. '\n'
+  simulationcraftProfile = simulationcraftProfile .. wowVersionComment .. '\n'
   simulationcraftProfile = simulationcraftProfile .. simcVersionWarning .. '\n'
   simulationcraftProfile = simulationcraftProfile .. '\n'
 
