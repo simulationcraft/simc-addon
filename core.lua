@@ -681,6 +681,32 @@ function Simulationcraft:GetMainFrame(text)
   return SimcFrame
 end
 
+-- Adapted from https://github.com/philanc/plc/blob/master/plc/checksum.lua
+local function adler32(s)
+  -- return adler32 checksum  (uint32)
+  -- adler32 is a checksum defined by Mark Adler for zlib
+  -- (based on the Fletcher checksum used in ITU X.224)
+  -- implementation based on RFC 1950 (zlib format spec), 1996
+  local prime = 65521 --largest prime smaller than 2^16
+  local s1, s2 = 1, 0
+
+  -- limit s size to ensure that modulo prime can be done only at end
+  -- 2^40 is too large for WoW Lua so limit to 2^30
+  if #s > (bit.lshift(1, 30)) then error("adler32: string too large") end
+
+  for i = 1,#s do
+    local b = string.byte(s, i)
+    s1 = s1 + b
+    s2 = s2 + s1
+    -- no need to test or compute mod prime every turn.
+  end
+
+  s1 = s1 % prime
+  s2 = s2 % prime
+
+  return (bit.lshift(s2, 16)) + s1
+end --adler32()
+
 -- This is the workhorse function that constructs the profile
 function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, links)
   -- addon metadata
@@ -966,6 +992,13 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, lin
   if specId==nil then
     simcPrintError = "Error: You need to pick a spec!"
   end
+
+  simulationcraftProfile = simulationcraftProfile .. '\n'
+
+  -- Simple checksum to provide a lightweight verification that the input hasn't been edited/modified
+  local checksum = adler32(simulationcraftProfile)
+
+  simulationcraftProfile = simulationcraftProfile .. '# Checksum: ' .. string.format('%x', checksum)
 
 
   local f = Simulationcraft:GetMainFrame(simcPrintError or simulationcraftProfile)
