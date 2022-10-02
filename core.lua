@@ -486,10 +486,22 @@ function Simulationcraft:GetBagItemStrings()
             -- instead of 4, possible blizz is leaving the door open to more expansion in the future?
             --
             -- 2020/01/24 - Change magic number to 51. Not sure why this changed again but it did! See y'all in 2022?
+            --
+            -- 2022/10/02 - Oh hai, GetContainerItemInfo is no longer global and is now on C_Container. The 2022
+            -- comment above was an actual joke in 2020. And here we are. See y'all in 2024?
             container = BANK_CONTAINER
             slot = slot - 51
           end
-          local _, _, _, _, _, _, itemLink, _, _, _ = GetContainerItemInfo(container, slot)
+
+          local itemLink
+          if C_Container then
+            -- Dragonflight
+            itemLink = C_Container.GetContainerItemLink(container, slot)
+          else
+            -- Shadowlands
+            local _, _, _, _, _, _, itemLink, _, _, _ = GetContainerItemInfo(container, slot)
+          end
+
           if itemLink then
             local name, _, quality, _, _, _, _, _, _, _, _ = GetItemInfo(itemLink)
 
