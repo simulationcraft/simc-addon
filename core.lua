@@ -499,7 +499,8 @@ function Simulationcraft:GetBagItemStrings()
             itemLink = C_Container.GetContainerItemLink(container, slot)
           else
             -- Shadowlands
-            local _, _, _, _, _, _, itemLink, _, _, _ = GetContainerItemInfo(container, slot)
+            local _, _, _, _, _, _, il, _, _, _ = GetContainerItemInfo(container, slot)
+            itemLink = il
           end
 
           if itemLink then
