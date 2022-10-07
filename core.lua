@@ -356,17 +356,6 @@ local function GetExportString(configID)
   return str
 end
 
-local function GetTalentExport()
-  if not ClassTalentFrame then
-    LoadAddOn("Blizzard_ClassTalentUI")
-  end
-  
-  ShowUIPanel(ClassTalentFrame);
-  ClassTalentFrame:SetTab(ClassTalentFrame.talentTabID)
-  
-  return "talents=" .. ClassTalentFrame.TalentsTab:GetLoadoutExportString()
-end
-
 -- function that translates between the game's role values and ours
 local function TranslateRole(spec_id, str)
   local spec_role = Simulationcraft.RoleTable[spec_id]
