@@ -291,43 +291,43 @@ local function WriteLoadoutHeader(exportStream, serializationVersion, specID, tr
 end
 
 local function GetActiveEntryIndex(treeNode)
-	for i, entryID in ipairs(treeNode.entryIDs) do
-		if(entryID == treeNode.activeEntry.entryID) then
-			return i;
-		end
-	end
+  for i, entryID in ipairs(treeNode.entryIDs) do
+    if(entryID == treeNode.activeEntry.entryID) then
+      return i;
+    end
+  end
 
-	return 0;
+  return 0;
 end
 
 local function WriteLoadoutContent(exportStream, configID, treeID)
   local treeNodes = C_Traits.GetTreeNodes(treeID)
-	for i, treeNodeID in ipairs(treeNodes) do
-		local treeNode = C_Traits.GetNodeInfo(configID, treeNodeID);
+  for i, treeNodeID in ipairs(treeNodes) do
+    local treeNode = C_Traits.GetNodeInfo(configID, treeNodeID);
 
-		local isNodeSelected = treeNode.ranksPurchased > 0;
-		local isPartiallyRanked = treeNode.ranksPurchased ~= treeNode.maxRanks;
-		local isChoiceNode = treeNode.type == Enum.TraitNodeType.Selection;
+    local isNodeSelected = treeNode.ranksPurchased > 0;
+    local isPartiallyRanked = treeNode.ranksPurchased ~= treeNode.maxRanks;
+    local isChoiceNode = treeNode.type == Enum.TraitNodeType.Selection;
 
-		exportStream:AddValue(1, isNodeSelected and 1 or 0);
-		if(isNodeSelected) then
-			exportStream:AddValue(1, isPartiallyRanked and 1 or 0);
-			if(isPartiallyRanked) then
-				exportStream:AddValue(bitWidthRanksPurchased, treeNode.ranksPurchased);
-			end
+    exportStream:AddValue(1, isNodeSelected and 1 or 0);
+    if(isNodeSelected) then
+      exportStream:AddValue(1, isPartiallyRanked and 1 or 0);
+      if(isPartiallyRanked) then
+        exportStream:AddValue(bitWidthRanksPurchased, treeNode.ranksPurchased);
+      end
 
-			exportStream:AddValue(1, isChoiceNode and 1 or 0);
-			if(isChoiceNode) then
-				local entryIndex = GetActiveEntryIndex(treeNode);
-				if(entryIndex <= 0 or entryIndex > 4) then
-					error("Error exporting tree node " .. treeNode.ID .. ". The active choice node entry index (" .. entryIndex .. ") is out of bounds. ");
-				end
-				
-				-- store entry index as zero-index
-				exportStream:AddValue(2, entryIndex - 1);
-			end
-		end
-	end
+      exportStream:AddValue(1, isChoiceNode and 1 or 0);
+      if(isChoiceNode) then
+        local entryIndex = GetActiveEntryIndex(treeNode);
+        if(entryIndex <= 0 or entryIndex > 4) then
+          error("Error exporting tree node " .. treeNode.ID .. ". The active choice node entry index (" .. entryIndex .. ") is out of bounds. ");
+        end
+        
+        -- store entry index as zero-index
+        exportStream:AddValue(2, entryIndex - 1);
+      end
+    end
+  end
 end
 
 local function GetExportString(configID)
