@@ -56,6 +56,12 @@ local CovenantSanctumUI     = _G.C_CovenantSanctumUI
 local ClassTalents          = _G.C_ClassTalents
 local Traits                = _G.C_Traits
 
+-- Talent string export
+local LOADOUT_SERIALIZATION_VERSION = 1
+local bitWidthHeaderVersion         = 8
+local bitWidthSpecID                = 16
+local bitWidthRanksPurchased        = 6
+
 -- load stuff from extras.lua
 local upgradeTable        = Simulationcraft.upgradeTable
 local slotNames           = Simulationcraft.slotNames
@@ -276,6 +282,90 @@ local function GetTalentString(configId)
   return str
 end
 
+local function WriteLoadoutHeader(exportStream, serializationVersion, specID, treeHash)
+  exportStream:AddValue(bitWidthHeaderVersion, serializationVersion)
+  exportStream:AddValue(bitWidthSpecID, specID)
+  for i, hashVal in ipairs(treeHash) do
+    exportStream:AddValue(8, hashVal)
+  end
+end
+
+local function GetActiveEntryIndex(treeNode)
+	for i, entryID in ipairs(treeNode.entryIDs) do
+		if(entryID == treeNode.activeEntry.entryID) then
+			return i;
+		end
+	end
+
+	return 0;
+end
+
+local function WriteLoadoutContent(exportStream, configID, treeID)
+  local treeNodes = C_Traits.GetTreeNodes(treeID)
+	for i, treeNodeID in ipairs(treeNodes) do
+		local treeNode = C_Traits.GetNodeInfo(configID, treeNodeID);
+
+		local isNodeSelected = treeNode.ranksPurchased > 0;
+		local isPartiallyRanked = treeNode.ranksPurchased ~= treeNode.maxRanks;
+		local isChoiceNode = treeNode.type == Enum.TraitNodeType.Selection;
+
+		exportStream:AddValue(1, isNodeSelected and 1 or 0);
+		if(isNodeSelected) then
+			exportStream:AddValue(1, isPartiallyRanked and 1 or 0);
+			if(isPartiallyRanked) then
+				exportStream:AddValue(bitWidthRanksPurchased, treeNode.ranksPurchased);
+			end
+
+			exportStream:AddValue(1, isChoiceNode and 1 or 0);
+			if(isChoiceNode) then
+				local entryIndex = GetActiveEntryIndex(treeNode);
+				if(entryIndex <= 0 or entryIndex > 4) then
+					error("Error exporting tree node " .. treeNode.ID .. ". The active choice node entry index (" .. entryIndex .. ") is out of bounds. ");
+				end
+				
+				-- store entry index as zero-index
+				exportStream:AddValue(2, entryIndex - 1);
+			end
+		end
+	end
+end
+
+local function GetExportString(configID)
+  local active = false
+  if configID == ClassTalents.GetActiveConfigID() then
+    active = true
+  end
+
+  local exportStream = ExportUtil.MakeExportDataStream();
+  local currentSpecID = PlayerUtil.GetCurrentSpecID();
+  local configInfo = Traits.GetConfigInfo(configID)
+  local treeID = configInfo.treeIDs[1]
+  local treeHash = C_Traits.GetTreeHash(configID, treeID)
+  local nodes = Traits.GetTreeNodes(treeID)
+
+  WriteLoadoutHeader(exportStream, LOADOUT_SERIALIZATION_VERSION, currentSpecID, treeHash )
+  WriteLoadoutContent(exportStream, configID, treeID)
+
+  local str = "talents=" .. exportStream:GetExportString()
+  if not active then
+    -- comment out the talents and then prepend a comment with the loadout name
+    str = '# ' .. str
+    str = '# Saved Loadout: ' .. configInfo.name .. '\n' .. str
+  end
+
+  return str
+end
+
+local function GetTalentExport()
+  if not ClassTalentFrame then
+    LoadAddOn("Blizzard_ClassTalentUI")
+  end
+  
+  ShowUIPanel(ClassTalentFrame);
+  ClassTalentFrame:SetTab(ClassTalentFrame.talentTabID)
+  
+  return "talents=" .. ClassTalentFrame.TalentsTab:GetLoadoutExportString()
+end
 
 -- function that translates between the game's role values and ours
 local function TranslateRole(spec_id, str)
@@ -836,13 +926,13 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, lin
     -- new dragonflight talents
     local currentConfigId = ClassTalents.GetActiveConfigID()
 
-    simulationcraftProfile = simulationcraftProfile .. GetTalentString(currentConfigId) .. '\n'
+    simulationcraftProfile = simulationcraftProfile .. GetExportString(currentConfigId) .. '\n'
     simulationcraftProfile = simulationcraftProfile .. '\n'
 
     local specConfigs = ClassTalents.GetConfigIDsBySpecID(globalSpecID)
 
     for _, configId in pairs(specConfigs) do
-      simulationcraftProfile = simulationcraftProfile .. GetTalentString(configId) .. '\n'
+      simulationcraftProfile = simulationcraftProfile .. GetExportString(configId) .. '\n'
     end
   else
     -- old talents
