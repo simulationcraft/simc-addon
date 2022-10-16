@@ -13,6 +13,9 @@ Simulationcraft.RoleTable = {
   [103] = 'attack',
   [104] = 'tank',
   [105] = 'attack',
+  -- Evoker
+  [1467] = 'spell',
+  [1468] = 'attack',
   -- Hunter
   [253] = 'attack',
   [254] = 'attack',
@@ -93,6 +96,9 @@ Simulationcraft.SpecNames = {
   [103] = 'Feral',
   [104] = 'Guardian',
   [105] = 'Restoration',
+-- Evoker
+  [1467] = 'Devastation',
+  [1468] = 'Preservation',
 -- Hunter 
   [253] = 'Beast Mastery',
   [254] = 'Marksmanship',
