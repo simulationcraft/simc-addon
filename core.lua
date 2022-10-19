@@ -57,7 +57,6 @@ local ClassTalents          = _G.C_ClassTalents
 local Traits                = _G.C_Traits
 
 -- Talent string export
-local LOADOUT_SERIALIZATION_VERSION = 1
 local bitWidthHeaderVersion         = 8
 local bitWidthSpecID                = 16
 local bitWidthRanksPurchased        = 6
@@ -337,13 +336,14 @@ local function GetExportString(configID)
   end
 
   local exportStream = ExportUtil.MakeExportDataStream();
-  local currentSpecID = PlayerUtil.GetCurrentSpecID();
   local configInfo = Traits.GetConfigInfo(configID)
+  local currentSpecID = PlayerUtil.GetCurrentSpecID();
   local treeID = configInfo.treeIDs[1]
-  local treeHash = C_Traits.GetTreeHash(configID, treeID)
+  local treeHash = C_Traits.GetTreeHash(treeID)
   local nodes = Traits.GetTreeNodes(treeID)
+  local serializationVersion = C_Traits.GetLoadoutSerializationVersion()
 
-  WriteLoadoutHeader(exportStream, LOADOUT_SERIALIZATION_VERSION, currentSpecID, treeHash )
+  WriteLoadoutHeader(exportStream, serializationVersion, currentSpecID, treeHash )
   WriteLoadoutContent(exportStream, configID, treeID)
 
   local str = "talents=" .. exportStream:GetExportString()
