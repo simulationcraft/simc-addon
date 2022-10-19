@@ -338,10 +338,23 @@ local function GetExportString(configID)
   local exportStream = ExportUtil.MakeExportDataStream();
   local configInfo = Traits.GetConfigInfo(configID)
   local currentSpecID = PlayerUtil.GetCurrentSpecID();
+
   local treeID = configInfo.treeIDs[1]
-  local treeHash = C_Traits.GetTreeHash(treeID)
+
+  local serializationVersion;
+  local treeHash;
+
+  if C_Traits.GetLoadoutSerializationVersion then
+    -- 10.0.2 Beta
+    treeHash = C_Traits.GetTreeHash(treeID)
+    serializationVersion = C_Traits.GetLoadoutSerializationVersion()
+  else
+    -- 10.0.0 PTR
+    serializationVersion = 1
+    treeHash = C_Traits.GetTreeHash(configID, treeID)
+  end
+
   local nodes = Traits.GetTreeNodes(treeID)
-  local serializationVersion = C_Traits.GetLoadoutSerializationVersion()
 
   WriteLoadoutHeader(exportStream, serializationVersion, currentSpecID, treeHash )
   WriteLoadoutContent(exportStream, configID, treeID)
@@ -573,7 +586,7 @@ function Simulationcraft:GetBagItemStrings()
           end
 
           local itemLink
-          if C_Container then
+          if C_Container and C_Container.GetContainerItemLink then
             -- Dragonflight
             itemLink = C_Container.GetContainerItemLink(container, slot)
           else
