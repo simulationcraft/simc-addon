@@ -856,7 +856,7 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, lin
   if specId then
     globalSpecID,_,_,_,_,role = GetSpecializationInfo(specId)
   end
-  local playerSpec = specNames[ globalSpecID ]
+  local playerSpec = specNames[ globalSpecID ] or 'unknown'
 
   -- Professions
   local pid1, pid2 = GetProfessions()
@@ -893,7 +893,7 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, lin
   playerLevel = 'level=' .. playerLevel
   playerRace = 'race=' .. Tokenize(playerRace)
   playerRole = 'role=' .. TranslateRole(globalSpecID, role)
-  playerSpec = 'spec=' .. Tokenize(playerSpec)
+  local playerSpecStr = 'spec=' .. Tokenize(playerSpec)
   playerRealm = 'server=' .. Tokenize(playerRealm)
   playerRegion = 'region=' .. Tokenize(playerRegion)
 
@@ -920,11 +920,14 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, lin
   simulationcraftProfile = simulationcraftProfile .. playerRealm .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerRole .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerProfessions .. '\n'
-  simulationcraftProfile = simulationcraftProfile .. playerSpec .. '\n'
+  simulationcraftProfile = simulationcraftProfile .. playerSpecStr .. '\n'
   simulationcraftProfile = simulationcraftProfile .. '\n'
 
-  -- DRAGONFLIGHT
-  if ClassTalents then
+  if playerSpec == 'unknown' then
+    -- do nothing
+    -- Player does not have a spec / is in starting player area
+  elseif ClassTalents then
+    -- DRAGONFLIGHT
     -- new dragonflight talents
     local currentConfigId = ClassTalents.GetActiveConfigID()
 
