@@ -503,10 +503,10 @@ local function GetItemStringFromItemLink(slotNum, itemLink, itemLoc, debugOutput
   end
 
   local itemStr = ''
-  if debugOutput then
-    itemStr = itemStr .. '# ' .. gsub(itemLink, "\124", "\124\124") .. '\n'
-  end
   itemStr = itemStr .. (simcSlotNames[slotNum] or 'unknown') .. "=" .. table.concat(simcItemOptions, ',')
+  if debugOutput then
+    itemStr = itemStr .. '\n# ' .. gsub(itemLink, "\124", "\124\124") .. '\n'
+  end
 
   return itemStr
 end
