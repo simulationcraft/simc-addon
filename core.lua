@@ -543,7 +543,7 @@ function Simulationcraft:GetItemStrings(debugOutput)
   return items
 end
 
-function Simulationcraft:GetBagItemStrings()
+function Simulationcraft:GetBagItemStrings(debugOutput)
   local bagItems = {}
 
   for slotNum=1, #slotNames do
@@ -604,7 +604,7 @@ function Simulationcraft:GetBagItemStrings()
             -- find all equippable, non-artifact items
             if IsEquippableItem(itemLink) and quality ~= 6 then
               bagItems[#bagItems + 1] = {
-                string = GetItemStringFromItemLink(slotNum, itemLink, itemLoc, false),
+                string = GetItemStringFromItemLink(slotNum, itemLink, itemLoc, debugOutput),
                 name = name .. (level and ' (' .. level .. ')' or '')
               }
             end
@@ -1009,7 +1009,7 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, lin
 
   -- output gear from bags
   if noBags == false then
-    local bagItems = Simulationcraft:GetBagItemStrings()
+    local bagItems = Simulationcraft:GetBagItemStrings(debugOutput)
 
     if #bagItems > 0 then
       simulationcraftProfile = simulationcraftProfile .. '\n'
