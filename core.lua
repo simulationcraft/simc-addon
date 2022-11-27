@@ -713,12 +713,12 @@ function Simulationcraft:GetMainFrame(text)
     })
     f:SetMovable(true)
     f:SetClampedToScreen(true)
-    f:SetScript("OnMouseDown", function(_, button)
+    f:SetScript("OnMouseDown", function(self, button) -- luacheck: ignore
       if button == "LeftButton" then
         self:StartMoving()
       end
     end)
-    f:SetScript("OnMouseUp", function(_, _)
+    f:SetScript("OnMouseUp", function(self, _) -- luacheck: ignore
       self:StopMovingOrSizing()
       -- save position between sessions
       local point, relativeFrame, relativeTo, ofsx, ofsy = self:GetPoint()
@@ -763,13 +763,13 @@ function Simulationcraft:GetMainFrame(text)
     rb:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
     rb:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
 
-    rb:SetScript("OnMouseDown", function(_, button)
+    rb:SetScript("OnMouseDown", function(self, button) -- luacheck: ignore
         if button == "LeftButton" then
             f:StartSizing("BOTTOMRIGHT")
             self:GetHighlightTexture():Hide() -- more noticeable
         end
     end)
-    rb:SetScript("OnMouseUp", function(_, _)
+    rb:SetScript("OnMouseUp", function(self, _) -- luacheck: ignore
         f:StopMovingOrSizing()
         self:GetHighlightTexture():Show()
         eb:SetWidth(sf:GetWidth())
