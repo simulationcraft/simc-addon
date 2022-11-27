@@ -661,7 +661,7 @@ function Simulationcraft:GetCovenantString()
   return nil
 end
 
-function SortByRow(a, b)
+local function SortByRow(a, b)
   return a.row < b.row
 end
 
