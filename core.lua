@@ -437,15 +437,14 @@ local function GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
   -- Gems
   for gemOffset = OFFSET_GEM_ID_1, OFFSET_GEM_ID_4 do
     local gemIndex = (gemOffset - OFFSET_GEM_BASE) + 1
+    gems[gemIndex] = 0
+    gemBonuses[gemIndex] = 0
     if itemSplit[gemOffset] > 0 then
       local gemId = GetGemItemID(itemLink, gemIndex)
       if gemId > 0 then
         gems[gemIndex] = gemId
         gemBonuses[gemIndex] = GetGemBonuses(itemLink, gemIndex)
       end
-    else
-      gems[gemIndex] = 0
-      gemBonuses[gemIndex] = 0
     end
   end
 
