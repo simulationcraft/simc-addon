@@ -292,7 +292,7 @@ end
 
 local function GetActiveEntryIndex(treeNode)
   for i, entryID in ipairs(treeNode.entryIDs) do
-    if(entryID == treeNode.activeEntry.entryID) then
+    if(treeNode.activeEntry and entryID == treeNode.activeEntry.entryID) then
       return i;
     end
   end
