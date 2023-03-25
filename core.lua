@@ -320,10 +320,11 @@ local function WriteLoadoutContent(exportStream, configID, treeID)
       if(isChoiceNode) then
         local entryIndex = GetActiveEntryIndex(treeNode);
         if(entryIndex <= 0 or entryIndex > 4) then
-          error(
-            "Error exporting tree node " .. treeNode.ID
-            .. ". The active choice node entry index (" .. entryIndex .. ") is out of bounds. "
-          );
+          local configInfo = Traits.GetConfigInfo(configID)
+          local errorMsg = "Talent loadout '" .. configInfo.name .. "' is corrupt/incomplete. It needs to be"
+            .. " recreated or deleted for /simc to function properly"
+          print(errorMsg);
+          error(errorMsg);
         end
 
         -- store entry index as zero-index
