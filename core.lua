@@ -54,6 +54,9 @@ local WeeklyRewards         = _G.C_WeeklyRewards
 local ClassTalents          = _G.C_ClassTalents
 local Traits                = _G.C_Traits
 
+-- GetAddOnMetadata was global until 10.1. It's now in C_AddOns. This line will use C_AddOns if available and work in either WoW build
+local GetAddOnMetadata = C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata
+
 -- Talent string export
 local bitWidthHeaderVersion         = 8
 local bitWidthSpecID                = 16
