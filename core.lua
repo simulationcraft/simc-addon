@@ -630,6 +630,40 @@ function Simulationcraft:GetZandalariLoa()
   return zandalariLoa
 end
 
+function Simulationcraft:GetSlotHighWatermarks()
+  if C_ItemUpgrade and C_ItemUpgrade.GetHighWatermarkForSlot then
+    local slots = {}
+    for slot = 1, 19 do
+      local characterHighWatermark, accountHighWatermark = C_ItemUpgrade.GetHighWatermarkForSlot(slot)
+      if characterHighWatermark or accountHighWatermark then
+        slots[#slots + 1] = table.concat({  slot, characterHighWatermark, accountHighWatermark }, ':')
+      end
+    end
+    return table.concat(slots, '/')
+  end
+end
+
+function Simulationcraft:GetUpgradeCurrencies()
+  local upgradeCurrencies = {}
+  -- Collect actual currencies
+  for currencyId, currencyName in pairs(Simulationcraft.upgradeCurrencies) do
+    local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(currencyId)
+    if currencyInfo and currencyInfo.quantity > 0 then
+      upgradeCurrencies[#upgradeCurrencies + 1] = table.concat({ "c", currencyId, currencyInfo.quantity }, ':')
+    end
+  end
+
+  -- Collect items that get used as currencies
+  for itemId, itemName in pairs(Simulationcraft.upgradeItems) do
+    local count = GetItemCount(itemId, true, true, true)
+    if count > 0 then
+      upgradeCurrencies[#upgradeCurrencies + 1] = table.concat({ "i", itemId, count }, ':')
+    end
+  end
+
+  return table.concat(upgradeCurrencies, '/')
+end
+
 function Simulationcraft:GetMainFrame(text)
   -- Frame code largely adapted from https://www.wowinterface.com/forums/showpost.php?p=323901&postcount=2
   if not SimcFrame then
@@ -993,6 +1027,19 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, lin
         break
       end
     end
+  end
+
+  simulationcraftProfile = simulationcraftProfile .. '\n'
+  simulationcraftProfile = simulationcraftProfile .. '### Additional Character Info\n'
+
+  local upgradeCurrenciesStr = Simulationcraft:GetUpgradeCurrencies()
+  simulationcraftProfile = simulationcraftProfile .. '#\n'
+  simulationcraftProfile = simulationcraftProfile .. '# upgrade_currencies=' .. upgradeCurrenciesStr .. '\n'
+
+  local highWatermarksStr = Simulationcraft:GetSlotHighWatermarks()
+  if highWatermarksStr then
+    simulationcraftProfile = simulationcraftProfile .. '#\n'
+    simulationcraftProfile = simulationcraftProfile .. '# slot_high_watermarks=' .. highWatermarksStr .. '\n'
   end
 
   -- sanity checks - if there's anything that makes the output completely invalid, punt!

@@ -293,3 +293,19 @@ Simulationcraft.covenants = {
   [3] = 'night_fae',
   [4] = 'necrolord',
 }
+
+Simulationcraft.upgradeCurrencies = {
+  [1191] = 'Valor',
+  [1792] = 'Honor',
+  [2245] = 'Flightstones',
+  [2122] = 'Storm Sigil',
+}
+
+Simulationcraft.upgradeItems = {
+  [202184] = 'Trophy of Strife',
+  [204193] = 'Whelpling\'s Shadowflame Crest',
+  [204195] = 'Drake\'s Shadowflame Crest',
+  [204196] = 'Wyrm\'s Shadowflame Crest',
+  [204194] = 'Aspect\'s Shadowflame Crest',
+}
+

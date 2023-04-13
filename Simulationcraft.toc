@@ -1,8 +1,8 @@
-## Interface: 100007
+## Interface: 100100
 ## Title: Simulationcraft
 ## Notes: Constructs SimC export strings
 ## Author: Theck, navv_, seriallos
-## Version: 10.0.7-04
+## Version: 10.1.0-01-alpha1
 ## OptionalDependencies: Ace3, LibRealmInfo, LibDBIcon, LibDataBroker-1.1
 ## SavedVariables: SimulationCraftDB
 
