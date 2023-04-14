@@ -633,7 +633,8 @@ end
 function Simulationcraft:GetSlotHighWatermarks()
   if C_ItemUpgrade and C_ItemUpgrade.GetHighWatermarkForSlot then
     local slots = {}
-    for slot = 1, 19 do
+    -- These are not normal equipment slots, they are Enum.ItemRedundancySlot
+    for slot = 0, 16 do
       local characterHighWatermark, accountHighWatermark = C_ItemUpgrade.GetHighWatermarkForSlot(slot)
       if characterHighWatermark or accountHighWatermark then
         slots[#slots + 1] = table.concat({  slot, characterHighWatermark, accountHighWatermark }, ':')
