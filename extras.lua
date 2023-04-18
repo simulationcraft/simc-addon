@@ -307,5 +307,16 @@ Simulationcraft.upgradeItems = {
   [204195] = 'Drake\'s Shadowflame Crest',
   [204196] = 'Wyrm\'s Shadowflame Crest',
   [204194] = 'Aspect\'s Shadowflame Crest',
+  [190453] = 'Spark of Ingenuity',
+  [197921] = 'Primal Infusion',
+  [198046] = 'Concentrated Primal Infusion',
+  [198048] = 'Titan Training Matrix I',
+  [198056] = 'Titan Training Matrix II',
+  [198058] = 'Titan Training Matrix III',
+  [198059] = 'Titan Training Matrix IV',
+  [204440] = 'Spark of Shadowflame',
+  [204673] = 'Titan Training Matrix V',
+  [204681] = 'Enchanted Whelpling\'s Shadowflame Crest',
+  [204682] = 'Enchanted Wyrm\'s Shadowflame Crest',
+  [204697] = 'Enchanted Aspect\'s Shadowflame Crest',
 }
-
