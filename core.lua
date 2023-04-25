@@ -504,6 +504,11 @@ local function GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
     simcItemOptions[#simcItemOptions + 1] = 'crafted_stats=' .. table.concat(craftedStats, '/')
   end
 
+  local craftingQuality = C_TradeSkillUI.GetItemCraftedQualityByItemInfo(itemLink);
+  if craftingQuality then
+    simcItemOptions[#simcItemOptions + 1] = 'crafting_quality=' .. craftingQuality
+  end
+
   local itemStr = ''
   itemStr = itemStr .. (simcSlotNames[slotNum] or 'unknown') .. "=" .. table.concat(simcItemOptions, ',')
   if debugOutput then
