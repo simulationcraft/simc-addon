@@ -96,8 +96,15 @@ function Simulationcraft:OnInitialize()
   });
   LibDBIcon:Register("SimulationCraft", SimcLDB, self.db.profile.minimap)
   Simulationcraft:UpdateMinimapButton()
-
   Simulationcraft:RegisterChatCommand('simc', 'HandleChatCommand')
+  AddonCompartmentFrame:RegisterAddon({
+    text = "SimulationCraft",
+    icon = "Interface\\AddOns\\SimulationCraft\\logo",
+    notCheckable = true,
+    func = function()
+      Simulationcraft:PrintSimcProfile(false, false, false)
+    end,
+})
 end
 
 function Simulationcraft:OnEnable()
@@ -106,10 +113,6 @@ end
 
 function Simulationcraft:OnDisable()
 
-end
-
-function Simulationcraft_OnAddonCompartmentClick()
-	Simulationcraft:PrintSimcProfile(false, false, false)
 end
 
 function Simulationcraft:UpdateMinimapButton()
