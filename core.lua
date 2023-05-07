@@ -81,7 +81,7 @@ function Simulationcraft:OnInitialize()
   self.db = LibStub("AceDB-3.0"):New("SimulationCraftDB", {
     profile = {
       minimap = {
-        hide = false,
+        hide = true,
       },
       frame = {
         point = "CENTER",
@@ -96,8 +96,15 @@ function Simulationcraft:OnInitialize()
   });
   LibDBIcon:Register("SimulationCraft", SimcLDB, self.db.profile.minimap)
   Simulationcraft:UpdateMinimapButton()
-
   Simulationcraft:RegisterChatCommand('simc', 'HandleChatCommand')
+  AddonCompartmentFrame:RegisterAddon({
+    text = "SimulationCraft",
+    icon = "Interface\\AddOns\\SimulationCraft\\logo",
+    notCheckable = true,
+    func = function()
+      Simulationcraft:PrintSimcProfile(false, false, false)
+    end,
+  })
 end
 
 function Simulationcraft:OnEnable()

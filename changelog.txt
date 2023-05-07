@@ -1,3 +1,6 @@
+v0.0.3
+	Move to addon compartment
+
 v0.0.2
 	Add user class and level in log
 
