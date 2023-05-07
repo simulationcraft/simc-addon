@@ -5,6 +5,8 @@
 ## Version: 10.1.0-02
 ## OptionalDependencies: Ace3, LibRealmInfo, LibDBIcon, LibDataBroker-1.1
 ## SavedVariables: SimulationCraftDB
+## AddonCompartmentFunc: OnAddonCompartmentClick
+## IconTexture: Interface\AddOns\SimulationCraft\logo
 
 libs\LibStub\LibStub.lua
 libs\CallbackHandler-1.0\CallbackHandler-1.0.lua

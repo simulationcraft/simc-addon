@@ -81,7 +81,7 @@ function Simulationcraft:OnInitialize()
   self.db = LibStub("AceDB-3.0"):New("SimulationCraftDB", {
     profile = {
       minimap = {
-        hide = false,
+        hide = true,
       },
       frame = {
         point = "CENTER",
@@ -106,6 +106,10 @@ end
 
 function Simulationcraft:OnDisable()
 
+end
+
+function OnAddonCompartmentClick()
+	Simulationcraft:PrintSimcProfile(false, false, false)
 end
 
 function Simulationcraft:UpdateMinimapButton()
