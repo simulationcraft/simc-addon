@@ -104,7 +104,7 @@ function Simulationcraft:OnInitialize()
     func = function()
       Simulationcraft:PrintSimcProfile(false, false, false)
     end,
-})
+  })
 end
 
 function Simulationcraft:OnEnable()
