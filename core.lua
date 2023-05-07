@@ -108,7 +108,7 @@ function Simulationcraft:OnDisable()
 
 end
 
-function OnAddonCompartmentClick()
+function Simulationcraft_OnAddonCompartmentClick()
 	Simulationcraft:PrintSimcProfile(false, false, false)
 end
 
