@@ -376,6 +376,7 @@ local function GetExportString(configID)
   if not active then
     -- comment out the talents and then prepend a comment with the loadout name
     str = '# ' .. str
+    -- Make sure any pipe characters get unescaped, otherwise breaks checksums
     str = '# Saved Loadout: ' .. configInfo.name:gsub("||", "|") .. '\n' .. str
   end
 
