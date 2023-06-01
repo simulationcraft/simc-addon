@@ -996,7 +996,7 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, lin
               end
             end
           else
-            print("Warning: SimC was unable to retrieve an item name from your Great Vault, try again")
+            print("Warning: SimC was unable to retrieve info for item " .. rewardInfo.id .. " from your Great Vault, try again")
           end
         end
       end
