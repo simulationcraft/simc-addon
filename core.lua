@@ -43,6 +43,8 @@ local OFFSET_SUFFIX_ID = 7
 -- local OFFSET_CONTEXT = 12
 local OFFSET_BONUS_ID = 13
 
+local OFFSET_GEM_BONUS_FROM_MODS = 2
+
 local ITEM_MOD_TYPE_DROP_LEVEL = 9
 -- 28 shows frequently but is currently unknown
 local ITEM_MOD_TYPE_CRAFT_STATS_1 = 29
@@ -402,34 +404,6 @@ local function TranslateRole(spec_id, str)
 end
 
 -- =================== Item Information =========================
-local function GetGemItemID(itemLink, index)
-  local _, gemLink = GetItemGem(itemLink, index)
-  if gemLink ~= nil then
-    local itemIdStr = string.match(gemLink, "item:(%d+)")
-    if itemIdStr ~= nil then
-      return tonumber(itemIdStr)
-    end
-  end
-
-  return 0
-end
-
-local function GetGemBonuses(itemLink, index)
-  local bonuses = {}
-  local _, gemLink = GetItemGem(itemLink, index)
-  if gemLink ~= nil then
-    local gemSplit = GetItemSplit(gemLink)
-    for i=1, gemSplit[OFFSET_BONUS_ID] do
-      bonuses[#bonuses + 1] = gemSplit[OFFSET_BONUS_ID + i]
-    end
-  end
-
-  if #bonuses > 0 then
-    return table.concat(bonuses, ':')
-  end
-
-  return 0
-end
 
 local function GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
   local itemSplit = GetItemSplit(itemLink)
@@ -452,10 +426,9 @@ local function GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
     gems[gemIndex] = 0
     gemBonuses[gemIndex] = 0
     if itemSplit[gemOffset] > 0 then
-      local gemId = GetGemItemID(itemLink, gemIndex)
+      local gemId = itemSplit[gemOffset]
       if gemId > 0 then
         gems[gemIndex] = gemId
-        gemBonuses[gemIndex] = GetGemBonuses(itemLink, gemIndex)
       end
     end
   end
@@ -464,16 +437,9 @@ local function GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
   while #gems > 0 and gems[#gems] == 0 do
     table.remove(gems, #gems)
   end
-  -- Remove any trailing zeros from the gem bonuses
-  while #gemBonuses > 0 and gemBonuses[#gemBonuses] == 0 do
-    table.remove(gemBonuses, #gemBonuses)
-  end
 
   if #gems > 0 then
     simcItemOptions[#simcItemOptions + 1] = 'gem_id=' .. table.concat(gems, '/')
-    if #gemBonuses > 0 then
-      simcItemOptions[#simcItemOptions + 1] = 'gem_bonus_id=' .. table.concat(gemBonuses, '/')
-    end
   end
 
   -- New style item suffix, old suffix style not supported
@@ -510,6 +476,19 @@ local function GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
 
   if #craftedStats > 0 then
     simcItemOptions[#simcItemOptions + 1] = 'crafted_stats=' .. table.concat(craftedStats, '/')
+  end
+
+  -- gem bonuses
+  local gemBonusOffset = linkOffset + (2 * numPairs) + OFFSET_GEM_BONUS_FROM_MODS
+  local numGemBonuses = itemSplit[gemBonusOffset]
+  local gemBonuses = {}
+  for index=1, numGemBonuses do
+    local offset = gemBonusOffset + index
+    gemBonuses[index] = itemSplit[offset]
+  end
+
+  if #gemBonuses > 0 then
+    simcItemOptions[#simcItemOptions + 1] = 'gem_bonus_id=' .. table.concat(gemBonuses, '/')
   end
 
   local craftingQuality = C_TradeSkillUI.GetItemCraftedQualityByItemInfo(itemLink);
