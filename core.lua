@@ -900,7 +900,9 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, lin
 
   -- output gear
   for slotNum=1, #slotNames do
-    if items[slotNum] then
+    local item = items[slotNum]
+    if item then
+      simulationcraftProfile = simulationcraftProfile .. '# ' .. item.name .. '\n'
       simulationcraftProfile = simulationcraftProfile .. items[slotNum].string .. '\n'
     end
   end
