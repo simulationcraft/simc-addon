@@ -17,6 +17,19 @@ shift left-click an item (from chat, a recent boss drop, or an item from a vendo
 comment below bag items in the text. WoW chat does have a character limit so the output may only contain the first 2-3
 items that you link.
 
+FAQ
+===
+
+### What does "Temporarily unable to retrieve item name due to too much other addon activity" mean?
+
+Some addons that do big database updates can unintentionally cause problems for others. Usually it's
+completionist or transmog addons (All The Things, Can I Mog It, etc) that need to do a bunch of work
+on login and that can sometimes prevent the SimulationCraft addon from being able to show item names.
+
+If you run /simc again a bit later once the database updates are done, it should resolve the issue and show
+the item names in comments. You may need to run /simc a couple of times for the info to be available.
+
+
 Maintainers
 -----------
 

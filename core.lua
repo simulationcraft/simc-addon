@@ -178,6 +178,17 @@ local function GetItemSplit(itemLink)
   return itemSplit
 end
 
+local function GetItemName(itemLink)
+  local name = string.match(itemLink, '|h%[(.*)%]|')
+  local removeIcons = gsub(name, '|%a.+|%a', '')
+  local trimmed = string.match(removeIcons, '^%s*(.*)%s*$')
+  if trimmed == '' then
+    return nil
+  end
+
+  return trimmed
+end
+
 -- char size for utf8 strings
 local function ChrSize(char)
   if not char then
@@ -533,75 +544,40 @@ function Simulationcraft:GetItemStrings(debugOutput)
   return items
 end
 
+-- Iterate through all container slots looking for gear that can be equipped.
+-- Item name and item level may not be available if other addons are causing lookups to be throttled but
+-- item links and IDs should always be available
 function Simulationcraft:GetBagItemStrings(debugOutput)
   local bagItems = {}
 
-  for slotNum=1, #slotNames do
-    local slotName = slotNames[slotNum]
-    -- Ignore "double" slots, results in doubled output which isn't useful
-    if slotName and slotName ~= 'Trinket1Slot' and slotName ~= 'Finger1Slot' then
-      local slotItems = {}
-      local slotId, _, _ = GetInventorySlotInfo(slotNames[slotNum])
-      GetInventoryItemsForSlot(slotId, slotItems)
-      for locationBitstring, _ in pairs(slotItems) do
-        local _, bank, bags, _, slot, bag = EquipmentManager_UnpackLocation(locationBitstring)
-        if ItemLocation then
-          if bag == nil then
-            -- this is a default bank slot (not a bank bag). these exist on the character equipment, not a bag
-            itemLoc = ItemLocation:CreateFromEquipmentSlot(slot)
-          else
-            itemLoc = ItemLocation:CreateFromBagAndSlot(bag, slot)
-          end
-        end
-        if bags or bank then
-          local container
-          if bags then
-            container = bag
-          elseif bank then
-            -- Default bank slots (the innate ones, not ones from bags-in-the-bank) are weird
-            -- slot starts at 39, I believe that is based on some older location values
-            -- GetContainerItemInfo uses a 0-based slot index
-            -- So take the slot from the unpack and subtract 39 to get the right index for GetContainerItemInfo.
-            --
-            -- 2018/01/17 - Change magic number to 47 to account for new backpack slots. Not sure why it went up by 8
-            -- instead of 4, possible blizz is leaving the door open to more expansion in the future?
-            --
-            -- 2020/01/24 - Change magic number to 51. Not sure why this changed again but it did! See y'all in 2022?
-            --
-            -- 2022/10/02 - Oh hai, GetContainerItemInfo is no longer global and is now on C_Container. The 2022
-            -- comment above was an actual joke in 2020. And here we are. See y'all in 2024?
-            container = BANK_CONTAINER
-            slot = slot - 51
-          end
+  for bag=0, NUM_BAG_SLOTS do
+    for slot=1, C_Container.GetContainerNumSlots(bag) do
+      local itemId = C_Container.GetContainerItemID(bag, slot)
 
-          local itemLink
-          if C_Container and C_Container.GetContainerItemLink then
-            -- Dragonflight
-            itemLink = C_Container.GetContainerItemLink(container, slot)
-          else
-            -- Shadowlands
-            local _, _, _, _, _, _, il, _, _, _ = GetContainerItemInfo(container, slot)
-            itemLink = il
-          end
+      -- something is in the bag slot
+      if itemId then
+        local _, _, _, itemEquipLoc = GetItemInfoInstant(itemId)
+        local slotNum = Simulationcraft.invTypeToSlotNum[itemEquipLoc]
 
-          if itemLink then
-            local name, _, quality, _, _, _, _, _, _, _, _ = GetItemInfo(itemLink)
-
-            -- get correct level for scaling gear
-            local level, _, _ = GetDetailedItemLevelInfo(itemLink)
-
-            -- find all equippable, non-artifact items
-            if IsEquippableItem(itemLink) and quality ~= 6 then
-              bagItems[#bagItems + 1] = {
-                string = GetItemStringFromItemLink(slotNum, itemLink, debugOutput),
-                name = name .. (level and ' (' .. level .. ')' or '')
-              }
-            end
-          end
+        -- item can be equipped
+        if slotNum then
+          local info = C_Container.GetContainerItemInfo(bag, slot)
+          local itemLink = C_Container.GetContainerItemLink(bag, slot)
+          local itemName = GetItemName(itemLink)
+          local level, _, _ = GetDetailedItemLevelInfo(itemLink)
+          bagItems[#bagItems + 1] = {
+            string = GetItemStringFromItemLink(slotNum, itemLink, debugOutput),
+            name = (itemName or 'Temporarily unable to retrieve item name due to too much other addon activity')
+              .. (level and ' (' .. level .. ')' or ''),
+            slotNum = slotNum
+          }
         end
       end
     end
   end
+
+  -- order results by paper doll slot, not bag slot
+  table.sort(bagItems, function (a, b) return a.slotNum < b.slotNum end)
 
   return bagItems
 end
