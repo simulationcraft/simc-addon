@@ -97,6 +97,7 @@ Simulationcraft.SpecNames = {
   [104] = 'Guardian',
   [105] = 'Restoration',
 -- Evoker
+  [1473] = 'Augmentation',
   [1467] = 'Devastation',
   [1468] = 'Preservation',
 -- Hunter 
