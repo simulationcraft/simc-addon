@@ -524,6 +524,7 @@ function Simulationcraft:GetItemStrings(debugOutput)
 
     -- if we don't have an item link, we don't care
     if itemLink then
+      -- In theory, this should always be loaded/cached
       local name = GetItemInfo(itemLink)
 
       -- get correct level for scaling gear
@@ -932,28 +933,22 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, lin
       local activities = WeeklyRewards.GetActivities()
       for _, activityInfo in ipairs(activities) do
         for _, rewardInfo in ipairs(activityInfo.rewards) do
-          local itemName, _, _, _, _, _, _, _, itemEquipLoc = GetItemInfo(rewardInfo.id);
+          local _, _, _, itemEquipLoc = GetItemInfoInstant(rewardInfo.id)
+          local itemName = GetItemInfo(rewardInfo.id);
           local itemLink = WeeklyRewards.GetItemHyperlink(rewardInfo.itemDBID)
-          if itemName then
-            if itemEquipLoc ~= "" then
-              local slotNum = Simulationcraft.invTypeToSlotNum[itemEquipLoc]
-              local itemStr = GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
-              simulationcraftProfile = simulationcraftProfile .. '#\n'
-              simulationcraftProfile = simulationcraftProfile .. '# ' .. itemName .. '\n'
-              simulationcraftProfile = simulationcraftProfile .. '# ' .. itemStr .. "\n"
+          if itemEquipLoc then
+            local slotNum = Simulationcraft.invTypeToSlotNum[itemEquipLoc]
+            local itemStr = GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
+            local level, _, _ = GetDetailedItemLevelInfo(itemLink)
+            simulationcraftProfile = simulationcraftProfile .. '#\n'
+            local itemNameComment = ''
+            if itemName and level then
+              itemNameComment = itemName .. ' ' .. '(' .. level .. ')'
             else
-              local _, _, _, _, _, _, _, _, _, _, _, classId, subClassId = GetItemInfo(itemLink)
-              -- Shadowlands weapon tokens
-              if classId == 5 and subClassId == 2 then
-                local level, _, _ = GetDetailedItemLevelInfo(itemLink)
-                local itemStr = GetItemStringFromItemLink(nil, itemLink, debugOutput)
-                simulationcraftProfile = simulationcraftProfile .. '#\n'
-                simulationcraftProfile = simulationcraftProfile .. '# ' .. itemName .. ' ' .. (level or '') .. '\n'
-                simulationcraftProfile = simulationcraftProfile .. '# ' .. itemStr .. "\n"
-              end
+              itemNameComment = 'Temporarily unable to retrieve item name due to too much other addon activity'
             end
-          else
-            print("Warning: SimC was unable to retrieve info for item " .. rewardInfo.id .. " from your Great Vault, try again")
+            simulationcraftProfile = simulationcraftProfile .. '# ' .. itemNameComment .. '\n'
+            simulationcraftProfile = simulationcraftProfile .. '# ' .. itemStr .. "\n"
           end
         end
       end
