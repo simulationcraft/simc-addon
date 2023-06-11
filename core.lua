@@ -83,7 +83,7 @@ function Simulationcraft:OnInitialize()
   self.db = LibStub("AceDB-3.0"):New("SimulationCraftDB", {
     profile = {
       minimap = {
-        hide = true,
+        hide = false,
       },
       frame = {
         point = "CENTER",
