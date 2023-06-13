@@ -182,7 +182,8 @@ local function GetItemName(itemLink)
   local name = string.match(itemLink, '|h%[(.*)%]|')
   local removeIcons = gsub(name, '|%a.+|%a', '')
   local trimmed = string.match(removeIcons, '^%s*(.*)%s*$')
-  if trimmed == '' then
+  -- check for empty string or only spaces
+  if string.match(trimmed, '^%s*$') then
     return nil
   end
 
@@ -525,7 +526,7 @@ function Simulationcraft:GetItemStrings(debugOutput)
     -- if we don't have an item link, we don't care
     if itemLink then
       -- In theory, this should always be loaded/cached
-      local name = GetItemInfo(itemLink)
+      local name = GetItemName(itemLink)
 
       -- get correct level for scaling gear
       local level, _, _ = GetDetailedItemLevelInfo(itemLink)
@@ -551,7 +552,7 @@ end
 function Simulationcraft:GetBagItemStrings(debugOutput)
   local bagItems = {}
 
-  for bag=0, NUM_BAG_SLOTS do
+  for bag=0, NUM_BANKBAGSLOTS do
     for slot=1, C_Container.GetContainerNumSlots(bag) do
       local itemId = C_Container.GetContainerItemID(bag, slot)
 
@@ -564,14 +565,15 @@ function Simulationcraft:GetBagItemStrings(debugOutput)
         if slotNum then
           local info = C_Container.GetContainerItemInfo(bag, slot)
           local itemLink = C_Container.GetContainerItemLink(bag, slot)
-          local itemName = GetItemName(itemLink)
-          local level, _, _ = GetDetailedItemLevelInfo(itemLink)
           bagItems[#bagItems + 1] = {
             string = GetItemStringFromItemLink(slotNum, itemLink, debugOutput),
-            name = (itemName or 'Temporarily unable to retrieve item name due to too much other addon activity')
-              .. (level and ' (' .. level .. ')' or ''),
             slotNum = slotNum
           }
+          local itemName = GetItemName(itemLink)
+          local level, _, _ = GetDetailedItemLevelInfo(itemLink)
+          if itemName and level then
+            bagItems[#bagItems].name = itemName .. ' (' .. level .. ')'
+          end
         end
       end
     end
@@ -757,8 +759,7 @@ local function adler32(s)
   return (bit.lshift(s2, 16)) + s1
 end --adler32()
 
--- This is the workhorse function that constructs the profile
-function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, links)
+function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links)
   -- addon metadata
   local versionComment = '# SimC Addon ' .. GetAddOnMetadata('Simulationcraft', 'Version')
   local wowVersion, wowBuild, _, wowToc = GetBuildInfo()
@@ -903,7 +904,9 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, lin
   for slotNum=1, #slotNames do
     local item = items[slotNum]
     if item then
-      simulationcraftProfile = simulationcraftProfile .. '# ' .. item.name .. '\n'
+      if item.name then
+        simulationcraftProfile = simulationcraftProfile .. '# ' .. item.name .. '\n'
+      end
       simulationcraftProfile = simulationcraftProfile .. items[slotNum].string .. '\n'
     end
   end
@@ -917,7 +920,7 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, lin
       simulationcraftProfile = simulationcraftProfile .. '### Gear from Bags\n'
       for i=1, #bagItems do
         simulationcraftProfile = simulationcraftProfile .. '#\n'
-        if bagItems[i].name then
+        if bagItems[i].name and bagItems[i].name ~= '' then
           simulationcraftProfile = simulationcraftProfile .. '# ' .. bagItems[i].name .. '\n'
         end
         simulationcraftProfile = simulationcraftProfile .. '# ' .. bagItems[i].string .. '\n'
@@ -934,24 +937,23 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, lin
       for _, activityInfo in ipairs(activities) do
         for _, rewardInfo in ipairs(activityInfo.rewards) do
           local _, _, _, itemEquipLoc = GetItemInfoInstant(rewardInfo.id)
-          local itemName = GetItemInfo(rewardInfo.id);
           local itemLink = WeeklyRewards.GetItemHyperlink(rewardInfo.itemDBID)
-          if itemEquipLoc then
-            local slotNum = Simulationcraft.invTypeToSlotNum[itemEquipLoc]
+          local itemName = GetItemName(itemLink);
+          local slotNum = Simulationcraft.invTypeToSlotNum[itemEquipLoc]
+          if slotNum then
             local itemStr = GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
             local level, _, _ = GetDetailedItemLevelInfo(itemLink)
             simulationcraftProfile = simulationcraftProfile .. '#\n'
-            local itemNameComment = ''
             if itemName and level then
               itemNameComment = itemName .. ' ' .. '(' .. level .. ')'
-            else
-              itemNameComment = 'Temporarily unable to retrieve item name due to too much other addon activity'
+              simulationcraftProfile = simulationcraftProfile .. '# ' .. itemNameComment .. '\n'
             end
-            simulationcraftProfile = simulationcraftProfile .. '# ' .. itemNameComment .. '\n'
             simulationcraftProfile = simulationcraftProfile .. '# ' .. itemStr .. "\n"
           end
         end
       end
+      simulationcraftProfile = simulationcraftProfile .. '#\n'
+      simulationcraftProfile = simulationcraftProfile .. '### End of Weekly Reward Choices\n'
     end
   end
 
@@ -969,7 +971,9 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, lin
         -- local level, _, _ = GetDetailedItemLevelInfo(itemLink)
         local itemStr = GetItemStringFromItemLink(slotNum, link, false)
         simulationcraftProfile = simulationcraftProfile .. '#\n'
-        simulationcraftProfile = simulationcraftProfile .. '# ' .. name .. '\n'
+        if name then
+          simulationcraftProfile = simulationcraftProfile .. '# ' .. name .. '\n'
+        end
         simulationcraftProfile = simulationcraftProfile .. '# ' .. itemStr .. "\n"
       end
     end
@@ -1020,6 +1024,12 @@ function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, lin
 
   simulationcraftProfile = simulationcraftProfile .. '# Checksum: ' .. string.format('%x', checksum)
 
+  return simulationcraftProfile
+end
+
+-- This is the workhorse function that constructs the profile
+function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, links)
+  local simulationcraftProfile = Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links)
 
   local f = Simulationcraft:GetMainFrame(simcPrintError or simulationcraftProfile)
   f:Show()

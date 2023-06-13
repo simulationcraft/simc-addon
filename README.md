@@ -20,7 +20,10 @@ items that you link.
 FAQ
 ===
 
-### What does "Temporarily unable to retrieve item name due to too much other addon activity" mean?
+### Why are some item names missing from the comments?
+
+First, this warning does not impact the sim in any way - it only makes it a bit harder to know which
+line is for which item for people reading the input.
 
 Some addons that do big database updates can unintentionally cause problems for others. Usually it's
 completionist or transmog addons (All The Things, Can I Mog It, etc) that need to do a bunch of work
