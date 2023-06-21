@@ -552,7 +552,7 @@ end
 function Simulationcraft:GetBagItemStrings(debugOutput)
   local bagItems = {}
 
-  for bag=0, NUM_BANKBAGSLOTS do
+  for bag=0, NUM_TOTAL_EQUIPPED_BAG_SLOTS + NUM_BANKBAGSLOTS do
     for slot=1, C_Container.GetContainerNumSlots(bag) do
       local itemId = C_Container.GetContainerItemID(bag, slot)
 
