@@ -60,7 +60,8 @@ Simulationcraft.RegionString = {
   [2] = 'kr',
   [3] = 'eu',
   [4] = 'tw',
-  [5] = 'cn'
+  [5] = 'cn',
+  [72] = 'tr'
 }
 
 -- non-localized profession names from ids

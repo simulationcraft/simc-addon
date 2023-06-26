@@ -779,7 +779,7 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
 
   -- Try region from LibRealmInfo first, then use default API
   -- Default API can be wrong for region-switching players
-  local playerRegion = region or regionString[GetCurrentRegion()]
+  local playerRegion = region or GetCurrentRegionName() or regionString[GetCurrentRegion()]
 
   -- Race info
   local _, playerRace = UnitRace('player')
