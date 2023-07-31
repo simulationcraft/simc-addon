@@ -1024,12 +1024,12 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
 
   simulationcraftProfile = simulationcraftProfile .. '# Checksum: ' .. string.format('%x', checksum)
 
-  return simulationcraftProfile
+  return simulationcraftProfile, simcPrintError
 end
 
 -- This is the workhorse function that constructs the profile
 function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, links)
-  local simulationcraftProfile = Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links)
+  local simulationcraftProfile, simcPrintError = Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links)
 
   local f = Simulationcraft:GetMainFrame(simcPrintError or simulationcraftProfile)
   f:Show()
