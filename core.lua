@@ -59,6 +59,11 @@ local Traits                = _G.C_Traits
 -- GetAddOnMetadata was global until 10.1. It's now in C_AddOns. This line will use C_AddOns if available and work in either WoW build
 local GetAddOnMetadata = C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata
 
+-- Some global item functions have been moved into C_Item in 11.0
+local GetDetailedItemLevelInfo = C_Item and C_Item.GetDetailedItemLevelInfo or GetDetailedItemLevelInfo
+local GetItemInfoInstant = C_Item and C_Item.GetItemInfoInstant or GetItemInfoInstant
+local GetItemCount = C_Item and C_Item.GetItemCount or GetItemCount
+
 -- Talent string export
 local bitWidthHeaderVersion         = 8
 local bitWidthSpecID                = 16
@@ -331,7 +336,8 @@ local function WriteLoadoutContent(exportStream, configID, treeID)
 
     local isNodeSelected = treeNode.ranksPurchased > 0;
     local isPartiallyRanked = treeNode.ranksPurchased ~= treeNode.maxRanks;
-    local isChoiceNode = treeNode.type == Enum.TraitNodeType.Selection or treeNode.type == Enum.TraitNodeType.SubTreeSelection;
+    local isChoiceNode = treeNode.type == Enum.TraitNodeType.Selection
+      or treeNode.type == Enum.TraitNodeType.SubTreeSelection;
 
     exportStream:AddValue(1, isNodeSelected and 1 or 0);
     if(isNodeSelected) then
