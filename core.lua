@@ -331,7 +331,7 @@ local function WriteLoadoutContent(exportStream, configID, treeID)
 
     local isNodeSelected = treeNode.ranksPurchased > 0;
     local isPartiallyRanked = treeNode.ranksPurchased ~= treeNode.maxRanks;
-    local isChoiceNode = treeNode.type == Enum.TraitNodeType.Selection;
+    local isChoiceNode = treeNode.type == Enum.TraitNodeType.Selection or treeNode.type == Enum.TraitNodeType.SubTreeSelection;
 
     exportStream:AddValue(1, isNodeSelected and 1 or 0);
     if(isNodeSelected) then
