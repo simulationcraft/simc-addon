@@ -339,18 +339,18 @@ local function WriteLoadoutContent(exportStream, configID, treeID)
   for _, treeNodeID in ipairs(treeNodes) do
     local treeNode = C_Traits.GetNodeInfo(configID, treeNodeID);
 
-		local isNodeGranted = treeNode.activeRank - treeNode.ranksPurchased > 0;
-		local isNodePurchased = treeNode.ranksPurchased > 0;
-		local isNodeSelected = isNodeGranted or isNodePurchased;
-		local isPartiallyRanked = treeNode.ranksPurchased ~= treeNode.maxRanks;
+    local isNodeGranted = treeNode.activeRank - treeNode.ranksPurchased > 0;
+    local isNodePurchased = treeNode.ranksPurchased > 0;
+    local isNodeSelected = isNodeGranted or isNodePurchased;
+    local isPartiallyRanked = treeNode.ranksPurchased ~= treeNode.maxRanks;
     local isChoiceNode = treeNode.type == Enum.TraitNodeType.Selection
       or treeNode.type == Enum.TraitNodeType.SubTreeSelection;
 
     exportStream:AddValue(1, isNodeSelected and 1 or 0);
     if(isNodeSelected) then
-			exportStream:AddValue(1, isNodePurchased and 1 or 0);
+      exportStream:AddValue(1, isNodePurchased and 1 or 0);
 
-			if isNodePurchased then
+      if isNodePurchased then
         exportStream:AddValue(1, isPartiallyRanked and 1 or 0);
         if(isPartiallyRanked) then
           exportStream:AddValue(bitWidthRanksPurchased, treeNode.ranksPurchased);
