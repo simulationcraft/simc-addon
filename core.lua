@@ -311,6 +311,7 @@ end
 --   return str
 -- end
 
+-- based on ClassTalentImportExportMixin:WriteLoadoutHeader
 local function WriteLoadoutHeader(exportStream, serializationVersion, specID, treeHash)
   exportStream:AddValue(bitWidthHeaderVersion, serializationVersion)
   exportStream:AddValue(bitWidthSpecID, specID)
@@ -319,6 +320,7 @@ local function WriteLoadoutHeader(exportStream, serializationVersion, specID, tr
   end
 end
 
+-- based on ClassTalentImportExportMixin:GetActiveEntryIndex(treeNode)
 local function GetActiveEntryIndex(treeNode)
   for i, entryID in ipairs(treeNode.entryIDs) do
     if(treeNode.activeEntry and entryID == treeNode.activeEntry.entryID) then
@@ -329,41 +331,49 @@ local function GetActiveEntryIndex(treeNode)
   return 0;
 end
 
+-- based on ClassTalentImportExportMixin:WriteLoadoutContent
 local function WriteLoadoutContent(exportStream, configID, treeID)
   local treeNodes = C_Traits.GetTreeNodes(treeID)
   for _, treeNodeID in ipairs(treeNodes) do
     local treeNode = C_Traits.GetNodeInfo(configID, treeNodeID);
 
-    local isNodeSelected = treeNode.ranksPurchased > 0;
-    local isPartiallyRanked = treeNode.ranksPurchased ~= treeNode.maxRanks;
+		local isNodeGranted = treeNode.activeRank - treeNode.ranksPurchased > 0;
+		local isNodePurchased = treeNode.ranksPurchased > 0;
+		local isNodeSelected = isNodeGranted or isNodePurchased;
+		local isPartiallyRanked = treeNode.ranksPurchased ~= treeNode.maxRanks;
     local isChoiceNode = treeNode.type == Enum.TraitNodeType.Selection
       or treeNode.type == Enum.TraitNodeType.SubTreeSelection;
 
     exportStream:AddValue(1, isNodeSelected and 1 or 0);
     if(isNodeSelected) then
-      exportStream:AddValue(1, isPartiallyRanked and 1 or 0);
-      if(isPartiallyRanked) then
-        exportStream:AddValue(bitWidthRanksPurchased, treeNode.ranksPurchased);
-      end
+			exportStream:AddValue(1, isNodePurchased and 1 or 0);
 
-      exportStream:AddValue(1, isChoiceNode and 1 or 0);
-      if(isChoiceNode) then
-        local entryIndex = GetActiveEntryIndex(treeNode);
-        if(entryIndex <= 0 or entryIndex > 4) then
-          local configInfo = Traits.GetConfigInfo(configID)
-          local errorMsg = "Talent loadout '" .. configInfo.name .. "' is corrupt/incomplete. It needs to be"
-            .. " recreated or deleted for /simc to function properly"
-          print(errorMsg);
-          error(errorMsg);
+			if isNodePurchased then
+        exportStream:AddValue(1, isPartiallyRanked and 1 or 0);
+        if(isPartiallyRanked) then
+          exportStream:AddValue(bitWidthRanksPurchased, treeNode.ranksPurchased);
         end
 
-        -- store entry index as zero-index
-        exportStream:AddValue(2, entryIndex - 1);
+        exportStream:AddValue(1, isChoiceNode and 1 or 0);
+        if(isChoiceNode) then
+          local entryIndex = GetActiveEntryIndex(treeNode);
+          if(entryIndex <= 0 or entryIndex > 4) then
+            local configInfo = Traits.GetConfigInfo(configID)
+            local errorMsg = "Talent loadout '" .. configInfo.name .. "' is corrupt/incomplete. It needs to be"
+              .. " recreated or deleted for /simc to function properly"
+            print(errorMsg);
+            error(errorMsg);
+          end
+
+          -- store entry index as zero-index
+          exportStream:AddValue(2, entryIndex - 1);
+        end
       end
     end
   end
 end
 
+-- based on ClassTalentImportExportMixin:GetLoadoutExportString
 local function GetExportString(configID)
   local active = false
   if configID == ClassTalents.GetActiveConfigID() then
@@ -371,23 +381,11 @@ local function GetExportString(configID)
   end
 
   local exportStream = ExportUtil.MakeExportDataStream();
-  local configInfo = Traits.GetConfigInfo(configID)
+  local configInfo = Traits.GetConfigInfo(configID);
   local currentSpecID = PlayerUtil.GetCurrentSpecID();
-
-  local treeID = configInfo.treeIDs[1]
-
-  local serializationVersion;
-  local treeHash;
-
-  if C_Traits.GetLoadoutSerializationVersion then
-    -- 10.0.2 Beta
-    treeHash = C_Traits.GetTreeHash(treeID)
-    serializationVersion = C_Traits.GetLoadoutSerializationVersion()
-  else
-    -- 10.0.0 PTR
-    serializationVersion = 1
-    treeHash = C_Traits.GetTreeHash(configID, treeID)
-  end
+  local treeID = configInfo.treeIDs[1];
+  local treeHash = C_Traits.GetTreeHash(treeID);
+  local serializationVersion = C_Traits.GetLoadoutSerializationVersion();
 
   WriteLoadoutHeader(exportStream, serializationVersion, currentSpecID, treeHash )
   WriteLoadoutContent(exportStream, configID, treeID)
