@@ -50,6 +50,8 @@ local ITEM_MOD_TYPE_DROP_LEVEL = 9
 local ITEM_MOD_TYPE_CRAFT_STATS_1 = 29
 local ITEM_MOD_TYPE_CRAFT_STATS_2 = 30
 
+local SUPPORTED_LOADOUT_SERIALIZATION_VERSION = 1
+
 local WeeklyRewards         = _G.C_WeeklyRewards
 
 -- New talents for Dragonflight
@@ -887,6 +889,20 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
   elseif ClassTalents then
     -- DRAGONFLIGHT
     -- new dragonflight talents
+    if Traits.GetLoadoutSerializationVersion() ~= SUPPORTED_LOADOUT_SERIALIZATION_VERSION then
+      simcPrintError = 'This version of the SimC addon does not work with this version of WoW.\n'
+      simcPrintError = simcPrintError .. 'There is a mismatch in the version of talent string exports.\n'
+      simcPrintError = simcPrintError .. '\n'
+      if Traits.GetLoadoutSerializationVersion() > SUPPORTED_LOADOUT_SERIALIZATION_VERSION then
+        simcPrintError = simcPrintError .. 'WoW is using a newer version - you probably need to update your addon.\n'
+      else
+        simcPrintError = simcPrintError .. 'WoW is using an older version - you may be running an alpha/beta addon that is not currently ready for retail.\n'
+      end
+      simcPrintError = simcPrintError .. '\n'
+      simcPrintError = simcPrintError .. 'WoW talent string export version = ' .. Traits.GetLoadoutSerializationVersion() .. '\n'
+      simcPrintError = simcPrintError .. 'Addon talent string export version = ' .. SUPPORTED_LOADOUT_SERIALIZATION_VERSION .. '\n'
+    end
+
     local currentConfigId = ClassTalents.GetActiveConfigID()
 
     simulationcraftProfile = simulationcraftProfile .. GetExportString(currentConfigId) .. '\n'
