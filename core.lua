@@ -597,7 +597,8 @@ end
 function Simulationcraft:GetZandalariLoa()
   local zandalariLoa = nil
   for index = 1, 32 do
-    local _, _, _, _, _, _, _, _, _, spellId = UnitBuff("player", index)
+    local auraData = C_UnitAuras.GetBuffDataByIndex("player", index)
+    local spellId = auraData.spellId
     if spellId == nil then
       break
     end
