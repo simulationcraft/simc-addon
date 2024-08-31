@@ -361,8 +361,8 @@ local function WriteLoadoutContent(exportStream, configID, treeID)
           local entryIndex = GetActiveEntryIndex(treeNode);
           if(entryIndex <= 0 or entryIndex > 4) then
             local configInfo = Traits.GetConfigInfo(configID)
-            local errorMsg = "Talent loadout '" .. configInfo.name .. "' is corrupt/incomplete. It needs to be"
-              .. " recreated or deleted for /simc to function properly"
+            local errorMsg = "Talent loadout '" .. configInfo.name .. "' is corrupt/incomplete. Find that talent"
+              .. " loadout in your talents UI and delete or update it. It may be on a different spec."
             print(errorMsg);
             error(errorMsg);
           end
