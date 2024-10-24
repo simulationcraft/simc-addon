@@ -645,6 +645,18 @@ function Simulationcraft:GetUpgradeCurrencies()
   return table.concat(upgradeCurrencies, '/')
 end
 
+function Simulationcraft:GetItemUpgradeAchievements()
+  local achieves = {}
+  for i=1, #Simulationcraft.upgradeAchievements do
+    local achId = Simulationcraft.upgradeAchievements[i]
+    _, name, points, complete = GetAchievementInfo(achId)
+    if complete then
+      achieves[#achieves + 1] = achId
+    end
+  end
+  return table.concat(achieves, '/')
+end
+
 function Simulationcraft:GetMainFrame(text)
   -- Frame code largely adapted from https://www.wowinterface.com/forums/showpost.php?p=323901&postcount=2
   if not SimcFrame then
@@ -1034,6 +1046,10 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
     simulationcraftProfile = simulationcraftProfile .. '#\n'
     simulationcraftProfile = simulationcraftProfile .. '# slot_high_watermarks=' .. highWatermarksStr .. '\n'
   end
+
+  local upgradeAchievementsStr = Simulationcraft:GetItemUpgradeAchievements()
+  simulationcraftProfile = simulationcraftProfile .. '#\n'
+  simulationcraftProfile = simulationcraftProfile .. '# upgrade_achievements=' .. upgradeAchievementsStr .. '\n'
 
   -- sanity checks - if there's anything that makes the output completely invalid, punt!
   if specId==nil then

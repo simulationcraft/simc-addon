@@ -1,9 +1,9 @@
-## Interface: 110002
+## Interface: 110005
 ## Title: Simulationcraft
 ## IconTexture: Interface\Addons\SimulationCraft\logo
 ## Notes: Constructs SimC export strings
 ## Author: Theck, navv_, seriallos
-## Version: 11.0.2-02
+## Version: 11.0.5-01
 ## OptionalDependencies: Ace3, LibRealmInfo, LibDBIcon, LibDataBroker-1.1
 ## SavedVariables: SimulationCraftDB
 

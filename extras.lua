@@ -296,6 +296,13 @@ Simulationcraft.covenants = {
   [4] = 'necrolord',
 }
 
+Simulationcraft.upgradeAchievements = {
+  40107, -- Harbinger of the Weathered
+  40115, -- Harbinger of the Carved
+  40118, -- Harbinger of the Runed
+  40939, -- Harbinger of the Gilded
+}
+
 -- Upgrade currencies and item
 
 Simulationcraft.upgradeCurrencies = {
@@ -347,3 +354,4 @@ Simulationcraft.upgradeItems = {
   [228338] = 'Soul Sigil I',
   [228339] = 'Soul Sigil II',
 }
+
