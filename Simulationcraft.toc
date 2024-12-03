@@ -7,6 +7,9 @@
 ## OptionalDependencies: Ace3, LibRealmInfo, LibDBIcon, LibDataBroker-1.1
 ## SavedVariables: SimulationCraftDB
 
+## X-Curse-Project-ID: 82745
+## X-Wago-ID: BNBeRVGx
+
 
 libs\LibStub\LibStub.lua
 libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
