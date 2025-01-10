@@ -319,9 +319,18 @@ Simulationcraft.upgradeCurrencies = {
   [2916] = 'Runed Harbinger Crest',
   [2917] = 'Gilded Harbinger Crest',
   [3008] = 'Valorstones',
+  [3107] = 'Weathered Undermine Crest',
+  [3108] = 'Carved Undermine Crest',
+  [3109] = 'Runed Undermine Crest',
+  [3110] = 'Gilded Undermine Crest',
 }
 
 Simulationcraft.upgradeItems = {
+  [180055] = 'Relic of the Past I',
+  [180057] = 'Relic of the Past II',
+  [180058] = 'Relic of the Past III',
+  [180059] = 'Relic of the Past IV',
+  [180060] = 'Relic of the Past V',
   [190453] = 'Spark of Ingenuity',
   [197921] = 'Primal Infusion',
   [198046] = 'Concentrated Primal Infusion',
@@ -353,5 +362,12 @@ Simulationcraft.upgradeItems = {
   [224073] = 'Enchanted Gilded Harbinger Crest',
   [228338] = 'Soul Sigil I',
   [228339] = 'Soul Sigil II',
+  [228368] = 'Relic of the Past VI',
+  [229388] = 'Prized Combatant\'s Heraldry',
+  [229389] = 'Prized Aspirant\'s Heraldry',
+  [229390] = 'Prized Gladiator\'s Heraldry',
+  [230906] = 'Spark of Fortunes',
+  [230935] = 'Enchanted Gilded Undermine Crest',
+  [230936] = 'Enchanted Runed Undermine Crest',
+  [230937] = 'Enchanted Weathered Undermine Crest',
 }
-
