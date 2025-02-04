@@ -30,6 +30,7 @@ SimcLDB = LibStub("LibDataBroker-1.1"):NewDataObject("SimulationCraft", {
 LibDBIcon = LibStub("LibDBIcon-1.0")
 
 local SimcFrame = nil
+local OptionsDB = nil
 
 local OFFSET_ITEM_ID = 1
 local OFFSET_ENCHANT_ID = 2
@@ -87,11 +88,12 @@ local zandalariLoaBuffs   = Simulationcraft.zandalariLoaBuffs
 
 function Simulationcraft:OnInitialize()
   -- init databroker
-  self.db = LibStub("AceDB-3.0"):New("SimulationCraftDB", {
+  OptionsDB = LibStub("AceDB-3.0"):New("SimulationCraftDB", {
     profile = {
       minimap = {
         hide = false,
       },
+      closeOnCopy = true,
       frame = {
         point = "CENTER",
         relativeFrame = nil,
@@ -103,7 +105,7 @@ function Simulationcraft:OnInitialize()
       },
     },
   });
-  LibDBIcon:Register("SimulationCraft", SimcLDB, self.db.profile.minimap)
+  LibDBIcon:Register("SimulationCraft", SimcLDB, OptionsDB.profile.minimap)
   Simulationcraft:UpdateMinimapButton()
   Simulationcraft:RegisterChatCommand('simc', 'HandleChatCommand')
   AddonCompartmentFrame:RegisterAddon({
@@ -125,7 +127,7 @@ function Simulationcraft:OnDisable()
 end
 
 function Simulationcraft:UpdateMinimapButton()
-  if (self.db.profile.minimap.hide) then
+  if (OptionsDB.profile.minimap.hide) then
     LibDBIcon:Hide("SimulationCraft")
   else
     LibDBIcon:Show("SimulationCraft")
@@ -156,9 +158,9 @@ function Simulationcraft:HandleChatCommand(input)
     elseif arg == 'merchant' then
       showMerchant = true
     elseif arg == 'minimap' then
-      self.db.profile.minimap.hide = not self.db.profile.minimap.hide
+      OptionsDB.profile.minimap.hide = not OptionsDB.profile.minimap.hide
       DEFAULT_CHAT_FRAME:AddMessage(
-        "SimulationCraft: Minimap button is now " .. (self.db.profile.minimap.hide and "hidden" or "shown")
+        "SimulationCraft: Minimap button is now " .. (OptionsDB.profile.minimap.hide and "hidden" or "shown")
       )
       Simulationcraft:UpdateMinimapButton()
       return
@@ -661,7 +663,7 @@ function Simulationcraft:GetMainFrame(text)
   -- Frame code largely adapted from https://www.wowinterface.com/forums/showpost.php?p=323901&postcount=2
   if not SimcFrame then
     -- Main Frame
-    local frameConfig = self.db.profile.frame
+    local frameConfig = OptionsDB.profile.frame
     local f = CreateFrame("Frame", "SimcFrame", UIParent, "DialogBoxFrame")
     f:ClearAllPoints()
     -- load position from local DB
@@ -705,12 +707,32 @@ function Simulationcraft:GetMainFrame(text)
     sf:SetPoint("BOTTOM", SimcFrameButton, "TOP", 0, 0)
 
     -- edit box
+    local ctrlDown = false
     local eb = CreateFrame("EditBox", "SimcEditBox", SimcScrollFrame)
     eb:SetSize(sf:GetSize())
     eb:SetMultiLine(true)
     eb:SetAutoFocus(true)
     eb:SetFontObject("ChatFontNormal")
     eb:SetScript("OnEscapePressed", function() f:Hide() end)
+    eb:SetScript("OnKeyDown", function(self, key)
+      if key == "LCTRL" or key == "RCTRL" then
+        ctrlDown = true
+      end
+    end)
+    eb:SetScript("OnKeyUp", function(self, key)
+      if key == "LCTRL" or key == "RCTRL" then
+        -- Add a small grace period. In testing, the way I press Ctrl-C would sometimes have Ctrl keyup bfore C
+        C_Timer.After(0.2, function() ctrlDown = false end)
+      end
+      if ctrlDown and key == "C" then
+        if OptionsDB.profile.closeOnCopy then
+          -- Just in case there's some weird way that WoW could close the window before the OS copies
+          C_Timer.After(0.1, function()
+            f:Hide()
+          end)
+        end
+      end
+    end)
     sf:SetScrollChild(eb)
 
     -- resizing
@@ -745,6 +767,15 @@ function Simulationcraft:GetMainFrame(text)
         -- save size between sessions
         frameConfig.width = f:GetWidth()
         frameConfig.height = f:GetHeight()
+    end)
+
+    -- Automatic close checkbox
+    local checkbox = CreateFrame("CheckButton", "AutomaticClose", f, "ChatConfigCheckButtonTemplate")
+    checkbox:SetPoint("BOTTOMLEFT", 12, 18)
+    checkbox.Text:SetText("Close after copy")
+    checkbox:SetChecked(true)
+    checkbox:HookScript("OnClick", function(self)
+      OptionsDB.profile.closeOnCopy = self:GetChecked()
     end)
 
     SimcFrame = f
