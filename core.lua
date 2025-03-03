@@ -715,21 +715,24 @@ function Simulationcraft:GetMainFrame(text)
     eb:SetFontObject("ChatFontNormal")
     eb:SetScript("OnEscapePressed", function() f:Hide() end)
     eb:SetScript("OnKeyDown", function(self, key)
-      if key == "LCTRL" or key == "RCTRL" then
+      if key == "LCTRL" or key == "RCTRL" or key == "LMETA" or key == "RMETA" then
         ctrlDown = true
       end
     end)
     eb:SetScript("OnKeyUp", function(self, key)
-      if key == "LCTRL" or key == "RCTRL" then
+      if key == "LCTRL" or key == "RCTRL" or key == "LMETA" or key == "RMETA" then
         -- Add a small grace period. In testing, the way I press Ctrl-C would sometimes have Ctrl keyup bfore C
         C_Timer.After(0.2, function() ctrlDown = false end)
       end
-      if ctrlDown and key == "C" then
-        if OptionsDB.profile.closeOnCopy then
-          -- Just in case there's some weird way that WoW could close the window before the OS copies
-          C_Timer.After(0.1, function()
-            f:Hide()
-          end)
+      if ctrlDown then
+        -- handle copy or cut
+        if key == "C" or key == "X" then
+          if OptionsDB.profile.closeOnCopy then
+            -- Just in case there's some weird way that WoW could close the window before the OS copies
+            C_Timer.After(0.1, function()
+              f:Hide()
+            end)
+          end
         end
       end
     end)
