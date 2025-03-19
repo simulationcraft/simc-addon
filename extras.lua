@@ -297,10 +297,17 @@ Simulationcraft.covenants = {
 }
 
 Simulationcraft.upgradeAchievements = {
+  -- 11.0
   40107, -- Harbinger of the Weathered
   40115, -- Harbinger of the Carved
   40118, -- Harbinger of the Runed
   40939, -- Harbinger of the Gilded
+
+  -- 11.1
+  40942, -- Weathered
+  40943, -- Carved
+  40944, -- Runed
+  40945, -- Gilded
 }
 
 -- Upgrade currencies and item
