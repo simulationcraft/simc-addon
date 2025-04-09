@@ -859,6 +859,13 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
   end
   local playerSpec = specNames[ globalSpecID ] or 'unknown'
 
+  -- Loot spec
+  local lootSpecId = GetLootSpecialization()
+  if lootSpecId == 0 then
+    lootSpecId = globalSpecID
+  end
+  local playerLootSpec = specNames[ lootSpecId ]
+
   -- Professions
   local pid1, pid2 = GetProfessions()
   local firstProf, firstProfRank, secondProf, secondProfRank, profOneId, profTwoId
@@ -901,6 +908,7 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
   local playerSpecStr = 'spec=' .. Tokenize(playerSpec)
   playerRealm = 'server=' .. Tokenize(playerRealm)
   playerRegion = 'region=' .. Tokenize(playerRegion)
+  local playerLootSpecStr = 'loot_spec=' .. Tokenize(playerLootSpec)
 
   -- Build the output string for the player (not including gear)
   local simcPrintError = nil
@@ -926,6 +934,7 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
   simulationcraftProfile = simulationcraftProfile .. playerRole .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerProfessions .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerSpecStr .. '\n'
+  simulationcraftProfile = simulationcraftProfile .. '# ' .. playerLootSpecStr .. '\n'
   simulationcraftProfile = simulationcraftProfile .. '\n'
 
   if playerSpec == 'unknown' then -- luacheck: ignore
