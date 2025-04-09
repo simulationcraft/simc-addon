@@ -626,6 +626,18 @@ function Simulationcraft:GetSlotHighWatermarks()
   end
 end
 
+function Simulationcraft:GetCatalystCurrencies()
+  local catalystCurrencies = {}
+  for currencyId, currencyName in pairs(Simulationcraft.catalystCurrencies) do
+    local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(currencyId)
+    if currencyInfo and currencyInfo.quantity > 0 then
+      catalystCurrencies[#catalystCurrencies + 1] = table.concat({ currencyId, currencyInfo.quantity }, ':')
+    end
+  end
+
+  return table.concat(catalystCurrencies, '/')
+end
+
 function Simulationcraft:GetUpgradeCurrencies()
   local upgradeCurrencies = {}
   -- Collect actual currencies
@@ -1079,6 +1091,10 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
 
   simulationcraftProfile = simulationcraftProfile .. '\n'
   simulationcraftProfile = simulationcraftProfile .. '### Additional Character Info\n'
+
+  local catalystCurrenciesStr = Simulationcraft:GetCatalystCurrencies()
+  simulationcraftProfile = simulationcraftProfile .. '#\n'
+  simulationcraftProfile = simulationcraftProfile .. '# catalyst_currencies=' .. catalystCurrenciesStr .. '\n'
 
   local upgradeCurrenciesStr = Simulationcraft:GetUpgradeCurrencies()
   simulationcraftProfile = simulationcraftProfile .. '#\n'

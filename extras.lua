@@ -310,6 +310,12 @@ Simulationcraft.upgradeAchievements = {
   40945, -- Gilded
 }
 
+-- Catalyst currency
+
+Simulationcraft.catalystCurrencies = {
+  [3116] = 'Essence of Kaja\'mite', -- 11.1
+}
+
 -- Upgrade currencies and item
 
 Simulationcraft.upgradeCurrencies = {
