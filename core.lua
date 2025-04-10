@@ -630,7 +630,7 @@ function Simulationcraft:GetCatalystCurrencies()
   local catalystCurrencies = {}
   for currencyId, currencyName in pairs(Simulationcraft.catalystCurrencies) do
     local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(currencyId)
-    if currencyInfo and currencyInfo.quantity > 0 then
+    if currencyInfo then
       catalystCurrencies[#catalystCurrencies + 1] = table.concat({ currencyId, currencyInfo.quantity }, ':')
     end
   end

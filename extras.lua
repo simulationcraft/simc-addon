@@ -313,6 +313,7 @@ Simulationcraft.upgradeAchievements = {
 -- Catalyst currency
 
 Simulationcraft.catalystCurrencies = {
+  [2813] = 'Harmonized Silk', -- 11.0
   [3116] = 'Essence of Kaja\'mite', -- 11.1
 }
 
