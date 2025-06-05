@@ -31,6 +31,8 @@ LibDBIcon = LibStub("LibDBIcon-1.0")
 
 local SimcFrame = nil
 local OptionsDB = nil
+local SpellCache = {}
+local SpellCacheLoaded = false
 
 local OFFSET_ITEM_ID = 1
 local OFFSET_ENCHANT_ID = 2
@@ -516,6 +518,11 @@ local function GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
     simcItemOptions[#simcItemOptions + 1] = 'crafting_quality=' .. craftingQuality
   end
 
+  -- 11.1.7 Belt
+  if itemId == 242664 or itemId == 245964 or itemId == 245965 or itemId == 245966 then
+    simcItemOptions[#simcItemOptions + 1] = 'titan_disc_id=' .. Simulationcraft:GetDiscBeltSpell()
+  end
+
   local itemStr = ''
   itemStr = itemStr .. (simcSlotNames[slotNum] or 'unknown') .. "=" .. table.concat(simcItemOptions, ',')
   if debugOutput then
@@ -669,6 +676,53 @@ function Simulationcraft:GetItemUpgradeAchievements()
     end
   end
   return table.concat(achieves, '/')
+end
+
+function LoadSpellsAsync(callback)
+  local spellIds = Simulationcraft.preloadSpellIds
+
+  -- Build up the SpellCache asynchronously
+  local numLoaded = 0
+  function onLoad()
+    numLoaded = numLoaded + 1
+
+    if numLoaded == #spellIds then
+      SpellCacheLoaded = true
+      if callback then
+        callback(SpellCache)
+      end
+    end
+  end
+
+  for index=1, #spellIds do
+    local spellId = spellIds[index]
+    local spell = Spell:CreateFromSpellID(spellId)
+    if not spell:IsSpellEmpty() then
+      spell:ContinueOnSpellLoad(function()
+        SpellCache[spellId] = spell
+        onLoad()
+      end)
+    else
+      onLoad()
+    end
+  end
+end
+
+-- This requires the SpellCache with the right spell IDs to be loaded
+function Simulationcraft:GetDiscBeltSpell()
+  local activeSpell = nil
+  local beltDescription = SpellCache[Simulationcraft.discBeltSpell]:GetSpellDescription()
+  if not beltDescription then
+    error('Unable to get spell description for DISC Belt spell')
+  end
+  for k, v in pairs(Simulationcraft.discBeltEffectSpells) do
+    local effectDesc = SpellCache[k]:GetSpellDescription()
+    if beltDescription:find(effectDesc) then
+      activeSpell = v
+    end
+  end
+
+  return activeSpell
 end
 
 function Simulationcraft:GetMainFrame(text)
@@ -909,8 +963,7 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
     "# " .. playerName .. ' - ' .. playerSpec
     .. ' - ' .. date('%Y-%m-%d %H:%M') .. ' - '
     .. playerRegion .. '/' .. playerRealm
- )
-
+  )
 
   -- Construct SimC-compatible strings from the basic information
   local player = Tokenize(playerClass) .. '="' .. playerName .. '"'
@@ -1127,8 +1180,10 @@ end
 
 -- This is the workhorse function that constructs the profile
 function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, links)
-  local simulationcraftProfile, simcPrintError = Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links)
+  LoadSpellsAsync(function()
+    simulationcraftProfile, simcPrintError = Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links)
 
-  local f = Simulationcraft:GetMainFrame(simcPrintError or simulationcraftProfile)
-  f:Show()
+    local f = Simulationcraft:GetMainFrame(simcPrintError or simulationcraftProfile)
+    f:Show()
+  end)
 end

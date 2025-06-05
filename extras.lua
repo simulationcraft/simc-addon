@@ -310,6 +310,36 @@ Simulationcraft.upgradeAchievements = {
   40945, -- Gilded
 }
 
+-- 11.1.7 Belt spells
+
+Simulationcraft.discBeltSpell = 1233515
+Simulationcraft.discBeltEffectSpells = {
+  [1241240] = 1236279,
+  [1241241] = 1236278,
+  [1241242] = 1236277,
+  [1241243] = 1236961,
+  [1241244] = 1236109,
+  [1241245] = 1236122,
+  [1241246] = 1236272,
+  [1241250] = 1236275,
+  [1241251] = 1236273,
+}
+
+-- Spells to load by LoadSpellsAsync and to store in SpellCache
+Simulationcraft.preloadSpellIds = {
+  -- 11.1.7 DISC Belt Spells
+  1233515,
+  1241240,
+  1241241,
+  1241242,
+  1241243,
+  1241244,
+  1241245,
+  1241246,
+  1241250,
+  1241251,
+}
+
 -- Catalyst currency
 
 Simulationcraft.catalystCurrencies = {
