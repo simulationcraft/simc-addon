@@ -699,6 +699,9 @@ function LoadSpellsAsync(callback)
     local spell = Spell:CreateFromSpellID(spellId)
     if not spell:IsSpellEmpty() then
       spell:ContinueOnSpellLoad(function()
+        -- It's possible that in some cases, ContinueOnSpellLoad may not fire. If that happens,
+        -- will need to look into ContinueWithCancelOnSpellLoad which can apparently be used with
+        -- timeouts
         SpellCache[spellId] = spell
         onLoad()
       end)
