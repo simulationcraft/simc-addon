@@ -520,7 +520,10 @@ local function GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
 
   -- 11.1.7 Belt
   if itemId == 242664 or itemId == 245964 or itemId == 245965 or itemId == 245966 then
-    simcItemOptions[#simcItemOptions + 1] = 'titan_disc_id=' .. Simulationcraft:GetDiscBeltSpell()
+    local titanDiscId = Simulationcraft:GetTitanDiscBeltSpell()
+    if titanDiscId then
+      simcItemOptions[#simcItemOptions + 1] = 'titan_disc_id=' .. titanDiscId
+    end
   end
 
   local itemStr = ''
@@ -712,7 +715,7 @@ function LoadSpellsAsync(callback)
 end
 
 -- This requires the SpellCache with the right spell IDs to be loaded
-function Simulationcraft:GetDiscBeltSpell()
+function Simulationcraft:GetTitanDiscBeltSpell()
   local activeSpell = nil
   local beltDescription = SpellCache[Simulationcraft.discBeltSpell]:GetSpellDescription()
   if not beltDescription then
