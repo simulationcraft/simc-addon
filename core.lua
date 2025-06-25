@@ -681,7 +681,7 @@ function Simulationcraft:GetItemUpgradeAchievements()
   return table.concat(achieves, '/')
 end
 
-function LoadSpellsAsync(callback)
+local function LoadSpellsAsync(callback)
   local spellIds = Simulationcraft.preloadSpellIds
 
   -- Build up the SpellCache asynchronously
