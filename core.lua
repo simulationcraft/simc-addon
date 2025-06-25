@@ -189,10 +189,14 @@ local function GetItemSplit(itemLink)
   return itemSplit
 end
 
+local function Trim(str)
+  return string.match(str, '^%s*(.-)%s*$')
+end
+
 local function GetItemName(itemLink)
   local name = string.match(itemLink, '|h%[(.*)%]|')
   local removeIcons = gsub(name, '|%a.+|%a', '')
-  local trimmed = string.match(removeIcons, '^%s*(.*)%s*$')
+  local trimmed = Trim(removeIcons)
   -- check for empty string or only spaces
   if string.match(trimmed, '^%s*$') then
     return nil
@@ -432,6 +436,7 @@ local function GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
   local simcItemOptions = {}
   local gems = {}
   local gemBonuses = {}
+  local debugLines = {}
 
   -- Item id
   local itemId = itemSplit[OFFSET_ITEM_ID]
@@ -520,16 +525,24 @@ local function GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
 
   -- 11.1.7 Belt
   if itemId == 242664 or itemId == 245964 or itemId == 245965 or itemId == 245966 then
-    local titanDiscId = Simulationcraft:GetTitanDiscBeltSpell()
+    local titanDiscId, tooltipStrings = Simulationcraft:GetTitanDiscBeltSpell()
     if titanDiscId then
       simcItemOptions[#simcItemOptions + 1] = 'titan_disc_id=' .. titanDiscId
+    end
+    debugLines[#debugLines + 1] = 'Spell Descriptions:'
+    for i = 1, #tooltipStrings do
+      debugLines[#debugLines + 1] = tooltipStrings[i]
     end
   end
 
   local itemStr = ''
   itemStr = itemStr .. (simcSlotNames[slotNum] or 'unknown') .. "=" .. table.concat(simcItemOptions, ',')
   if debugOutput then
-    itemStr = itemStr .. '\n# ' .. gsub(itemLink, "\124", "\124\124") .. '\n'
+    debugLines[#debugLines + 1] = gsub(itemLink, "\124", "\124\124")
+    for line = 1, #debugLines do
+      itemStr = itemStr .. '\n# ' .. debugLines[line]
+    end
+    itemStr = itemStr .. '\n'
   end
 
   return itemStr
@@ -717,18 +730,21 @@ end
 -- This requires the SpellCache with the right spell IDs to be loaded
 function Simulationcraft:GetTitanDiscBeltSpell()
   local activeSpell = nil
-  local beltDescription = SpellCache[Simulationcraft.discBeltSpell]:GetSpellDescription()
+  local debugTooltipStrings = {}
+  local beltDescription = Trim(SpellCache[Simulationcraft.discBeltSpell]:GetSpellDescription())
+  debugTooltipStrings[#debugTooltipStrings + 1] = beltDescription
   if not beltDescription then
     error('Unable to get spell description for DISC Belt spell')
   end
   for k, v in pairs(Simulationcraft.discBeltEffectSpells) do
-    local effectDesc = SpellCache[k]:GetSpellDescription()
+    local effectDesc = Trim(SpellCache[k]:GetSpellDescription())
+    debugTooltipStrings[#debugTooltipStrings + 1] = effectDesc
     if beltDescription:find(effectDesc) then
       activeSpell = v
     end
   end
 
-  return activeSpell
+  return activeSpell, debugTooltipStrings
 end
 
 function Simulationcraft:GetMainFrame(text)
