@@ -739,7 +739,8 @@ function Simulationcraft:GetTitanDiscBeltSpell()
   for k, v in pairs(Simulationcraft.discBeltEffectSpells) do
     local effectDesc = Trim(SpellCache[k]:GetSpellDescription())
     debugTooltipStrings[#debugTooltipStrings + 1] = effectDesc
-    if beltDescription:find(effectDesc) then
+    -- disable pattern matching with the last argument
+    if beltDescription:find(effectDesc, 1, true) then
       activeSpell = v
     end
   end
