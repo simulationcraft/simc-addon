@@ -430,6 +430,7 @@ Simulationcraft.upgradeAchievements = {
   40942,  -- Weathered of the Undermine
   40943,  -- Carved of the Undermine
   40944,  -- Runed of the Undermine
+  40945,  -- Gilded of the Undermine
   41886,  -- Weathered of the Ethereal
   41887,  -- Carved of the Ethereal
   41888,  -- Runed of the Ethereal
