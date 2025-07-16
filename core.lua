@@ -585,7 +585,7 @@ function Simulationcraft:GetBagItemStrings(debugOutput)
 
   -- https://wowpedia.fandom.com/wiki/BagID
   -- Bag indexes are a pain, need to start in the negatives to check everything (like the default bank container)
-  for bag=BACKPACK_CONTAINER - ITEM_INVENTORY_BANK_BAG_OFFSET, NUM_TOTAL_EQUIPPED_BAG_SLOTS + NUM_BANKBAGSLOTS do
+  for bag=BACKPACK_CONTAINER - ITEM_INVENTORY_BANK_BAG_OFFSET, NUM_TOTAL_EQUIPPED_BAG_SLOTS + 6 do
     for slot=1, C_Container.GetContainerNumSlots(bag) do
       local itemId = C_Container.GetContainerItemID(bag, slot)
 
