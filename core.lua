@@ -583,9 +583,34 @@ end
 function Simulationcraft:GetBagItemStrings(debugOutput)
   local bagItems = {}
 
-  -- https://wowpedia.fandom.com/wiki/BagID
-  -- Bag indexes are a pain, need to start in the negatives to check everything (like the default bank container)
-  for bag=BACKPACK_CONTAINER - ITEM_INVENTORY_BANK_BAG_OFFSET, NUM_TOTAL_EQUIPPED_BAG_SLOTS + 6 do
+  -- https://warcraft.wiki.gg/wiki/InventorySlotID#Bags
+  -- https://warcraft.wiki.gg/wiki/BagID
+  -- 11.2 unifies character, reagent, and void banks and reorganizes the container IDs
+  -- Before 11.2, the addon basically needed to iteration from index -5 to 11 or so
+  -- After 11.2, it's a much more sane 0 to 17
+  -- The bound of the iteration can mostly be gleaned from various constants (that have shifted around between patches)
+  -- with the addition of the built-in backpack slot
+  -- This should work for a while if they add any more containers and if the container sizes change as it's all pretty
+  -- dynamic now
+
+  local invConstants = Constants.InventoryConstants
+  local startSlot = nil
+  local totalSlots = nil
+  if invConstants.NumCharacterBankSlots then
+    -- 11.2 and after
+    startSlot = 0
+    -- add 1 for the backpack
+    local numBagSlots = 1 + invConstants.NumBagSlots + invConstants.NumReagentBagSlots
+    local numBankSlots = invConstants.NumCharacterBankSlots
+    local numWarbandBankSlots = invConstants.NumAccountBankSlots
+    endSlot = numBagSlots + numBankSlots + numWarbandBankSlots
+  else
+    -- 11.1.7 and before
+    startSlot = BACKPACK_CONTAINER - ITEM_INVENTORY_BANK_BAG_OFFSET
+    endSlot = NUM_TOTAL_EQUIPPED_BAG_SLOTS + NUM_BANKBAGSLOTS
+  end
+
+  for bag=startSlot, endSlot do
     for slot=1, C_Container.GetContainerNumSlots(bag) do
       local itemId = C_Container.GetContainerItemID(bag, slot)
 
