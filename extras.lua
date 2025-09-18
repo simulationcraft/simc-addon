@@ -434,4 +434,5 @@ Simulationcraft.upgradeAchievements = {
   41886,  -- Weathered of the Ethereal
   41887,  -- Carved of the Ethereal
   41888,  -- Runed of the Ethereal
+  41892,  -- Gilded of the Ethereal
 }
