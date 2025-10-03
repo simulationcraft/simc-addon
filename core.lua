@@ -967,9 +967,9 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
 
   -- Spec info
   local role, globalSpecID, playerRole
-  local specId = GetSpecialization()
+  local specId = C_SpecializationInfo.GetSpecialization()
   if specId then
-    globalSpecID,_,_,_,_,role = GetSpecializationInfo(specId)
+    globalSpecID,_,_,_,_,role = C_SpecializationInfo.GetSpecializationInfo(specId)
   end
   local playerSpec = specNames[ globalSpecID ] or 'unknown'
 
