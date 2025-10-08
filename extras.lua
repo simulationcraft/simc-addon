@@ -409,6 +409,10 @@ Simulationcraft.upgradeItems = {
   [231767] = 'Enchanted Weathered Ethereal Crest',
   [231768] = 'Enchanted Gilded Ethereal Crest',
   [231769] = 'Enchanted Runed Ethereal Crest',
+  [239146] = 'Gilded Augmentation Matrix',
+  [239203] = 'Runed Augmentation Matrix',
+  [251993] = 'Gilded Starlight Matrix',
+  [251994] = 'Runed Starlight Matrix',
 }
 
 Simulationcraft.catalystCurrencies = {
