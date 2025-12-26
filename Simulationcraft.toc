@@ -1,4 +1,4 @@
-## Interface: 110200, 110205, 120000
+## Interface: 110200, 110207, 120000
 ## Title: Simulationcraft
 ## IconTexture: Interface\Addons\SimulationCraft\logo
 ## Notes: Constructs SimC export strings
