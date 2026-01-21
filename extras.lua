@@ -92,7 +92,7 @@ Simulationcraft.SpecNames = {
 -- Demon Hunter
   [577] = 'Havoc',
   [581] = 'Vengeance',
-  [1408] = 'Devourer',
+  [1480] = 'Devourer',
 -- Druid
   [102] = 'Balance',
   [103] = 'Feral',
