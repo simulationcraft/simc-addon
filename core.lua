@@ -48,6 +48,8 @@ local OFFSET_BONUS_ID = 13
 
 local OFFSET_GEM_BONUS_FROM_MODS = 2
 
+-- Item Modifiers: https://warcraft.wiki.gg/wiki/ItemLink#Item_Modifiers
+
 local ITEM_MOD_TYPE_DROP_LEVEL = 9
 -- 28 shows frequently but is currently unknown
 local ITEM_MOD_TYPE_CRAFT_STATS_1 = 29
