@@ -332,29 +332,19 @@ Simulationcraft.preloadSpellIds = {
 Simulationcraft.upgradeCurrencies = {
   [1191] = 'Valor',
   [1792] = 'Honor',
+  [1813] = 'Reservoir Anima',
+  [1931] = 'Cataloged Research',
   [2122] = 'Storm Sigil',
-  [2245] = 'Flightstones',
-  [2706] = 'Whelpling\'s Dreaming Crest',
-  [2707] = 'Drake\'s Dreaming Crest',
-  [2708] = 'Wyrm\'s Dreaming Crest',
-  [2709] = 'Aspect\'s Dreaming Crest',
-  [2806] = 'Whelpling\'s Awakened Crest',
-  [2807] = 'Drake\'s Awakened Crest',
-  [2809] = 'Wyrm\'s Awakened Crest',
-  [2812] = 'Aspect\'s Awakened Crest',
-  [2914] = 'Weathered Harbinger Crest',
-  [2915] = 'Carved Harbinger Crest',
-  [2916] = 'Runed Harbinger Crest',
-  [2917] = 'Gilded Harbinger Crest',
   [3008] = 'Valorstones',
-  [3107] = 'Weathered Undermine Crest',
-  [3108] = 'Carved Undermine Crest',
-  [3109] = 'Runed Undermine Crest',
-  [3110] = 'Gilded Undermine Crest',
   [3284] = 'Weathered Ethereal Crest',
   [3286] = 'Carved Ethereal Crest',
   [3288] = 'Runed Ethereal Crest',
   [3290] = 'Gilded Ethereal Crest',
+  [3341] = 'Veteran Dawncrest',
+  [3343] = 'Champion Dawncrest',
+  [3345] = 'Hero Dawncrest',
+  [3347] = 'Myth Dawncrest',
+  [3383] = 'Adventurer Dawncrest',
 }
 
 Simulationcraft.upgradeItems = {
@@ -364,32 +354,15 @@ Simulationcraft.upgradeItems = {
   [180058] = 'Relic of the Past III',
   [180059] = 'Relic of the Past IV',
   [180060] = 'Relic of the Past V',
-  [190453] = 'Spark of Ingenuity',
-  [197921] = 'Primal Infusion',
-  [198046] = 'Concentrated Primal Infusion',
-  [198048] = 'Titan Training Matrix I',
-  [198056] = 'Titan Training Matrix II',
-  [198058] = 'Titan Training Matrix III',
-  [198059] = 'Titan Training Matrix IV',
-  [204440] = 'Spark of Shadowflame',
-  [204673] = 'Titan Training Matrix V',
+  [204276] = 'Untapped Forbidden Knowledge',
   [204681] = 'Enchanted Whelpling\'s Shadowflame Crest',
   [204682] = 'Enchanted Wyrm\'s Shadowflame Crest',
   [204697] = 'Enchanted Aspect\'s Shadowflame Crest',
   [206366] = 'Cracked Trophy of Strife',
-  [206959] = 'Spark of Dreams',
-  [206960] = 'Enchanted Wyrm\'s Dreaming Crest',
-  [206961] = 'Enchanted Aspect\'s Dreaming Crest',
-  [206977] = 'Enchanted Whelpling\'s Dreaming Crest',
   [210221] = 'Forged Combatant\'s Heraldry',
   [210232] = 'Forged Aspirant\'s Heraldry',
   [210233] = 'Forged Gladiator\'s Heraldry',
   [211296] = 'Spark of Omens',
-  [211494] = 'Spark of Beginnings',
-  [211516] = 'Spark of Awakening',
-  [211518] = 'Enchanted Wyrm\'s Awakened Crest',
-  [211519] = 'Enchanted Aspect\'s Awakened Crest',
-  [211520] = 'Enchanted Whelpling\'s Awakened Crest',
   [224069] = 'Enchanted Weathered Harbinger Crest',
   [224072] = 'Enchanted Runed Harbinger Crest',
   [224073] = 'Enchanted Gilded Harbinger Crest',
@@ -410,16 +383,21 @@ Simulationcraft.upgradeItems = {
   [231767] = 'Enchanted Weathered Ethereal Crest',
   [231768] = 'Enchanted Gilded Ethereal Crest',
   [231769] = 'Enchanted Runed Ethereal Crest',
+  [232875] = 'Spark of Radiance',
   [239146] = 'Gilded Augmentation Matrix',
   [239203] = 'Runed Augmentation Matrix',
   [251993] = 'Gilded Starlight Matrix',
   [251994] = 'Runed Starlight Matrix',
+  [256559] = 'Galactic Combatant\'s Heraldry',
+  [256607] = 'Galactic Aspirant\'s Heraldry',
+  [256608] = 'Galactic Gladiator\'s Heraldry',
 }
 
 Simulationcraft.catalystCurrencies = {
   [2813] = 'Harmonized Silk',
   [3116] = 'Essence of Kaja\'mite',
   [3269] = 'Ethereal Voidsplinter',
+  [3378] = 'Dawnlight Manaflux',
 }
 
 Simulationcraft.upgradeAchievements = {
@@ -432,6 +410,7 @@ Simulationcraft.upgradeAchievements = {
   40107,  -- Harbinger of the Weathered
   40115,  -- Harbinger of the Carved
   40118,  -- Harbinger of the Runed
+  40939,  -- Harbinger of the Gilded
   40942,  -- Weathered of the Undermine
   40943,  -- Carved of the Undermine
   40944,  -- Runed of the Undermine
@@ -440,4 +419,8 @@ Simulationcraft.upgradeAchievements = {
   41887,  -- Carved of the Ethereal
   41888,  -- Runed of the Ethereal
   41892,  -- Gilded of the Ethereal
+  42767,  -- Veteran of the Dawn
+  42768,  -- Champion of the Dawn
+  42769,  -- Hero of the Dawn
+  61809,  -- Adventurer of the Dawn
 }
