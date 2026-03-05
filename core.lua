@@ -713,7 +713,7 @@ function Simulationcraft:GetItemUpgradeAchievements()
   local achieves = {}
   for i=1, #Simulationcraft.upgradeAchievements do
     local achId = Simulationcraft.upgradeAchievements[i]
-    _, name, points, complete = GetAchievementInfo(achId)
+    local _, name, points, complete = GetAchievementInfo(achId)
     if complete then
       achieves[#achieves + 1] = achId
     end
@@ -726,7 +726,7 @@ local function LoadSpellsAsync(callback)
 
   -- Build up the SpellCache asynchronously
   local numLoaded = 0
-  function onLoad()
+  local function onLoad()
     numLoaded = numLoaded + 1
 
     if numLoaded == #spellIds then
@@ -1138,7 +1138,7 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
             local level, _, _ = GetDetailedItemLevelInfo(itemLink)
             simulationcraftProfile = simulationcraftProfile .. '#\n'
             if itemName and level then
-              itemNameComment = itemName .. ' ' .. '(' .. level .. ')'
+              local itemNameComment = itemName .. ' ' .. '(' .. level .. ')'
               simulationcraftProfile = simulationcraftProfile .. '# ' .. itemNameComment .. '\n'
             end
             simulationcraftProfile = simulationcraftProfile .. '# ' .. itemStr .. "\n"
@@ -1231,9 +1231,16 @@ end
 -- This is the workhorse function that constructs the profile
 function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, links)
   LoadSpellsAsync(function()
-    simulationcraftProfile, simcPrintError = Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links)
+    local simulationcraftProfile, simcPrintError = Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links)
 
     local f = Simulationcraft:GetMainFrame(simcPrintError or simulationcraftProfile)
     f:Show()
   end)
 end
+
+LoadSpellsAsync()
+
+-- Expose GetSimcProfile so addons can fetch the profile without goin through awkward wordarounds, added inside a global table so its easier to add more things under it later on if needed
+SimulationcraftAPI = {
+  GetSimcProfile =  Simulationcraft.GetSimcProfile
+}
