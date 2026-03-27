@@ -6,6 +6,7 @@
 ## Version: 12.0.1-02
 ## OptionalDependencies: Ace3, LibRealmInfo, LibDBIcon, LibDataBroker-1.1
 ## SavedVariables: SimulationCraftDB
+## Category: Loot
 
 ## X-Curse-Project-ID: 82745
 ## X-Wago-ID: BNBeRVGx
