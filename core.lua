@@ -654,6 +654,9 @@ function Simulationcraft:GetZandalariLoa()
     if spellId == nil then
       break
     end
+    if issecretvalue(spellId) then
+      break
+    end
     if zandalariLoaBuffs[spellId] then
       zandalariLoa = zandalariLoaBuffs[spellId]
       break
