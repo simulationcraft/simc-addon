@@ -3,9 +3,21 @@
 ## IconTexture: Interface\Addons\SimulationCraft\logo
 ## Notes: Constructs SimC export strings
 ## Author: Theck, navv_, seriallos
-## Version: 12.0.1-03
+## Version: 12.0.1-04
 ## OptionalDependencies: Ace3, LibRealmInfo, LibDBIcon, LibDataBroker-1.1
 ## SavedVariables: SimulationCraftDB
+
+## Category: Other
+## Category-deDE: Anderes
+## Category-esES: Otros
+## Category-esMX: Otros
+## Category-frFR: Autre
+## Category-itIT: Altro
+## Category-koKR: 기타
+## Category-ptBR: Outro
+## Category-ruRU: Другое
+## Category-zhCN: 其它
+## Category-zhTW: 其他
 
 ## X-Curse-Project-ID: 82745
 ## X-Wago-ID: BNBeRVGx
