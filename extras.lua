@@ -391,6 +391,7 @@ Simulationcraft.upgradeItems = {
   [256559] = 'Galactic Combatant\'s Heraldry',
   [256607] = 'Galactic Aspirant\'s Heraldry',
   [256608] = 'Galactic Gladiator\'s Heraldry',
+  [268552] = 'Ascendant Voidcore',
 }
 
 Simulationcraft.catalystCurrencies = {
