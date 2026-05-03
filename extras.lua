@@ -424,4 +424,5 @@ Simulationcraft.upgradeAchievements = {
   42768,  -- Champion of the Dawn
   42769,  -- Hero of the Dawn
   61809,  -- Adventurer of the Dawn
+  42770,  -- Myth of the Dawn
 }
