@@ -1281,8 +1281,10 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
 
   simulationcraftProfile = simulationcraftProfile .. '\n'
 
-  -- Simple checksum to provide a lightweight verification that the input hasn't been edited/modified
-  local checksum = adler32(simulationcraftProfile)
+  -- Simple checksum to provide a lightweight verification that the input hasn't been edited/modified.
+  -- Pipes are doubled for EditBox display but the clipboard/consumer side sees them un-doubled,
+  -- so checksum the un-doubled form to match what a consumer would see
+  local checksum = adler32((simulationcraftProfile:gsub("||", "|")))
 
   simulationcraftProfile = simulationcraftProfile .. '# Checksum: ' .. string.format('%x', checksum)
 
