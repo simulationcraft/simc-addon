@@ -431,6 +431,45 @@ local function TranslateRole(spec_id, str)
   end
 end
 
+local function formatCosts(fmt, costs, idField)
+  local out = {}
+  for _, c in ipairs(costs) do
+    local disc = (c.discountInfo and c.discountInfo.isDiscounted) and 1 or 0
+    out[#out + 1] = string.format(fmt, c[idField], c.cost, disc)
+  end
+  return table.concat(out, ',')
+end
+
+-- get item upgrade info if possible
+local function getUpgradeComment(itemLoc)
+  if not (itemLoc and C_ItemUpgrade.CanUpgradeItem(itemLoc)) then return nil end
+  C_ItemUpgrade.SetItemUpgradeFromLocation(itemLoc)
+  local info = C_ItemUpgrade.GetItemUpgradeItemInfo()
+  C_ItemUpgrade.ClearItemUpgrade()
+  if not info or not info.itemUpgradeable then return nil end
+
+  local levelStrs = {}
+  for _, lvl in ipairs(info.upgradeLevelInfos) do
+    if lvl.upgradeLevel ~= info.currUpgrade then
+      levelStrs[#levelStrs + 1] = string.format(
+        '%d:%d:%s:%s',
+        lvl.upgradeLevel, lvl.itemLevelIncrement,
+        formatCosts('c#%d#%d#%d', lvl.currencyCostsToUpgrade, 'currencyID'),
+        formatCosts('i#%d#%d#%d', lvl.itemCostsToUpgrade, 'itemID')
+      )
+    end
+  end
+  if #levelStrs == 0 then return nil end
+  return 'upgrade_levels=' .. table.concat(levelStrs, '/')
+end
+
+local function isUpgradeVendorOpen()
+  if C_PlayerInteractionManager and C_PlayerInteractionManager.IsInteractingWithNpcOfType then
+    return C_PlayerInteractionManager.IsInteractingWithNpcOfType(Enum.PlayerInteractionType.ItemUpgrade)
+  end
+  return false
+end
+
 -- =================== Item Information =========================
 
 local function GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
@@ -551,6 +590,7 @@ local function GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
 end
 
 function Simulationcraft:GetItemStrings(debugOutput)
+  local includeUpgrade = debugOutput and isUpgradeVendorOpen()
   local items = {}
   for slotNum=1, #slotNames do
     local slotId = GetInventorySlotInfo(slotNames[slotNum])
@@ -569,9 +609,15 @@ function Simulationcraft:GetItemStrings(debugOutput)
         itemComment = name .. ' (' .. level .. ')'
       end
 
+      local upgrade
+      if includeUpgrade then
+        upgrade = getUpgradeComment(ItemLocation:CreateFromEquipmentSlot(slotId))
+      end
+
       items[slotNum] = {
         string = GetItemStringFromItemLink(slotNum, itemLink, debugOutput),
-        name = itemComment
+        name = itemComment,
+        upgrade = upgrade
       }
     end
   end
@@ -583,6 +629,7 @@ end
 -- Item name and item level may not be available if other addons are causing lookups to be throttled but
 -- item links and IDs should always be available
 function Simulationcraft:GetBagItemStrings(debugOutput)
+  local includeUpgrade = debugOutput and isUpgradeVendorOpen()
   local bagItems = {}
 
   -- https://warcraft.wiki.gg/wiki/InventorySlotID#Bags
@@ -625,9 +672,14 @@ function Simulationcraft:GetBagItemStrings(debugOutput)
         if slotNum then
           local info = C_Container.GetContainerItemInfo(bag, slot)
           local itemLink = C_Container.GetContainerItemLink(bag, slot)
+          local upgrade
+          if includeUpgrade then
+            upgrade = getUpgradeComment(ItemLocation:CreateFromBagAndSlot(bag, slot))
+          end
           bagItems[#bagItems + 1] = {
             string = GetItemStringFromItemLink(slotNum, itemLink, debugOutput),
-            slotNum = slotNum
+            slotNum = slotNum,
+            upgrade = upgrade
           }
           local itemName = GetItemName(itemLink)
           local level, _, _ = GetDetailedItemLevelInfo(itemLink)
@@ -1103,6 +1155,9 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
       if item.name then
         simulationcraftProfile = simulationcraftProfile .. '# ' .. item.name .. '\n'
       end
+      if item.upgrade then
+        simulationcraftProfile = simulationcraftProfile .. '# ' .. item.upgrade .. '\n'
+      end
       simulationcraftProfile = simulationcraftProfile .. items[slotNum].string .. '\n'
     end
   end
@@ -1118,6 +1173,9 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
         simulationcraftProfile = simulationcraftProfile .. '#\n'
         if bagItems[i].name and bagItems[i].name ~= '' then
           simulationcraftProfile = simulationcraftProfile .. '# ' .. bagItems[i].name .. '\n'
+        end
+        if bagItems[i].upgrade then
+          simulationcraftProfile = simulationcraftProfile .. '# ' .. bagItems[i].upgrade .. '\n'
         end
         simulationcraftProfile = simulationcraftProfile .. '# ' .. bagItems[i].string .. '\n'
       end
