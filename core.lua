@@ -57,6 +57,14 @@ local ITEM_MOD_TYPE_CRAFT_STATS_2 = 30
 
 local SUPPORTED_LOADOUT_SERIALIZATION_VERSION = 2
 
+-- Extra C_Traits systems (beyond class talents) to export.
+-- Each entry pairs the SimC option name with its trait system ID
+-- (the value passed to C_Traits.SetConfigIDBySystemID by the matching Blizzard UI).
+local TRAIT_SYSTEMS = {
+  { name = 'omnium_talents',         systemID = 48 }, -- 12.0.7 player power
+  { name = 'void_talents',           systemID = 46 },
+}
+
 local WeeklyRewards         = _G.C_WeeklyRewards
 
 -- New talents for Dragonflight
@@ -411,6 +419,28 @@ local function GetExportString(configID)
   end
 
   return str
+end
+
+-- Build a slash-delimited list of purchased traits from any C_Traits config.
+-- Format: <optionName>=<entryID>:<rank>/<entryID>:<rank>/...
+local function GetTraitString(optionName, configID)
+  if not configID then return nil end
+
+  local configInfo = Traits.GetConfigInfo(configID)
+  if not configInfo or not configInfo.treeIDs then return nil end
+
+  local entries = {}
+  for _, treeID in ipairs(configInfo.treeIDs) do
+    for _, nodeID in ipairs(Traits.GetTreeNodes(treeID)) do
+      local node = Traits.GetNodeInfo(configID, nodeID)
+      if node and node.ranksPurchased and node.ranksPurchased > 0 and node.activeEntry then
+        entries[#entries + 1] = node.activeEntry.entryID .. ':' .. node.activeEntry.rank
+      end
+    end
+  end
+
+  if #entries == 0 then return nil end
+  return optionName .. '=' .. table.concat(entries, '/')
 end
 
 -- function that translates between the game's role values and ours
@@ -1141,6 +1171,21 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
     -- old talents
     local playerTalents = CreateSimcTalentString()
     simulationcraftProfile = simulationcraftProfile .. playerTalents .. '\n'
+  end
+
+  if Traits and Traits.GetConfigIDBySystemID then
+    local firstTraitSystem = true
+    for _, system in ipairs(TRAIT_SYSTEMS) do
+      local configID = Traits.GetConfigIDBySystemID(system.systemID)
+      local traitStr = GetTraitString(system.name, configID)
+      if traitStr then
+        if firstTraitSystem then
+          simulationcraftProfile = simulationcraftProfile .. '\n'
+          firstTraitSystem = false
+        end
+        simulationcraftProfile = simulationcraftProfile .. traitStr .. '\n'
+      end
+    end
   end
 
   simulationcraftProfile = simulationcraftProfile .. '\n'
