@@ -62,7 +62,6 @@ local SUPPORTED_LOADOUT_SERIALIZATION_VERSION = 2
 -- (the value passed to C_Traits.SetConfigIDBySystemID by the matching Blizzard UI).
 local TRAIT_SYSTEMS = {
   { name = 'omnium_talents',         systemID = 48 }, -- 12.0.7 player power
-  { name = 'void_talents',           systemID = 46 },
 }
 
 local WeeklyRewards         = _G.C_WeeklyRewards
