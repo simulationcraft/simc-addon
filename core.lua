@@ -51,7 +51,8 @@ local OFFSET_GEM_BONUS_FROM_MODS = 2
 -- Item Modifiers: https://warcraft.wiki.gg/wiki/ItemLink#Item_Modifiers
 
 local ITEM_MOD_TYPE_DROP_LEVEL = 9
--- 28 shows frequently but is currently unknown
+-- ContentTuningID: clamps the drop-level scaling to the tuning's level-squish range
+local ITEM_MOD_TYPE_CONTENT_TUNING = 28
 local ITEM_MOD_TYPE_CRAFT_STATS_1 = 29
 local ITEM_MOD_TYPE_CRAFT_STATS_2 = 30
 
@@ -566,6 +567,8 @@ local function GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
     local pairValue = itemSplit[pairOffset + 1]
     if pairType == ITEM_MOD_TYPE_DROP_LEVEL then
       simcItemOptions[#simcItemOptions + 1] = 'drop_level=' .. pairValue
+    elseif pairType == ITEM_MOD_TYPE_CONTENT_TUNING then
+      simcItemOptions[#simcItemOptions + 1] = 'content_tuning=' .. pairValue
     elseif pairType == ITEM_MOD_TYPE_CRAFT_STATS_1 or pairType == ITEM_MOD_TYPE_CRAFT_STATS_2 then
       craftedStats[#craftedStats + 1] = pairValue
     end
