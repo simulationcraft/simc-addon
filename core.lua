@@ -55,6 +55,10 @@ local ITEM_MOD_TYPE_DROP_LEVEL = 9
 local ITEM_MOD_TYPE_CONTENT_TUNING = 28
 local ITEM_MOD_TYPE_CRAFT_STATS_1 = 29
 local ITEM_MOD_TYPE_CRAFT_STATS_2 = 30
+-- 12.1: catalyst items inherit secondary stats from the source item
+-- We think this might be the mechanism to do it - it makes sense if this encodes the source item ID.
+-- Adding prospectively to see when the functionality shows up on the PTR
+local ITEM_MOD_TYPE_REDIRECTED_BASE_STATS = 64
 
 local SUPPORTED_LOADOUT_SERIALIZATION_VERSION = 2
 
@@ -131,7 +135,7 @@ function Simulationcraft:OnInitialize()
 end
 
 function Simulationcraft:OnEnable()
-
+  self:Print('RBS-aware version loaded (redirected_base_stats support)')
 end
 
 function Simulationcraft:OnDisable()
@@ -571,6 +575,8 @@ local function GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
       simcItemOptions[#simcItemOptions + 1] = 'content_tuning=' .. pairValue
     elseif pairType == ITEM_MOD_TYPE_CRAFT_STATS_1 or pairType == ITEM_MOD_TYPE_CRAFT_STATS_2 then
       craftedStats[#craftedStats + 1] = pairValue
+    elseif pairType == ITEM_MOD_TYPE_REDIRECTED_BASE_STATS then
+      simcItemOptions[#simcItemOptions + 1] = 'redirected_base_stats=' .. pairValue
     end
   end
 
