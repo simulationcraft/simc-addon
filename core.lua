@@ -135,7 +135,7 @@ function Simulationcraft:OnInitialize()
 end
 
 function Simulationcraft:OnEnable()
-  self:Print('RBS-aware version loaded (redirected_base_stats support)')
+
 end
 
 function Simulationcraft:OnDisable()
