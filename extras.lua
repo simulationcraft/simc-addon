@@ -345,6 +345,11 @@ Simulationcraft.upgradeCurrencies = {
   [3345] = 'Hero Dawncrest',
   [3347] = 'Myth Dawncrest',
   [3383] = 'Adventurer Dawncrest',
+  [3442] = 'Adventurer Mistcrest',
+  [3443] = 'Veteran Mistcrest',
+  [3444] = 'Champion Mistcrest',
+  [3445] = 'Hero Mistcrest',
+  [3446] = 'Myth Mistcrest',
 }
 
 Simulationcraft.upgradeItems = {
@@ -391,6 +396,10 @@ Simulationcraft.upgradeItems = {
   [256559] = 'Galactic Combatant\'s Heraldry',
   [256607] = 'Galactic Aspirant\'s Heraldry',
   [256608] = 'Galactic Gladiator\'s Heraldry',
+  [274476] = 'Spark of Tides',
+  [275380] = 'Venomous Combatant\'s Heraldry',
+  [275383] = 'Venomous Aspirant\'s Heraldry',
+  [275385] = 'Venomous Gladiator\'s Heraldry',
   [268552] = 'Ascendant Voidcore',
 }
 
@@ -399,6 +408,11 @@ Simulationcraft.catalystCurrencies = {
   [3116] = 'Essence of Kaja\'mite',
   [3269] = 'Ethereal Voidsplinter',
   [3378] = 'Dawnlight Manaflux',
+}
+
+Simulationcraft.bonusRollCurrencies = {
+  [3418] = 'Nebulous Voidcore',
+  [3511] = '[DNT, Unused] Venomous Voidcore',
 }
 
 Simulationcraft.upgradeAchievements = {
@@ -423,6 +437,11 @@ Simulationcraft.upgradeAchievements = {
   42767,  -- Veteran of the Dawn
   42768,  -- Champion of the Dawn
   42769,  -- Hero of the Dawn
-  61809,  -- Adventurer of the Dawn
   42770,  -- Myth of the Dawn
+  61809,  -- Adventurer of the Dawn
+  62410,  -- Adventurer of the Mist
+  62411,  -- Veteran of the Mist
+  62412,  -- Champion of the Mist
+  62414,  -- Hero of the Mist
+  62416,  -- Myth of the Mist
 }
