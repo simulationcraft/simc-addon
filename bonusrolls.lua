@@ -97,15 +97,15 @@ function Simulationcraft:RecordBonusRoll(currency, source, ctx, keyLevel, itemId
   }
 end
 
--- Export the current season + current spec's pool as 'currency:source:context:keyLevel:itemId/...'.
+-- Export all specs' rolls for the current season as 'currency:source:context:keyLevel:itemId:specId/...'.
 function Simulationcraft:GetBonusRollItems()
   local season = self:GetCurrentSeasonId()
-  local spec = ResolveLootSpecId(nil)
   local keys = {}
   for _, roll in ipairs(self.db.char.bonusRolls) do
-    if type(roll) == 'table' and roll.season == season and roll.spec == spec then
-      -- currency leads the key so Raidbots can map it to a season and drop stale-pool rolls
-      keys[#keys + 1] = roll.currency .. ':' .. roll.source .. ':' .. roll.context .. ':' .. roll.keyLevel .. ':' .. roll.itemId
+    if type(roll) == 'table' and roll.season == season then
+      -- currency leads the key so Raidbots can map it to a season and drop stale-pool rolls;
+      -- spec trails it so all specs' pools can share one list
+      keys[#keys + 1] = roll.currency .. ':' .. roll.source .. ':' .. roll.context .. ':' .. roll.keyLevel .. ':' .. roll.itemId .. ':' .. roll.spec
     end
   end
   table.sort(keys)
