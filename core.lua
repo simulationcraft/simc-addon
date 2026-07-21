@@ -217,6 +217,16 @@ local function Trim(str)
   return string.match(str, '^%s*(.-)%s*$')
 end
 
+-- Returns the trimmed spell description, or nil if the spell has no usable description
+local function GetSpellDescriptionOrNil(spell)
+  local description = spell:GetSpellDescription()
+  if type(description) ~= 'string' then
+    return nil
+  end
+  description = Trim(description)
+  return description ~= '' and description or nil
+end
+
 local function GetItemName(itemLink)
   local name = string.match(itemLink, '|h%[(.*)%]|')
   local removeIcons = gsub(name, '|%a.+|%a', '')
@@ -856,17 +866,23 @@ end
 function Simulationcraft:GetTitanDiscBeltSpell()
   local activeSpell = nil
   local debugTooltipStrings = {}
-  local beltDescription = Trim(SpellCache[Simulationcraft.discBeltSpell]:GetSpellDescription())
-  debugTooltipStrings[#debugTooltipStrings + 1] = beltDescription
+  local beltSpell = SpellCache[Simulationcraft.discBeltSpell]
+  local beltDescription = beltSpell and GetSpellDescriptionOrNil(beltSpell)
+  -- The belt is 11.1.7 content, its spells may no longer resolve on newer clients
   if not beltDescription then
-    error('Unable to get spell description for DISC Belt spell')
+    return nil, debugTooltipStrings
   end
+  debugTooltipStrings[#debugTooltipStrings + 1] = beltDescription
   for k, v in pairs(Simulationcraft.discBeltEffectSpells) do
-    local effectDesc = Trim(SpellCache[k]:GetSpellDescription())
-    debugTooltipStrings[#debugTooltipStrings + 1] = effectDesc
-    -- disable pattern matching with the last argument
-    if beltDescription:find(effectDesc, 1, true) then
-      activeSpell = v
+    local effectSpell = SpellCache[k]
+    local effectDesc = effectSpell and GetSpellDescriptionOrNil(effectSpell)
+    -- An empty description would match anything below, so skip it
+    if effectDesc then
+      debugTooltipStrings[#debugTooltipStrings + 1] = effectDesc
+      -- disable pattern matching with the last argument
+      if beltDescription:find(effectDesc, 1, true) then
+        activeSpell = v
+      end
     end
   end
 
@@ -1248,19 +1264,24 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
       local activities = WeeklyRewards.GetActivities()
       for _, activityInfo in ipairs(activities) do
         for _, rewardInfo in ipairs(activityInfo.rewards) do
-          local _, _, _, itemEquipLoc = GetItemInfoInstant(rewardInfo.id)
-          local itemLink = WeeklyRewards.GetItemHyperlink(rewardInfo.itemDBID)
-          local itemName = GetItemName(itemLink);
-          local slotNum = Simulationcraft.invTypeToSlotNum[itemEquipLoc]
-          if slotNum then
-            local itemStr = GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
-            local level, _, _ = GetDetailedItemLevelInfo(itemLink)
-            simulationcraftProfile = simulationcraftProfile .. '#\n'
-            if itemName and level then
-              local itemNameComment = itemName .. ' ' .. '(' .. level .. ')'
-              simulationcraftProfile = simulationcraftProfile .. '# ' .. itemNameComment .. '\n'
+          -- itemDBID is nilable, only item rewards carry one. Currency rewards (crests,
+          -- valorstones, etc) have none, and GetItemHyperlink errors when passed nil.
+          if rewardInfo.itemDBID then
+            local _, _, _, itemEquipLoc = GetItemInfoInstant(rewardInfo.id)
+            local itemLink = WeeklyRewards.GetItemHyperlink(rewardInfo.itemDBID)
+            local slotNum = Simulationcraft.invTypeToSlotNum[itemEquipLoc]
+            -- GetItemHyperlink may return nothing even for a valid itemDBID
+            if itemLink and slotNum then
+              local itemName = GetItemName(itemLink);
+              local itemStr = GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
+              local level, _, _ = GetDetailedItemLevelInfo(itemLink)
+              simulationcraftProfile = simulationcraftProfile .. '#\n'
+              if itemName and level then
+                local itemNameComment = itemName .. ' ' .. '(' .. level .. ')'
+                simulationcraftProfile = simulationcraftProfile .. '# ' .. itemNameComment .. '\n'
+              end
+              simulationcraftProfile = simulationcraftProfile .. '# ' .. itemStr .. "\n"
             end
-            simulationcraftProfile = simulationcraftProfile .. '# ' .. itemStr .. "\n"
           end
         end
       end
