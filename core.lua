@@ -41,7 +41,7 @@ local OFFSET_GEM_ID_1 = 3
 -- local OFFSET_GEM_ID_3 = 5
 local OFFSET_GEM_ID_4 = 6
 local OFFSET_GEM_BASE = OFFSET_GEM_ID_1
-local OFFSET_SUFFIX_ID = 7
+-- local OFFSET_SUFFIX_ID = 7
 -- local OFFSET_FLAGS = 11
 local OFFSET_CONTEXT = 12
 local OFFSET_BONUS_ID = 13
@@ -552,11 +552,6 @@ local function GetItemStringFromItemLink(slotNum, itemLink, debugOutput)
 
   if #gems > 0 then
     simcItemOptions[#simcItemOptions + 1] = 'gem_id=' .. table.concat(gems, '/')
-  end
-
-  -- New style item suffix, old suffix style not supported
-  if itemSplit[OFFSET_SUFFIX_ID] ~= 0 then
-    simcItemOptions[#simcItemOptions + 1] = 'suffix=' .. itemSplit[OFFSET_SUFFIX_ID]
   end
 
   local bonuses = {}
