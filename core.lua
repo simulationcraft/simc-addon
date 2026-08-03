@@ -817,6 +817,18 @@ function Simulationcraft:GetUpgradeCurrencies()
   return table.concat(upgradeCurrencies, '/')
 end
 
+function Simulationcraft:GetBonusRollCurrencies()
+  local bonusRollCurrencies = {}
+  for currencyId, currencyName in pairs(Simulationcraft.bonusRollCurrencies) do
+    local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(currencyId)
+    if currencyInfo then
+      bonusRollCurrencies[#bonusRollCurrencies + 1] = table.concat({ currencyId, currencyInfo.quantity }, ':')
+    end
+  end
+
+  return table.concat(bonusRollCurrencies, '/')
+end
+
 function Simulationcraft:GetItemUpgradeAchievements()
   local achieves = {}
   for i=1, #Simulationcraft.upgradeAchievements do
@@ -1352,6 +1364,10 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
   local upgradeAchievementsStr = Simulationcraft:GetItemUpgradeAchievements()
   simulationcraftProfile = simulationcraftProfile .. '#\n'
   simulationcraftProfile = simulationcraftProfile .. '# upgrade_achievements=' .. upgradeAchievementsStr .. '\n'
+
+  local bonusRollCurrenciesStr = Simulationcraft:GetBonusRollCurrencies()
+  simulationcraftProfile = simulationcraftProfile .. '#\n'
+  simulationcraftProfile = simulationcraftProfile .. '# bonus_roll_currencies=' .. bonusRollCurrenciesStr .. '\n'
 
   local bonusRollStr = Simulationcraft:GetBonusRollItems()
   if bonusRollStr and bonusRollStr ~= '' then
