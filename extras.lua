@@ -408,6 +408,7 @@ Simulationcraft.catalystCurrencies = {
   [3116] = 'Essence of Kaja\'mite',
   [3269] = 'Ethereal Voidsplinter',
   [3378] = 'Dawnlight Manaflux',
+  [3465] = 'Venomblight Manaflux',
 }
 
 Simulationcraft.bonusRollCurrencies = {
