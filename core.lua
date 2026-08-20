@@ -83,11 +83,6 @@ local GetDetailedItemLevelInfo = C_Item and C_Item.GetDetailedItemLevelInfo or G
 local GetItemInfoInstant = C_Item and C_Item.GetItemInfoInstant or GetItemInfoInstant
 local GetItemCount = C_Item and C_Item.GetItemCount or GetItemCount
 
--- Talent string export
-local bitWidthHeaderVersion         = 8
-local bitWidthSpecID                = 16
-local bitWidthRanksPurchased        = 6
-
 -- load stuff from extras.lua
 -- local upgradeTable        = Simulationcraft.upgradeTable
 local slotNames           = Simulationcraft.slotNames
@@ -355,88 +350,22 @@ end
 --   return str
 -- end
 
--- based on ClassTalentImportExportMixin:WriteLoadoutHeader
-local function WriteLoadoutHeader(exportStream, serializationVersion, specID, treeHash)
-  exportStream:AddValue(bitWidthHeaderVersion, serializationVersion)
-  exportStream:AddValue(bitWidthSpecID, specID)
-  for _, hashVal in ipairs(treeHash) do
-    exportStream:AddValue(8, hashVal)
-  end
-end
-
--- based on ClassTalentImportExportMixin:GetActiveEntryIndex(treeNode)
-local function GetActiveEntryIndex(treeNode)
-  for i, entryID in ipairs(treeNode.entryIDs) do
-    if(treeNode.activeEntry and entryID == treeNode.activeEntry.entryID) then
-      return i;
-    end
-  end
-
-  return 0;
-end
-
--- based on ClassTalentImportExportMixin:WriteLoadoutContent
-local function WriteLoadoutContent(exportStream, configID, treeID)
-  local treeNodes = C_Traits.GetTreeNodes(treeID)
-  for _, treeNodeID in ipairs(treeNodes) do
-    local treeNode = C_Traits.GetNodeInfo(configID, treeNodeID);
-
-    local isNodeGranted = treeNode.activeRank - treeNode.ranksPurchased > 0;
-    local isNodePurchased = treeNode.ranksPurchased > 0;
-    local isNodeSelected = isNodeGranted or isNodePurchased;
-    local isPartiallyRanked = treeNode.ranksPurchased ~= treeNode.maxRanks;
-    local isChoiceNode = treeNode.type == Enum.TraitNodeType.Selection
-      or treeNode.type == Enum.TraitNodeType.SubTreeSelection;
-
-    exportStream:AddValue(1, isNodeSelected and 1 or 0);
-    if(isNodeSelected) then
-      exportStream:AddValue(1, isNodePurchased and 1 or 0);
-
-      if isNodePurchased then
-        exportStream:AddValue(1, isPartiallyRanked and 1 or 0);
-        if(isPartiallyRanked) then
-          exportStream:AddValue(bitWidthRanksPurchased, treeNode.ranksPurchased);
-        end
-
-        exportStream:AddValue(1, isChoiceNode and 1 or 0);
-        if(isChoiceNode) then
-          local entryIndex = GetActiveEntryIndex(treeNode);
-          if(entryIndex <= 0 or entryIndex > 4) then
-            local configInfo = Traits.GetConfigInfo(configID)
-            local errorMsg = "Talent loadout '" .. configInfo.name .. "' is corrupt/incomplete. Find that talent"
-              .. " loadout in your talents UI and delete or update it. It may be on a different spec."
-            print(errorMsg);
-            error(errorMsg);
-          end
-
-          -- store entry index as zero-index
-          exportStream:AddValue(2, entryIndex - 1);
-        end
-      end
-    end
-  end
-end
-
--- based on ClassTalentImportExportMixin:GetLoadoutExportString
 local function GetExportString(configID)
   local active = false
   if configID == ClassTalents.GetActiveConfigID() then
     active = true
   end
 
-  local exportStream = ExportUtil.MakeExportDataStream();
-  local configInfo = Traits.GetConfigInfo(configID);
-  local currentSpecID = PlayerUtil.GetCurrentSpecID();
-  local treeID = configInfo.treeIDs[1];
-  local treeHash = C_Traits.GetTreeHash(treeID);
-  local serializationVersion = C_Traits.GetLoadoutSerializationVersion();
+  local loadoutString = Traits.GenerateImportString(configID)
+  if not loadoutString or loadoutString == '' then
+    -- the client has no data for this loadout (e.g. before TRAIT_CONFIG_LIST_UPDATED)
+    return nil
+  end
 
-  WriteLoadoutHeader(exportStream, serializationVersion, currentSpecID, treeHash )
-  WriteLoadoutContent(exportStream, configID, treeID)
-
-  local str = "talents=" .. exportStream:GetExportString()
+  local str = "talents=" .. loadoutString
   if not active then
     -- comment out the talents and then prepend a comment with the loadout name
+    local configInfo = Traits.GetConfigInfo(configID)
     str = '# ' .. str
     -- Make sure any pipe characters get unescaped, otherwise breaks checksums
     str = '# Saved Loadout: ' .. configInfo.name:gsub("||", "|") .. '\n' .. str
@@ -1200,13 +1129,22 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
 
     local currentConfigId = ClassTalents.GetActiveConfigID()
 
-    simulationcraftProfile = simulationcraftProfile .. GetExportString(currentConfigId) .. '\n'
+    local activeTalents = GetExportString(currentConfigId)
+    if activeTalents then
+      simulationcraftProfile = simulationcraftProfile .. activeTalents .. '\n'
+    else
+      simulationcraftProfile = simulationcraftProfile
+        .. '# Unable to export talents - no talent data from the client yet, try /simc again\n'
+    end
     simulationcraftProfile = simulationcraftProfile .. '\n'
 
     local specConfigs = ClassTalents.GetConfigIDsBySpecID(globalSpecID)
 
     for _, configId in pairs(specConfigs) do
-      simulationcraftProfile = simulationcraftProfile .. GetExportString(configId) .. '\n'
+      local exportString = GetExportString(configId)
+      if exportString then
+        simulationcraftProfile = simulationcraftProfile .. exportString .. '\n'
+      end
     end
   else
     -- old talents
