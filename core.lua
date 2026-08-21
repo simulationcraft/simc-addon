@@ -83,6 +83,10 @@ local GetDetailedItemLevelInfo = C_Item and C_Item.GetDetailedItemLevelInfo or G
 local GetItemInfoInstant = C_Item and C_Item.GetItemInfoInstant or GetItemInfoInstant
 local GetItemCount = C_Item and C_Item.GetItemCount or GetItemCount
 
+-- Talent loadout export string header layout (see ClassTalentImportExportMixin)
+local bitWidthHeaderVersion = 8
+local bitWidthSpecID        = 16
+
 -- load stuff from extras.lua
 -- local upgradeTable        = Simulationcraft.upgradeTable
 local slotNames           = Simulationcraft.slotNames
@@ -105,6 +109,7 @@ function Simulationcraft:OnInitialize()
         hide = false,
       },
       closeOnCopy = true,
+      offspecLoadouts = false,
       frame = {
         point = "CENTER",
         relativeFrame = nil,
@@ -350,7 +355,29 @@ end
 --   return str
 -- end
 
-local function GetExportString(configID)
+-- The built-in exporter always writes the player's current spec ID into the
+-- string header, so loadouts belonging to other specs need the spec ID patched.
+-- Header layout: serialization version (8 bits), spec ID (16 bits), tree hash (128 bits).
+local function ReplaceSpecID(loadoutString, specID)
+  local importStream = ExportUtil.MakeImportDataStream(loadoutString)
+  local exportStream = ExportUtil.MakeExportDataStream()
+
+  exportStream:AddValue(bitWidthHeaderVersion, importStream:ExtractValue(bitWidthHeaderVersion))
+  importStream:ExtractValue(bitWidthSpecID) -- discard the current spec ID
+  exportStream:AddValue(bitWidthSpecID, specID)
+
+  -- copy the rest of the stream (tree hash + node content) through unchanged
+  local remainingBits = importStream:GetNumberOfBits() - bitWidthHeaderVersion - bitWidthSpecID
+  while remainingBits > 0 do
+    local chunk = math.min(remainingBits, 6)
+    exportStream:AddValue(chunk, importStream:ExtractValue(chunk))
+    remainingBits = remainingBits - chunk
+  end
+
+  return exportStream:GetExportString()
+end
+
+local function GetExportString(configID, specID, optionName)
   local active = false
   if configID == ClassTalents.GetActiveConfigID() then
     active = true
@@ -362,13 +389,18 @@ local function GetExportString(configID)
     return nil
   end
 
-  local str = "talents=" .. loadoutString
+  if specID then
+    loadoutString = ReplaceSpecID(loadoutString, specID)
+  end
+
+  local str = (optionName or "talents") .. "=" .. loadoutString
   if not active then
     -- comment out the talents and then prepend a comment with the loadout name
     local configInfo = Traits.GetConfigInfo(configID)
     str = '# ' .. str
+    local label = optionName == 'offspec_talents' and 'Offspec Loadout' or 'Saved Loadout'
     -- Make sure any pipe characters get unescaped, otherwise breaks checksums
-    str = '# Saved Loadout: ' .. configInfo.name:gsub("||", "|") .. '\n' .. str
+    str = '# ' .. label .. ': ' .. configInfo.name:gsub("||", "|") .. '\n' .. str
   end
 
   return str
@@ -947,9 +979,34 @@ function Simulationcraft:GetMainFrame(text)
     local checkbox = CreateFrame("CheckButton", "AutomaticClose", f, "ChatConfigCheckButtonTemplate")
     checkbox:SetPoint("BOTTOMLEFT", 12, 18)
     checkbox.Text:SetText("Close after copy")
+
+    -- nudge the label a little higher
+    checkbox.Text:ClearAllPoints()
+    checkbox.Text:SetPoint("LEFT", checkbox, "RIGHT", 2, -1)
+
     checkbox:SetChecked(true)
     checkbox:HookScript("OnClick", function(self)
       OptionsDB.profile.closeOnCopy = self:GetChecked()
+    end)
+
+    -- Offspec talent loadouts checkbox
+    local offspecCheckbox = CreateFrame("CheckButton", "SimcOffspecLoadouts", f, "ChatConfigCheckButtonTemplate")
+    offspecCheckbox.Text:SetText("Offspec Talent Loadouts")
+
+    -- nudge the label a little higher
+    offspecCheckbox.Text:ClearAllPoints()
+    offspecCheckbox.Text:SetPoint("LEFT", offspecCheckbox, "RIGHT", 2, -1)
+
+    -- template puts the label to the right of the box, so pull the box left of
+    -- the resize grabber by the label's width to keep the whole thing inside the frame
+    offspecCheckbox:SetPoint("BOTTOMRIGHT", -(offspecCheckbox.Text:GetStringWidth() + 26), 18)
+    offspecCheckbox:SetChecked(OptionsDB.profile.offspecLoadouts)
+
+    offspecCheckbox:HookScript("OnClick", function(self)
+      OptionsDB.profile.offspecLoadouts = self:GetChecked()
+      -- rebuild the profile text with the new setting
+      local args = Simulationcraft.lastProfileArgs or {}
+      Simulationcraft:PrintSimcProfile(args.debugOutput, args.noBags, args.showMerchant, args.links)
     end)
 
     SimcFrame = f
@@ -1146,6 +1203,33 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
         simulationcraftProfile = simulationcraftProfile .. exportString .. '\n'
       end
     end
+
+    if OptionsDB.profile.offspecLoadouts then
+      -- Saved loadouts from offspecs. The built-in exporter stamps
+      -- the current spec ID into every string, so these get their spec bits patched.
+      local getNumSpecs = C_SpecializationInfo.GetNumSpecializations or GetNumSpecializations
+      for otherSpecIndex = 1, getNumSpecs() do
+        if otherSpecIndex ~= specId then
+          local otherSpecID, otherSpecName = C_SpecializationInfo.GetSpecializationInfo(otherSpecIndex)
+          local otherSpecConfigs = otherSpecID and ClassTalents.GetConfigIDsBySpecID(otherSpecID)
+          if otherSpecConfigs and #otherSpecConfigs > 0 then
+            local sectionLines = {}
+            for _, configId in pairs(otherSpecConfigs) do
+              -- Use a different option name so existing consumers that can't handle offspec strings don't choke
+              local exportString = GetExportString(configId, otherSpecID, 'offspec_talents')
+              if exportString then
+                sectionLines[#sectionLines + 1] = exportString
+              end
+            end
+            if #sectionLines > 0 then
+              simulationcraftProfile = simulationcraftProfile .. '\n'
+              simulationcraftProfile = simulationcraftProfile .. '### Offspec Loadouts: ' .. otherSpecName .. '\n'
+              simulationcraftProfile = simulationcraftProfile .. table.concat(sectionLines, '\n') .. '\n'
+            end
+          end
+        end
+      end
+    end
   else
     -- old talents
     local playerTalents = CreateSimcTalentString()
@@ -1332,6 +1416,13 @@ end
 
 -- This is the workhorse function that constructs the profile
 function Simulationcraft:PrintSimcProfile(debugOutput, noBags, showMerchant, links)
+  -- remember the args so UI toggles on the output frame can rebuild the text
+  Simulationcraft.lastProfileArgs = {
+    debugOutput = debugOutput,
+    noBags = noBags,
+    showMerchant = showMerchant,
+    links = links,
+  }
   LoadSpellsAsync(function()
     local simulationcraftProfile, simcPrintError = Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links)
 
