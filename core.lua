@@ -75,6 +75,32 @@ local WeeklyRewards         = _G.C_WeeklyRewards
 local ClassTalents          = _G.C_ClassTalents
 local Traits                = _G.C_Traits
 
+-- Check for Forever-only APIs to detect which game is running
+local IS_FOREVER = (Enum.TraitConfigType and Enum.TraitConfigType.CamelotCombat ~= nil)
+  or (C_SpecializationInfo and C_SpecializationInfo.GetCombatConfigIDForSpecGroup ~= nil)
+
+-- Which optional parts of the profile each game exports. Anything not listed here is
+-- exported for both games. Checked as EXPORTS.<name> in GetSimcProfile.
+local MODERN_EXPORTS = {
+  'spec',                  -- spec in header, # loot_spec=, and the pick-a-spec sanity check
+  'trait_systems',        -- omnium_talents and friends from TRAIT_SYSTEMS
+  'catalyst_currencies',
+  'upgrade_currencies',
+  'slot_high_watermarks',
+  'upgrade_achievements',
+  'bonus_roll_currencies',
+  'bonus_roll_items',
+}
+local FOREVER_EXPORTS = {
+  'character_stats',       -- forever/stats.lua
+  'skills',
+  'buffs',
+}
+local EXPORTS = {}
+for _, name in ipairs(IS_FOREVER and FOREVER_EXPORTS or MODERN_EXPORTS) do
+  EXPORTS[name] = true
+end
+
 -- GetAddOnMetadata was global until 10.1. It's now in C_AddOns. This line will use C_AddOns if available and work in either WoW build
 local GetAddOnMetadata = C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata
 
@@ -426,6 +452,22 @@ local function GetTraitString(optionName, configID)
 
   if #entries == 0 then return nil end
   return optionName .. '=' .. table.concat(entries, '/')
+end
+
+-- Forever: Map the SpecGroup to the trait configID
+-- Not used by modern
+local function GetForeverExportString(groupIndex)
+  local configID = C_SpecializationInfo.GetCombatConfigIDForSpecGroup(groupIndex)
+  if not configID then
+    return nil
+  end
+
+  local ok, loadoutString = pcall(Traits.GenerateImportString, configID)
+  if not ok or not loadoutString or loadoutString == '' then
+    return nil
+  end
+
+  return 'talents=' .. loadoutString
 end
 
 -- function that translates between the game's role values and ours
@@ -1065,11 +1107,15 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
   local playerRegion = region or GetCurrentRegionName() or regionString[GetCurrentRegion()]
 
   -- Race info
-  local _, playerRace = UnitRace('player')
+  local _, playerRace, playerRaceId = UnitRace('player')
 
   -- fix some races to match SimC format
   if playerRace == 'Scourge' then --lulz
     playerRace = 'Undead'
+  elseif playerRaceId == 95 then
+    playerRace = "skyborne_alliance"
+  elseif playerRaceId == 96 then
+    playerRace = "skyborne_horde"
   else
     playerRace = FormatRace(playerRace)
   end
@@ -1095,37 +1141,29 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
   local playerLootSpec = specNames[ lootSpecId ]
 
   -- Professions
+  -- GetProfessions also returns the secondary skills (archaeology, fishing, cooking, first aid),
+  -- SimC only wants the two primaries. Either slot can be nil.
   local pid1, pid2 = GetProfessions()
-  local firstProf, firstProfRank, secondProf, secondProfRank, profOneId, profTwoId
-  if pid1 then
-    _,_,firstProfRank,_,_,_,profOneId = GetProfessionInfo(pid1)
-  end
-  if pid2 then
-    _,_,secondProfRank,_,_,_,profTwoId = GetProfessionInfo(pid2)
+  local professions = {}
+  for _, pid in pairs({ pid1, pid2 }) do
+    local _, _, rank, _, _, _, profId = GetProfessionInfo(pid)
+    local profName = profNames[ profId ]
+    if profName then
+      professions[#professions + 1] = Tokenize(profName) .. '=' .. tostring(rank)
+    end
   end
 
-  firstProf = profNames[ profOneId ]
-  secondProf = profNames[ profTwoId ]
-
-  local playerProfessions = '' -- luacheck: ignore
-  if pid1 or pid2 then
-    playerProfessions = 'professions='
-    if pid1 then
-      playerProfessions = playerProfessions..Tokenize(firstProf)..'='..tostring(firstProfRank)..'/'
-    end
-    if pid2 then
-      playerProfessions = playerProfessions..Tokenize(secondProf)..'='..tostring(secondProfRank)
-    end
-  else
-    playerProfessions = ''
+  local playerProfessions = ''
+  if #professions > 0 then
+    playerProfessions = 'professions=' .. table.concat(professions, '/')
   end
 
   -- create a header comment with basic player info and a date
-  local headerComment = (
-    "# " .. playerName .. ' - ' .. playerSpec
-    .. ' - ' .. date('%Y-%m-%d %H:%M') .. ' - '
-    .. playerRegion .. '/' .. playerRealm
-  )
+  local headerComment = "# " .. playerName
+  if EXPORTS.spec then
+    headerComment = headerComment .. ' - ' .. playerSpec
+  end
+  headerComment = headerComment .. ' - ' .. date('%Y-%m-%d %H:%M') .. ' - ' .. playerRegion .. '/' .. playerRealm
 
   -- Construct SimC-compatible strings from the basic information
   local player = Tokenize(playerClass) .. '="' .. playerName .. '"'
@@ -1160,11 +1198,37 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
   simulationcraftProfile = simulationcraftProfile .. playerRealm .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerRole .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerProfessions .. '\n'
+  -- spec= is always written (spec=unknown on Forever for now) so the profile shape stays stable
   simulationcraftProfile = simulationcraftProfile .. playerSpecStr .. '\n'
-  simulationcraftProfile = simulationcraftProfile .. '# ' .. playerLootSpecStr .. '\n'
+  if EXPORTS.spec then
+    simulationcraftProfile = simulationcraftProfile .. '# ' .. playerLootSpecStr .. '\n'
+  end
   simulationcraftProfile = simulationcraftProfile .. '\n'
 
-  if playerSpec == 'unknown' then -- luacheck: ignore
+  if IS_FOREVER then
+    -- WoW Forever: primary/secondary talents are organized by SpecGroup, an older concept that is unused in modern.
+    -- Map the spec groups to the new trait system and get new-style talent strings
+    local activeGroup = C_SpecializationInfo.GetActiveSpecGroup and C_SpecializationInfo.GetActiveSpecGroup() or 1
+    local activeTalents = GetForeverExportString(activeGroup)
+    if activeTalents then
+      simulationcraftProfile = simulationcraftProfile .. activeTalents .. '\n'
+    else
+      simulationcraftProfile = simulationcraftProfile
+        .. '# Unable to export talents - no talent data from the client yet, try /simc again\n'
+    end
+    simulationcraftProfile = simulationcraftProfile .. '\n'
+
+    local numGroups = GetNumSpecGroups and GetNumSpecGroups() or 1
+    local groupLabels = { 'Primary', 'Secondary' }
+    for groupIndex = 1, numGroups do
+      local exportString = GetForeverExportString(groupIndex)
+      if exportString then
+        simulationcraftProfile = simulationcraftProfile
+          .. '# ' .. (groupLabels[groupIndex] or ('Group ' .. groupIndex)) .. ' Talents\n'
+          .. '# ' .. exportString .. '\n'
+      end
+    end
+  elseif playerSpec == 'unknown' then -- luacheck: ignore
     -- do nothing
     -- Player does not have a spec / is in starting player area
   elseif ClassTalents then
@@ -1236,7 +1300,7 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
     simulationcraftProfile = simulationcraftProfile .. playerTalents .. '\n'
   end
 
-  if Traits and Traits.GetConfigIDBySystemID then
+  if EXPORTS.trait_systems and Traits and Traits.GetConfigIDBySystemID then
     local firstTraitSystem = true
     for _, system in ipairs(TRAIT_SYSTEMS) do
       local configID = Traits.GetConfigIDBySystemID(system.systemID)
@@ -1369,36 +1433,75 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
   simulationcraftProfile = simulationcraftProfile .. '\n'
   simulationcraftProfile = simulationcraftProfile .. '### Additional Character Info\n'
 
-  local catalystCurrenciesStr = Simulationcraft:GetCatalystCurrencies()
-  simulationcraftProfile = simulationcraftProfile .. '#\n'
-  simulationcraftProfile = simulationcraftProfile .. '# catalyst_currencies=' .. catalystCurrenciesStr .. '\n'
-
-  local upgradeCurrenciesStr = Simulationcraft:GetUpgradeCurrencies()
-  simulationcraftProfile = simulationcraftProfile .. '#\n'
-  simulationcraftProfile = simulationcraftProfile .. '# upgrade_currencies=' .. upgradeCurrenciesStr .. '\n'
-
-  local highWatermarksStr = Simulationcraft:GetSlotHighWatermarks()
-  if highWatermarksStr then
+  if EXPORTS.catalyst_currencies then
+    local catalystCurrenciesStr = Simulationcraft:GetCatalystCurrencies()
     simulationcraftProfile = simulationcraftProfile .. '#\n'
-    simulationcraftProfile = simulationcraftProfile .. '# slot_high_watermarks=' .. highWatermarksStr .. '\n'
+    simulationcraftProfile = simulationcraftProfile .. '# catalyst_currencies=' .. catalystCurrenciesStr .. '\n'
   end
 
-  local upgradeAchievementsStr = Simulationcraft:GetItemUpgradeAchievements()
-  simulationcraftProfile = simulationcraftProfile .. '#\n'
-  simulationcraftProfile = simulationcraftProfile .. '# upgrade_achievements=' .. upgradeAchievementsStr .. '\n'
-
-  local bonusRollCurrenciesStr = Simulationcraft:GetBonusRollCurrencies()
-  simulationcraftProfile = simulationcraftProfile .. '#\n'
-  simulationcraftProfile = simulationcraftProfile .. '# bonus_roll_currencies=' .. bonusRollCurrenciesStr .. '\n'
-
-  local bonusRollStr = Simulationcraft:GetBonusRollItems()
-  if bonusRollStr and bonusRollStr ~= '' then
+  if EXPORTS.upgrade_currencies then
+    local upgradeCurrenciesStr = Simulationcraft:GetUpgradeCurrencies()
     simulationcraftProfile = simulationcraftProfile .. '#\n'
-    simulationcraftProfile = simulationcraftProfile .. '# bonus_roll_items=' .. bonusRollStr .. '\n'
+    simulationcraftProfile = simulationcraftProfile .. '# upgrade_currencies=' .. upgradeCurrenciesStr .. '\n'
+  end
+
+  if EXPORTS.slot_high_watermarks then
+    local highWatermarksStr = Simulationcraft:GetSlotHighWatermarks()
+    if highWatermarksStr then
+      simulationcraftProfile = simulationcraftProfile .. '#\n'
+      simulationcraftProfile = simulationcraftProfile .. '# slot_high_watermarks=' .. highWatermarksStr .. '\n'
+    end
+  end
+
+  if EXPORTS.upgrade_achievements then
+    local upgradeAchievementsStr = Simulationcraft:GetItemUpgradeAchievements()
+    simulationcraftProfile = simulationcraftProfile .. '#\n'
+    simulationcraftProfile = simulationcraftProfile .. '# upgrade_achievements=' .. upgradeAchievementsStr .. '\n'
+  end
+
+  if EXPORTS.bonus_roll_currencies then
+    local bonusRollCurrenciesStr = Simulationcraft:GetBonusRollCurrencies()
+    simulationcraftProfile = simulationcraftProfile .. '#\n'
+    simulationcraftProfile = simulationcraftProfile .. '# bonus_roll_currencies=' .. bonusRollCurrenciesStr .. '\n'
+  end
+
+  if EXPORTS.bonus_roll_items then
+    local bonusRollStr = Simulationcraft:GetBonusRollItems()
+    if bonusRollStr and bonusRollStr ~= '' then
+      simulationcraftProfile = simulationcraftProfile .. '#\n'
+      simulationcraftProfile = simulationcraftProfile .. '# bonus_roll_items=' .. bonusRollStr .. '\n'
+    end
+  end
+
+  -- Stats are informational only, never let them break the export
+  if EXPORTS.character_stats then
+    local statsOk, statLines = pcall(Simulationcraft.GetCharacterStats, Simulationcraft)
+    if statsOk then
+      simulationcraftProfile = simulationcraftProfile .. '#\n'
+      for _, line in ipairs(statLines) do
+        simulationcraftProfile = simulationcraftProfile .. '# ' .. line[1] .. '=' .. line[2] .. '\n'
+      end
+    end
+  end
+
+  if EXPORTS.skills then
+    local skillsOk, skillsStr = pcall(Simulationcraft.GetSkillLevels, Simulationcraft)
+    if skillsOk and skillsStr then
+      simulationcraftProfile = simulationcraftProfile .. '#\n'
+      simulationcraftProfile = simulationcraftProfile .. '# skills=' .. skillsStr .. '\n'
+    end
+  end
+
+  if EXPORTS.buffs then
+    local buffsOk, buffsStr = pcall(Simulationcraft.GetActiveBuffs, Simulationcraft)
+    if buffsOk and buffsStr then
+      simulationcraftProfile = simulationcraftProfile .. '#\n'
+      simulationcraftProfile = simulationcraftProfile .. '# buffs=' .. buffsStr .. '\n'
+    end
   end
 
   -- sanity checks - if there's anything that makes the output completely invalid, punt!
-  if specId==nil then
+  if EXPORTS.spec and specId==nil then
     simcPrintError = "Error: You need to pick a spec!"
   end
 
