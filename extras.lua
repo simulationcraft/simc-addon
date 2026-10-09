@@ -401,6 +401,7 @@ Simulationcraft.upgradeItems = {
   [275383] = 'Venomous Aspirant\'s Heraldry',
   [275385] = 'Venomous Gladiator\'s Heraldry',
   [268552] = 'Ascendant Voidcore',
+  [280562] = 'Ascendant Venomstone',
 }
 
 Simulationcraft.catalystCurrencies = {
