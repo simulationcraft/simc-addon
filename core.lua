@@ -75,9 +75,7 @@ local WeeklyRewards         = _G.C_WeeklyRewards
 local ClassTalents          = _G.C_ClassTalents
 local Traits                = _G.C_Traits
 
--- Check for Forever-only APIs to detect which game is running
-local IS_FOREVER = (Enum.TraitConfigType and Enum.TraitConfigType.CamelotCombat ~= nil)
-  or (C_SpecializationInfo and C_SpecializationInfo.GetCombatConfigIDForSpecGroup ~= nil)
+local IS_FOREVER = Simulationcraft.IS_FOREVER
 
 -- Which optional parts of the profile each game exports. Anything not listed here is
 -- exported for both games. Checked as EXPORTS.<name> in GetSimcProfile.
@@ -95,6 +93,7 @@ local FOREVER_EXPORTS = {
   'character_stats',       -- forever/stats.lua
   'skills',
   'buffs',
+  'bags',
 }
 local EXPORTS = {}
 for _, name in ipairs(IS_FOREVER and FOREVER_EXPORTS or MODERN_EXPORTS) do
@@ -445,7 +444,7 @@ local function GetTraitString(optionName, configID)
     for _, nodeID in ipairs(Traits.GetTreeNodes(treeID)) do
       local node = Traits.GetNodeInfo(configID, nodeID)
       if node and node.ranksPurchased and node.ranksPurchased > 0 and node.activeEntry then
-        entries[#entries + 1] = node.activeEntry.entryID .. ':' .. node.activeEntry.rank
+        entries[#entries + 1] = node.activeEntry.entryID .. ':' .. (node.currentRank or node.ranksPurchased)
       end
     end
   end
@@ -468,6 +467,15 @@ local function GetForeverExportString(groupIndex)
   end
 
   return 'talents=' .. loadoutString
+end
+
+local function GetForeverLegacyTalentString()
+  local ok, legacyString = pcall(Simulationcraft.GetLegacyTalentString, Simulationcraft)
+  if not ok or not legacyString then
+    return nil
+  end
+
+  return 'legacy_talents=' .. legacyString
 end
 
 -- function that translates between the game's role values and ours
@@ -652,8 +660,20 @@ function Simulationcraft:GetItemStrings(debugOutput)
     local slotId = GetInventorySlotInfo(slotNames[slotNum])
     local itemLink = GetInventoryItemLink('player', slotId)
 
+    -- Ammo slot in Forever just has an item ID and count but not item link
+    if not itemLink and slotNames[slotNum] == 'AmmoSlot' then
+      -- Empty ammo slot returns 0 (not nil) and a count of 1
+      local ammoId = GetInventoryItemID('player', slotId)
+      if ammoId and ammoId > 0 then
+        local ammoName = C_Item and C_Item.GetItemInfo and C_Item.GetItemInfo(ammoId)
+        items[slotNum] = {
+          string = simcSlotNames[slotNum] .. '=,id=' .. ammoId,
+          name = ammoName,
+          count = GetInventoryItemCount('player', slotId),
+        }
+      end
     -- if we don't have an item link, we don't care
-    if itemLink then
+    elseif itemLink then
       -- In theory, this should always be loaded/cached
       local name = GetItemName(itemLink)
 
@@ -673,7 +693,7 @@ function Simulationcraft:GetItemStrings(debugOutput)
       items[slotNum] = {
         string = GetItemStringFromItemLink(slotNum, itemLink, debugOutput),
         name = itemComment,
-        upgrade = upgrade
+        upgrade = upgrade,
       }
     end
   end
@@ -1228,6 +1248,11 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
           .. '# ' .. exportString .. '\n'
       end
     end
+
+    local legacyTalents = GetForeverLegacyTalentString()
+    if legacyTalents then
+      simulationcraftProfile = simulationcraftProfile .. '\n' .. legacyTalents .. '\n'
+    end
   elseif playerSpec == 'unknown' then -- luacheck: ignore
     -- do nothing
     -- Player does not have a spec / is in starting player area
@@ -1331,6 +1356,20 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
         simulationcraftProfile = simulationcraftProfile .. '# ' .. item.upgrade .. '\n'
       end
       simulationcraftProfile = simulationcraftProfile .. items[slotNum].string .. '\n'
+      if item.count then
+        simulationcraftProfile = simulationcraftProfile .. '# ammo_count=' .. item.count .. '\n'
+      end
+    end
+  end
+
+  -- output equipped bags (Forever)
+  if EXPORTS.bags then
+    local bagsOk, bags = pcall(Simulationcraft.GetEquippedBags, Simulationcraft)
+    if bagsOk and bags and #bags > 0 then
+      simulationcraftProfile = simulationcraftProfile .. '\n'
+      for _, bagLine in ipairs(bags) do
+        simulationcraftProfile = simulationcraftProfile .. bagLine .. '\n'
+      end
     end
   end
 

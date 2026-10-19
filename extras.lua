@@ -1,5 +1,10 @@
 local _, Simulationcraft = ...
 
+-- There might be some other ways to detect Forever (use a special ToC variable, check for some APIs)
+-- but this seems like the most readable for now
+-- https://warcraft.wiki.gg/wiki/WOW_PROJECT_ID
+Simulationcraft.IS_FOREVER = WOW_PROJECT_ID == (WOW_PROJECT_CAMELOT or 18)
+
 Simulationcraft.RoleTable = {
   -- Death Knight
   [250] = 'tank',
@@ -217,6 +222,19 @@ Simulationcraft.invTypeToSlotNum = {
 	INVTYPE_THROWN=17, -- Thrown weapons. I do not know if this slot number is correct, but it shouldn't matter since these are no longer obtainable and those that do exist are now gray items.
 	--INVTYPE_RELIC=?, -- No corresponding slot number, and I do not think any such items exist. Existing relics were turned into non-equipable gray items. This is value is not used for legion relics either.
 }
+
+-- WoW Forever still has the ranged slot (bows, guns, crossbows, wands, thrown, and the
+-- paladin/druid/shaman relics: librams, idols, totems). Modern removed it and folds
+-- those item types into main hand, which is what the tables above map them to. Add the slot
+-- and re-point those inventory types at it when running on Forever.
+if Simulationcraft.IS_FOREVER then
+	Simulationcraft.slotNames[20] = "RangedSlot"
+	Simulationcraft.simcSlotNames[20] = 'ranged'
+	Simulationcraft.invTypeToSlotNum.INVTYPE_RANGED = 20      -- bows
+	Simulationcraft.invTypeToSlotNum.INVTYPE_RANGEDRIGHT = 20 -- guns, crossbows, wands
+	Simulationcraft.invTypeToSlotNum.INVTYPE_THROWN = 20
+	Simulationcraft.invTypeToSlotNum.INVTYPE_RELIC = 20       -- librams, idols, totems
+end
 
 -- table for conversion to upgrade level, stolen from AMR (<3)
 

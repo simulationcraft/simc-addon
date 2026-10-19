@@ -448,3 +448,23 @@ function Simulationcraft:GetActiveBuffs()
 
   return table.concat(entries, '/')
 end
+
+-- Equipped bags. Forever has bags with their own effects (quivers and ammo pouches add ranged
+-- attack speed), so the bag items matter for a hunter.
+-- Returns a list of "bagN=,id=X" lines, or nil if the container API is unavailable.
+function Simulationcraft:GetEquippedBags()
+  if not (C_Container and C_Container.ContainerIDToInventoryID) then
+    return nil
+  end
+
+  local bags = {}
+  for bagID = 1, (NUM_BAG_SLOTS or 4) do
+    local inventoryID = C_Container.ContainerIDToInventoryID(bagID)
+    local itemID = inventoryID and GetInventoryItemID('player', inventoryID)
+    if itemID and itemID > 0 then
+      bags[#bags + 1] = 'bag' .. bagID .. '=,id=' .. itemID
+    end
+  end
+
+  return bags
+end
