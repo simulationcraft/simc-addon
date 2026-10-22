@@ -314,37 +314,19 @@ local function AddStatString(stats, name, value)
   end
 end
 
--- What the active pet is. npc_id (from the GUID) is the stable identifier; the family,
--- type and loyalty strings are localized and only there for readability.
+-- Pet details not already in the pet_* lines from forever/pet.lua
 local function AddPetInfo(lines)
   local info = {}
 
-  -- GUIDs look like Creature-0-[server]-[instance]-[zone]-[npcID]-[spawnUID]; pets are "Pet-..."
-  local guid = CallStatAPI('UnitGUID', 'pet')
-  if type(guid) == 'string' then
-    local npcId = guid:match('^%a+%-%d+%-%d+%-%d+%-%d+%-(%d+)%-')
-    AddStat(info, 'npc_id', tonumber(npcId))
-  end
-  AddStat(info, 'level', (CallStatAPI('UnitLevel', 'pet')))
-  AddStatString(info, 'name', (CallStatAPI('UnitName', 'pet')))
-  AddStatString(info, 'family', (CallStatAPI('UnitCreatureFamily', 'pet')))
   AddStatString(info, 'type', (CallStatAPI('UnitCreatureType', 'pet')))
 
   if C_PetInfo then
     AddStatString(info, 'talent_tree', C_PetInfo.GetPetTalentTree and (select(2, pcall(C_PetInfo.GetPetTalentTree))))
     AddStatString(info, 'loyalty', C_PetInfo.GetPetLoyalty and (select(2, pcall(C_PetInfo.GetPetLoyalty))))
     if C_PetInfo.GetPetHappiness then
-      local ok, happiness, damagePercentage, loyaltyRate = pcall(C_PetInfo.GetPetHappiness)
+      local ok, _, _, loyaltyRate = pcall(C_PetInfo.GetPetHappiness)
       if ok then
-        AddStat(info, 'happiness', happiness)
-        AddStat(info, 'damage_percent', damagePercentage)
         AddStat(info, 'loyalty_rate', loyaltyRate)
-      end
-    end
-    if C_PetInfo.GetPetTrainingPoints then
-      local ok, totalPoints, usedPoints = pcall(C_PetInfo.GetPetTrainingPoints)
-      if ok and type(totalPoints) == 'number' then
-        info[#info + 1] = 'training_points:' .. FormatStatValue(totalPoints) .. ':' .. FormatStatValue(usedPoints or 0)
       end
     end
   end

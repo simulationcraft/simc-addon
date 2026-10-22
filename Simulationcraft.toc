@@ -3,7 +3,7 @@
 ## IconTexture: Interface\Addons\SimulationCraft\logo
 ## Notes: Constructs SimC export strings
 ## Author: Theck, navv_, seriallos
-## Version: 12.1.5-02
+## Version: 12.1.5-03
 ## OptionalDependencies: Ace3, LibRealmInfo, LibDBIcon, LibDataBroker-1.1
 ## SavedVariables: SimulationCraftDB
 
@@ -39,3 +39,4 @@ core.lua
 bonusrolls.lua
 forever\stats.lua
 forever\legacytalents.lua
+forever\pet.lua

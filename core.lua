@@ -94,6 +94,7 @@ local FOREVER_EXPORTS = {
   'skills',
   'buffs',
   'bags',
+  'pet',                   -- forever/pet.lua
 }
 local EXPORTS = {}
 for _, name in ipairs(IS_FOREVER and FOREVER_EXPORTS or MODERN_EXPORTS) do
@@ -312,6 +313,7 @@ local function Tokenize(str)
   end
   return s
 end
+Simulationcraft.Tokenize = Tokenize -- for the forever/ modules
 
 -- method to add spaces to UnitRace names for proper tokenization
 local function FormatRace(str)
@@ -1369,6 +1371,17 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
       simulationcraftProfile = simulationcraftProfile .. '\n'
       for _, bagLine in ipairs(bags) do
         simulationcraftProfile = simulationcraftProfile .. bagLine .. '\n'
+      end
+    end
+  end
+
+  -- output hunter pet (Forever)
+  if EXPORTS.pet then
+    local petOk, petLines = pcall(Simulationcraft.GetPetExport, Simulationcraft)
+    if petOk and petLines then
+      simulationcraftProfile = simulationcraftProfile .. '\n'
+      for _, petLine in ipairs(petLines) do
+        simulationcraftProfile = simulationcraftProfile .. petLine .. '\n'
       end
     end
   end
