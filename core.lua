@@ -1116,7 +1116,13 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
   -- Basic player info
   local _, realmName, _, _, _, _, region, _, _, realmLatinName, _ = LibRealmInfo:GetRealmInfoByUnit('player')
 
-  local playerName = UnitName('player')
+  -- Forever: UnitName returns the surname as its second value (where retail returns the realm)
+  local playerName, playerSurname = UnitName('player')
+  if IS_FOREVER and type(playerSurname) == 'string' and playerSurname ~= '' then
+    local separator = Constants and Constants.CharacterNameSeparatorConsts
+      and Constants.CharacterNameSeparatorConsts.CHARACTERNAME_SURNAME_SEPARATOR or ' '
+    playerName = playerName .. separator .. playerSurname
+  end
   local _, playerClass = UnitClass('player')
   local playerLevel = UnitLevel('player')
 
