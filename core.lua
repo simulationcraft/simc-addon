@@ -108,6 +108,7 @@ local GetAddOnMetadata = C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetad
 local GetDetailedItemLevelInfo = C_Item and C_Item.GetDetailedItemLevelInfo or GetDetailedItemLevelInfo
 local GetItemInfoInstant = C_Item and C_Item.GetItemInfoInstant or GetItemInfoInstant
 local GetItemCount = C_Item and C_Item.GetItemCount or GetItemCount
+local GetItemInfo = C_Item and C_Item.GetItemInfo or GetItemInfo
 
 -- Talent loadout export string header layout (see ClassTalentImportExportMixin)
 local bitWidthHeaderVersion = 8
