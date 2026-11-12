@@ -219,6 +219,32 @@ local function AddCombatModifiers(lines)
   lines[#lines + 1] = { 'combat_modifiers', misc }
 end
 
+-- Glancing blow chance and damage penalty (both in percent) for the main hand weapon/shapeshift
+-- form against targets 0 to 3 levels above the player, the same way the skills pane shows them
+-- for a raid boss. A target's defense skill is 5 per level.
+local SKILL_RANKS_PER_LEVEL = 5
+local GLANCING_MAX_LEVEL_OFFSET = 3
+
+local function AddGlancingBlows(lines)
+  local glancing = {}
+  local level = UnitLevel('player')
+
+  if type(level) == 'number' then
+    for levelOffset = 0, GLANCING_MAX_LEVEL_OFFSET do
+      local targetDefenseSkill = (level + levelOffset) * SKILL_RANKS_PER_LEVEL
+
+      -- nil weapon skill: the client uses the skill of the equipped main hand weapon
+      local chance = CallStatAPI('GetGlancingBlowChance', nil, targetDefenseSkill)
+      local penalty = CallStatAPI('GetGlancingBlowPenalty', nil, targetDefenseSkill)
+
+      AddStat(glancing, 'chance_plus' .. levelOffset, type(chance) == 'number' and chance * 100)
+      AddStat(glancing, 'penalty_plus' .. levelOffset, type(penalty) == 'number' and penalty * 100)
+    end
+  end
+
+  lines[#lines + 1] = { 'glancing', glancing }
+end
+
 -- Every CR_* combat rating with a nonzero rating or bonus, as name:rating:bonus
 local function AddCombatRatings(lines)
   local names = {}
@@ -356,6 +382,7 @@ function Simulationcraft:GetCharacterStats()
   AddAttackPower(lines, 'player', '')
   AddSpellStats(lines)
   AddCombatModifiers(lines)
+  AddGlancingBlows(lines)
   AddCombatRatings(lines)
   AddDefenseStats(lines, 'player', '')
   AddWeaponDamage(lines, 'player', '')
