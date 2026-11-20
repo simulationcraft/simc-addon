@@ -4,8 +4,12 @@
 local _, Simulationcraft = ...   -- same shared addon table as core.lua / extras.lua
 
 -- Creature ID from the pet GUID: Pet-0-server-instance-zone-creatureID-spawn
+-- Split, don't pattern-match: server/spawn fields get obfuscated in 1.60.1
 local function GetPetCreatureID()
-  return tonumber(UnitGUID('pet'):match('^Pet%-%d+%-%d+%-%d+%-%d+%-(%d+)%-'))
+  local guid = UnitGUID('pet')
+  if not guid then return nil end
+  local guidType, _, _, _, _, creatureID = strsplit('-', guid)
+  return guidType == 'Pet' and tonumber(creatureID) or nil
 end
 
 -- Spell IDs from the pet spellbook. Attack/Follow/Stay are pet actions without a spellID

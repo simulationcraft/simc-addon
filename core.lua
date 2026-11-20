@@ -1114,7 +1114,8 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
   local simcVersionWarning = '# Requires SimulationCraft 1000-01 or newer'
 
   -- Basic player info
-  local _, realmName, _, _, _, _, region, _, _, realmLatinName, _ = LibRealmInfo:GetRealmInfoByUnit('player')
+  -- pcall: Forever 1.60.1 blanks GetRealmName(), which makes LibRealmInfo assert
+  local _, _, realmName, _, _, _, _, region, _, _, realmLatinName = pcall(LibRealmInfo.GetRealmInfoByUnit, LibRealmInfo, 'player')
 
   -- Forever: UnitName returns the surname as its second value (where retail returns the realm)
   local playerName, playerSurname = UnitName('player')
@@ -1191,7 +1192,10 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
   if EXPORTS.spec then
     headerComment = headerComment .. ' - ' .. playerSpec
   end
-  headerComment = headerComment .. ' - ' .. date('%Y-%m-%d %H:%M') .. ' - ' .. playerRegion .. '/' .. playerRealm
+  headerComment = headerComment .. ' - ' .. date('%Y-%m-%d %H:%M') .. ' - ' .. playerRegion
+  if playerRealm and playerRealm ~= '' then
+    headerComment = headerComment .. '/' .. playerRealm
+  end
 
   -- Construct SimC-compatible strings from the basic information
   local player = Tokenize(playerClass) .. '="' .. playerName .. '"'
@@ -1199,7 +1203,9 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
   playerRace = 'race=' .. Tokenize(playerRace)
   playerRole = 'role=' .. TranslateRole(globalSpecID, role)
   local playerSpecStr = 'spec=' .. Tokenize(playerSpec)
-  playerRealm = 'server=' .. Tokenize(playerRealm)
+  -- Forever: realm name can be empty; omit server= then
+  local playerServerStr = Tokenize(playerRealm)
+  playerServerStr = playerServerStr ~= '' and ('server=' .. playerServerStr) or nil
   playerRegion = 'region=' .. Tokenize(playerRegion)
   local playerLootSpecStr = 'loot_spec=' .. Tokenize(playerLootSpec)
 
@@ -1223,7 +1229,9 @@ function Simulationcraft:GetSimcProfile(debugOutput, noBags, showMerchant, links
     end
   end
   simulationcraftProfile = simulationcraftProfile .. playerRegion .. '\n'
-  simulationcraftProfile = simulationcraftProfile .. playerRealm .. '\n'
+  if playerServerStr then
+    simulationcraftProfile = simulationcraftProfile .. playerServerStr .. '\n'
+  end
   simulationcraftProfile = simulationcraftProfile .. playerRole .. '\n'
   simulationcraftProfile = simulationcraftProfile .. playerProfessions .. '\n'
   -- spec= is always written (spec=unknown on Forever for now) so the profile shape stays stable
